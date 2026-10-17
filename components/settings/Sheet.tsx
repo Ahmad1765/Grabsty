@@ -5,9 +5,10 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { tap } from '@/lib/haptics';
@@ -25,6 +26,7 @@ export function SheetModal({
   children: React.ReactNode;
 }) {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Modal
@@ -44,8 +46,7 @@ export function SheetModal({
         }}
       >
         <Pressable style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }} onPress={onClose} accessibilityLabel="Close" />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={{ width: '100%', maxWidth: 520, maxHeight: '90%' }}
         >
           <View
@@ -58,7 +59,7 @@ export function SheetModal({
               }),
               paddingTop: 16,
               paddingHorizontal: 20,
-              paddingBottom: Platform.OS === 'ios' ? 32 : 20,
+              paddingBottom: Platform.OS === 'ios' ? 32 : Math.max(insets.bottom + 8, 20),
               maxHeight: '100%',
               borderWidth: isDark ? 1 : 0,
               borderColor: theme.border,
@@ -118,7 +119,7 @@ export function SheetModal({
               {children}
             </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </View>
     </Modal>
   );

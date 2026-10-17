@@ -281,6 +281,13 @@ export default function ConversationScreen() {
     outputRange: [0, 6],
   });
 
+  // Android's back-to-dismiss hides the keyboard without blurring the input, so
+  // onBlur never fires (and re-tapping the still-focused input skips onFocus);
+  // follow the keyboard so the listing card comes back when it goes away.
+  useEffect(() => {
+    setIsWriting(keyboardUp);
+  }, [keyboardUp]);
+
   // Ensure message list follows bottom when keyboard opens
   useEffect(() => {
     if (keyboardUp) {
@@ -465,7 +472,7 @@ export default function ConversationScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false,
         quality: 0.8,
         base64: true,

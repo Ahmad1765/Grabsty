@@ -4,10 +4,10 @@ import {
   View,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
@@ -179,7 +179,7 @@ export function PaymentOptionsModal({
           <View style={{ width: 36 }} />
         </View>
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <KeyboardAvoider style={{ flex: 1 }}>
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 30 }}
@@ -837,7 +837,7 @@ export function PaymentOptionsModal({
             </Text>
           </Pressable>
         </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </SafeAreaView>
     </Modal>
   );

@@ -6,10 +6,9 @@ import {
   StyleSheet,
   Platform,
   Modal,
-  TextInput,
   Share,
 } from 'react-native';
-import { Text } from '@/lib/rnText';
+import { Text, TextInput } from '@/lib/rnText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
@@ -29,6 +28,7 @@ import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import type { Order } from '@/lib/payments';
 import type { Listing, FulfillmentStatus } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
+import { conditionLabel } from '@/components/product/shared';
 
 export interface OrderDetailsTrackingViewProps {
   order?: Order | null;
@@ -192,7 +192,7 @@ function KeyValueRow({
         rightElement
       ) : value ? (
         <Text
-          numberOfLines={2}
+          numberOfLines={3}
           style={[
             {
               fontSize: 14,
@@ -350,23 +350,38 @@ export function OrderDetailsTrackingView({
 
   // Ready to Deliver Form State
   const [pickupContactName, setPickupContactName] = useState(
-    sellerDefaultAddress?.recipient_name || 'Seller Contact',
+    sellerDefaultAddress?.recipient_name || '',
   );
   const [pickupContactPhone, setPickupContactPhone] = useState(
-    sellerDefaultAddress?.phone || '+1 (555) 234-8901',
+    sellerDefaultAddress?.phone || '',
   );
   const [pickupLine1, setPickupLine1] = useState(
-    sellerDefaultAddress?.line1 || '210 Dan Allen Drive',
+    sellerDefaultAddress?.line1 || '',
   );
   const [pickupLine2, setPickupLine2] = useState(
-    sellerDefaultAddress?.line2 || 'Apt 4B',
+    sellerDefaultAddress?.line2 || '',
   );
   const [pickupCity, setPickupCity] = useState(
-    sellerDefaultAddress?.city || 'Raleigh, NC',
+    sellerDefaultAddress?.city || '',
   );
   const [pickupPostalCode, setPickupPostalCode] = useState(
-    sellerDefaultAddress?.postal_code || '27607',
+    sellerDefaultAddress?.postal_code || '',
   );
+  // The seller's saved address is fetched after mount; fill only the fields
+  // the seller hasn't typed into yet.
+  useEffect(() => {
+    const a = sellerDefaultAddress;
+    if (!a) return;
+    const fill = (set: (fn: (v: string) => string) => void, v?: string | null) =>
+      v && set((cur) => cur || v);
+    fill(setPickupContactName, a.recipient_name);
+    fill(setPickupContactPhone, a.phone);
+    fill(setPickupLine1, a.line1);
+    fill(setPickupLine2, a.line2);
+    fill(setPickupCity, a.city);
+    fill(setPickupPostalCode, a.postal_code);
+  }, [sellerDefaultAddress]);
+
   const [pickupSelectedDate, setPickupSelectedDate] = useState<'tomorrow' | 'day_after'>('tomorrow');
   const [pickupConfirmed, setPickupConfirmed] = useState(false);
   const [pickupConfirmedDateStr, setPickupConfirmedDateStr] = useState<string | null>(null);
@@ -433,23 +448,23 @@ export function OrderDetailsTrackingView({
     addr.recipientName ||
     addr.recipient_name ||
     (order as any)?.buyer?.full_name ||
-    'Hannah Dial';
+    '—';
 
   const streetAddress =
     propDeliveryAddress ||
     [addr.line1, addr.city].filter(Boolean).join(', ') ||
-    '730 E 950 S Apt C438, Orem UT 84097';
+    '—';
 
   const phone =
     propContactPhone ||
     addr.phone ||
-    '+1 (555) 123-2014';
+    '—';
 
   const item =
     propItemTitle ||
     listing?.title ||
     (order as any)?.listing?.title ||
-    'Tracked Order Item';
+    'Item';
 
   const note =
     propDeliveryNote ||
@@ -461,9 +476,9 @@ export function OrderDetailsTrackingView({
   const itemPhoto =
     listing?.images?.[0] ||
     (listing as any)?.photos?.[0] ||
-    'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=200&auto=format&fit=crop&q=80';
-  const itemCondition = (listing as any)?.condition || 'New with tags';
-  const orderIdNumber = order?.id ? (order.id.replace(/[^0-9]/g, '').slice(0, 7) || '2636862') : '2636862';
+    null;
+  const itemCondition = conditionLabel((listing as any)?.condition);
+  const orderIdNumber = order?.id ? (order.id.replace(/[^0-9]/g, '').slice(0, 7) || order.id.slice(0, 7).toUpperCase()) : '—';
 
   const actualItems = useMemo(() => {
     const rawItems = (order as any)?.order_items;
@@ -472,7 +487,7 @@ export function OrderDetailsTrackingView({
         id: oi.id || `item-${idx}`,
         title: oi.listing?.title || oi.title || item,
         orderId: `Order #${orderIdNumber}`,
-        condition: oi.listing?.condition || itemCondition,
+        condition: oi.listing?.condition ? conditionLabel(oi.listing.condition) : itemCondition,
         photo: oi.listing?.images?.[0] || itemPhoto,
       }));
     }
@@ -748,7 +763,7 @@ export function OrderDetailsTrackingView({
     tap('light');
     try {
       await Share.share({
-        message: `${BRAND} Shipping Label\nWaybill: ${trackingNumber}\nFrom: ${pickupContactName} (${pickupLine1}, ${pickupCity})\nTo: ${recipient} (${streetAddress})\nCarrier: USPS Ground Advantage / ${BRAND} Express`,
+        message: `${BRAND} Shipping Label\nWaybill: ${trackingNumber}\nFrom: ${pickupContactName} (${pickupLine1}, ${pickupCity})\nTo: ${recipient} (${streetAddress})\nCarrier: ${carrierName}`,
       });
       toast.show('Shipping label ready & shared', {
         variant: 'default',
@@ -888,12 +903,14 @@ export function OrderDetailsTrackingView({
                 })}
               >
                 <Text
+                  numberOfLines={1}
                   style={[
                     {
-                      fontSize: 16.5,
+                      fontSize: 14,
                       fontFamily: typography.family.sansBold,
                       color: theme.ink,
                       letterSpacing: -0.3,
+                      flexShrink: 1,
                     },
                     tabularNumberStyle,
                   ]}
@@ -911,32 +928,34 @@ export function OrderDetailsTrackingView({
                   <Feather name="copy" size={12} color={theme.mute} />
                 </View>
               </Pressable>
+                {/* Canonical Status Pill */}
+                <View
+                  style={{
+                    alignSelf: 'flex-start',
+                    marginTop: 8,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: isDark ? 'rgba(108, 71, 255, 0.16)' : '#F2F3FE',
+                    borderWidth: 1,
+                    borderColor: isDark ? 'rgba(108, 71, 255, 0.32)' : 'rgba(83, 86, 238, 0.22)',
+                    paddingHorizontal: 14,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontFamily: typography.family.sansBold,
+                      color: isDark ? '#A5B4FC' : '#5356EE',
+                      letterSpacing: -0.1,
+                    }}
+                  >
+                    {statusBadge}
+                  </Text>
+                </View>
             </View>
 
-            {/* Canonical Status Pill */}
-            <View
-              style={{
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: isDark ? 'rgba(108, 71, 255, 0.16)' : '#F2F3FE',
-                borderWidth: 1,
-                borderColor: isDark ? 'rgba(108, 71, 255, 0.32)' : 'rgba(83, 86, 238, 0.22)',
-                paddingHorizontal: 14,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontFamily: typography.family.sansBold,
-                  color: isDark ? '#A5B4FC' : '#5356EE',
-                  letterSpacing: -0.1,
-                }}
-              >
-                {statusBadge}
-              </Text>
-            </View>
           </View>
 
           {/* Stepper Progress Nodes: Picked -> In Transit -> Delivered */}
@@ -1306,12 +1325,21 @@ export function OrderDetailsTrackingView({
                     </Text>
 
                     {/* Order ID Link */}
-                    <Pressable onPress={() => toast.show(sItem.orderId, { variant: 'default' })}>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Copy ${sItem.orderId}`}
+                      onPress={() => {
+                        tap('light');
+                        Clipboard.setStringAsync(sItem.orderId.replace('Order #', ''))
+                          .then(() => toast.show('Order number copied', { variant: 'default', icon: 'copy' }))
+                          .catch(() => {});
+                      }}
+                    >
                       <Text
                         style={{
                           fontSize: 13.5,
                           fontFamily: typography.family.sansBold,
-                          color: isDark ? '#A5B4FC' : '#2563EB',
+                          color: theme.purple,
                           marginBottom: 3,
                         }}
                       >
@@ -1430,7 +1458,7 @@ export function OrderDetailsTrackingView({
             {/* ── Chronological Activity Timeline (Bottom of Fulfillment View) ── */}
             {activityEvents.length > 0 ? (
               <>
-                <SectionEyebrow title="Activity Timeline" icon="activity" badge={`${activityEvents.length} updates`} />
+                <SectionEyebrow title="Activity Timeline" icon="activity" badge={`${activityEvents.length} ${activityEvents.length === 1 ? 'update' : 'updates'}`} />
                 <GroupCard style={{ padding: 18 }}>
                   {activityEvents.map((evt, idx) => {
                     const isLast = idx === activityEvents.length - 1;

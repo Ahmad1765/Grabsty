@@ -45,6 +45,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { ProfileQrSheet } from '@/components/profile/ProfileQrSheet';
 import { StatusFilterChips } from '@/components/profile/StatusFilterChips';
 import { useUserSafetyActions } from '@/hooks/useUserSafetyActions';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 type SellerTab = 'shop' | 'liked' | 'collections';
 
@@ -91,7 +92,6 @@ export default function UserProfileScreen() {
   const profile = profileQ.data ?? null;
   const listings = listingsQ.data ?? EMPTY_LISTINGS;
   const loading = profileQ.isLoading || listingsQ.isLoading;
-  const refreshing = profileQ.isRefetching || listingsQ.isRefetching;
   const followed = followQ.data?.isFollowing ?? false;
   const followersCount = followQ.data?.followersCount ?? profile?.followers_count ?? 0;
   const followingCount = followQ.data?.followingCount ?? profile?.following_count ?? 0;
@@ -180,17 +180,17 @@ export default function UserProfileScreen() {
     }
   };
 
-  const onRefresh = () => {
+  const refetchAll = async () => {
     if (!userId) return;
-    profileQ.refetch();
-    listingsQ.refetch();
-    likedQ.refetch();
-    if (isCollectionsPublic) {
-      savedQ.refetch();
-      saveListsQ.refetch();
-    }
-    if (authUser?.id) followQ.refetch();
+    await Promise.all([
+      profileQ.refetch(),
+      listingsQ.refetch(),
+      likedQ.refetch(),
+      ...(isCollectionsPublic ? [savedQ.refetch(), saveListsQ.refetch()] : []),
+      ...(authUser?.id ? [followQ.refetch()] : []),
+    ]);
   };
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const visibleListings = useMemo(
     () =>

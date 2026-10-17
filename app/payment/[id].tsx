@@ -1099,7 +1099,9 @@ export default function PaymentScreen() {
                 }}
               >
                 {shippingAddress.line1}
-                {shippingAddress.line2 ? `, ${shippingAddress.line2}` : ''}
+                {shippingAddress.line2 && shippingAddress.line2.trim() !== shippingAddress.line1.trim()
+                  ? `, ${shippingAddress.line2}`
+                  : ''}
               </Text>
               <Text
                 style={{
@@ -1109,7 +1111,8 @@ export default function PaymentScreen() {
                   fontFamily: typography.family.sans,
                 }}
               >
-                {shippingAddress.city}
+                {/* Legacy rows store "City, Country" in city; the country is shown below. */}
+                {shippingAddress.country ? shippingAddress.city.split(',')[0].trim() : shippingAddress.city}
                 {shippingAddress.postal_code ? `, ${shippingAddress.postal_code}` : ''}
                 {shippingAddress.country ? ` · ${shippingAddress.country}` : ''}
               </Text>
@@ -1565,7 +1568,9 @@ export default function PaymentScreen() {
             paddingHorizontal: 16,
           }}
         >
-          Your transaction is handled securely by Stripe. Ceranix Buyer Protection holds payment in escrow until delivery is verified.
+          {selectedMethod === 'cod'
+            ? 'Pay the courier in cash when your order arrives. Grabsty Buyer Protection covers you if the item isn’t as described.'
+            : 'Your transaction is handled securely by Stripe. Grabsty Buyer Protection holds payment in escrow until delivery is verified.'}
         </Text>
       </ScrollView>
 

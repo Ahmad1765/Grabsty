@@ -1,7 +1,8 @@
 // app/wardrobe/new.tsx — post an outfit to your wardrobe, optionally hiding
 // your face and/or the background (web: real processing; native: no-op today).
 import { useState, useRef } from 'react';
-import { View, Pressable, ScrollView, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Pressable, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -34,7 +35,7 @@ function NewWardrobeInner() {
 
   const pick = async () => {
     const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.9,
       base64: true,
     });
@@ -106,7 +107,7 @@ function NewWardrobeInner() {
         <Text style={{ fontSize: 16, fontWeight: '800' }}>New outfit</Text>
         <View style={{ width: 24 }} />
       </View>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoider style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -161,7 +162,7 @@ function NewWardrobeInner() {
             )}
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

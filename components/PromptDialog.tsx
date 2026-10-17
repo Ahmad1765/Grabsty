@@ -6,7 +6,8 @@
 // in a dedicated sheet, not here.
 
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Animated, Easing, Modal, Platform, Pressable, StyleSheet, View, KeyboardAvoidingView } from 'react-native';
+import { Alert, Animated, Easing, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/context/ThemeContext';
@@ -121,8 +122,7 @@ function PromptModal({
             ]}
           />
         </Animated.View>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoider
           style={{ width: '100%', alignItems: 'center', justifyContent: 'center' }}
         >
           <Animated.View
@@ -204,7 +204,7 @@ function PromptModal({
           </View>
         </Pressable>
         </Animated.View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Pressable>
     </Modal>
   );

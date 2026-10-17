@@ -5,7 +5,8 @@
 // Mounting is cheap — the heavy fetch only runs when `visible` flips on.
 
 import { useEffect, useMemo, useState } from 'react';
-import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, ScrollView, KeyboardAvoidingView, useWindowDimensions } from 'react-native';
+import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, ScrollView, useWindowDimensions } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { BlurView } from 'expo-blur';
 import Feather from '@expo/vector-icons/Feather';
@@ -177,8 +178,7 @@ export function SaveListSheet({
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
         )}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoider
           style={{ width: width - 40, maxWidth: 380, alignItems: 'center', justifyContent: 'center' }}
         >
           <Pressable
@@ -356,7 +356,7 @@ export function SaveListSheet({
               </Pressable>
             )}
           </Pressable>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Pressable>
     </Modal>
   );

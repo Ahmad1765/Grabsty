@@ -4,14 +4,13 @@ import {
   View,
   Pressable,
   ScrollView,
-  TextInput,
   ActivityIndicator,
   Platform,
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeContainer } from '@/components/ui/SafeContainer';
-import { Text } from '@/lib/rnText';
+import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { tap } from '@/lib/haptics';
 import { useTheme } from '@/context/ThemeContext';

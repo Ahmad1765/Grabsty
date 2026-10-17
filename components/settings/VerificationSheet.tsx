@@ -6,8 +6,9 @@ import {
   ScrollView,
   Platform,
   Alert,
-  KeyboardAvoidingView,
-} from 'react-native';
+  } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -46,6 +47,7 @@ export function VerificationSheet({
   onSave: (form: VerifyForm) => Promise<void>;
 }) {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [form, setForm] = useState<VerifyForm>({
     legal_name: '',
     document_kind: 'national_id',
@@ -173,8 +175,7 @@ export function VerificationSheet({
           accessibilityLabel="Close"
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={{ width: '100%', maxWidth: 520, maxHeight: '92%' }}
         >
           <View
@@ -256,7 +257,7 @@ export function VerificationSheet({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingHorizontal: 20,
-                paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+                paddingBottom: Platform.OS === 'ios' ? 36 : Math.max(insets.bottom + 8, 24),
               }}
             >
               {initial?.status === 'approved' ? (
@@ -504,7 +505,7 @@ export function VerificationSheet({
               )}
             </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </View>
     </Modal>
   );

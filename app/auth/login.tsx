@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeContainer } from '@/components/ui/SafeContainer';
@@ -8,7 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { signInWithGoogle } from '@/lib/oauth';
-import { useToast } from '@/lib/toast';
+import { ToastProvider, useToast } from '@/lib/toast';
 import { colors } from '@/lib/theme';
 import { BRAND } from '@/lib/brand';
 
@@ -54,7 +54,18 @@ function PressableScale({
   );
 }
 
-export default function LoginScreen() {
+// The screen is presented as a modal, which on Android draws over the root ToastProvider,
+// so its errors ("Wrong email or password", reset-link status) were invisible. A local
+// provider renders them inside the modal.
+export default function LoginRoute() {
+  return (
+    <ToastProvider>
+      <LoginScreen />
+    </ToastProvider>
+  );
+}
+
+function LoginScreen() {
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
   const { height } = useWindowDimensions();
@@ -69,6 +80,7 @@ export default function LoginScreen() {
   const [emailFocused, setEmailFocused] = useState(false);
   const [pwFocused, setPwFocused] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const passwordRef = useRef<any>(null);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [forgotCooldown, setForgotCooldown] = useState(0);
 
@@ -105,7 +117,7 @@ export default function LoginScreen() {
     }).start();
   }, [mode, switchAnim]);
 
-  const welcomeHeight = Math.min(height * 0.5, 460);
+  const welcomeHeight = Math.min(height * 0.42, 460);
   const formHeight = Math.min(height * 0.28, 240);
   const panelHeight = stepAnim.interpolate({
     inputRange: [0, 1],
@@ -167,6 +179,8 @@ export default function LoginScreen() {
           : /already registered|already exists/i.test(raw)
             ? 'That email already has an account — try signing in'
             : raw || 'Something went wrong. Please try again.';
+      // Inline, not just a toast: the toast lands over the Sign in button and is gone in 2s.
+      setErrors({ password: friendly });
       toast.show(friendly, { variant: 'default', icon: 'alert-triangle' });
     } finally {
       setLoading(false);
@@ -252,7 +266,7 @@ export default function LoginScreen() {
   return (
     <SafeContainer
       mode="keyboard-avoiding"
-      edges={['top']}
+      edges={['top', 'bottom']}
       backgroundColor={colors.white}
       style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
@@ -408,10 +422,10 @@ export default function LoginScreen() {
 
               <Text
                 style={{
-                  fontSize: step === 'welcome' ? 52 : 40,
+                  fontSize: step === 'welcome' ? (height < 760 ? 44 : 52) : 40,
                   fontWeight: '900',
                   color: colors.white,
-                  lineHeight: step === 'welcome' ? 54 : 42,
+                  lineHeight: step === 'welcome' ? (height < 760 ? 46 : 54) : 42,
                   letterSpacing: -1.8,
                 }}
               >
@@ -584,6 +598,9 @@ export default function LoginScreen() {
                   <Field label="Email" icon="mail" focused={emailFocused} error={errors.email}>
                     <TextInput
                       testID="email-input"
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
                       placeholder="you@example.com"
                       placeholderTextColor={colors.muteSoft}
                       keyboardType="email-address"
@@ -616,6 +633,9 @@ export default function LoginScreen() {
                     >
                       <TextInput
                         testID="password-input"
+                        ref={passwordRef}
+                        returnKeyType="go"
+                        onSubmitEditing={() => { if (!loading) handleSubmit(); }}
                         placeholder="At least 8 characters"
                         placeholderTextColor={colors.muteSoft}
                         secureTextEntry={!showPw}

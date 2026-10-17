@@ -40,6 +40,7 @@ import {
   GRID_DRAW_DISTANCE,
 } from '@/lib/responsive';
 import type { Listing } from '@/types';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 import type { SavedSearch } from '@/lib/savedSearches';
 import {
   GridPlaceholder,
@@ -133,12 +134,6 @@ export default function HomeScreen() {
     }
   }, [listings, trendingListings]);
 
-  const refreshing =
-    feedQ.isRefetching ||
-    trendingQ.isRefetching ||
-    savedSearchesQ.isRefetching ||
-    savedListingsQ.isRefetching;
-
   const { isStale: feedStale, refetch: feedRefetch } = feedQ;
   const { isStale: trendingStale, refetch: trendingRefetch } = trendingQ;
   const { isStale: searchesStale, refetch: searchesRefetch } = savedSearchesQ;
@@ -164,13 +159,16 @@ export default function HomeScreen() {
     ]),
   );
 
-  const onRefresh = useCallback(async () => {
-    await Promise.all([
-      feedRefetch(),
-      trendingRefetch(),
-      ...(userId ? [searchesRefetch(), savedRefetch()] : []),
-    ]);
-  }, [feedRefetch, trendingRefetch, searchesRefetch, savedRefetch, userId]);
+  const refetchAll = useCallback(
+    () =>
+      Promise.all([
+        feedRefetch(),
+        trendingRefetch(),
+        ...(userId ? [searchesRefetch(), savedRefetch()] : []),
+      ]),
+    [feedRefetch, trendingRefetch, searchesRefetch, savedRefetch, userId],
+  );
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   // ── Multi-Tier Client Filter Hook ────────────────────────────────────────
   const feedFilter = useHomeFeedFilters({
@@ -271,7 +269,7 @@ export default function HomeScreen() {
       />
 
       {searchModeOpen && (
-        <View style={[StyleSheet.absoluteFillObject, { zIndex: 100, elevation: 10 }]}>
+        <View style={[StyleSheet.absoluteFillObject, { top: insets.top, zIndex: 100, elevation: 10 }]}>
           <HomeSearchView
             onClose={() => {
               setSearchModeOpen(false);

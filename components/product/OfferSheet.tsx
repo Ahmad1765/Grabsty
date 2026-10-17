@@ -5,9 +5,9 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
-  KeyboardAvoidingView,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,7 +33,7 @@ export interface OfferSheetProps {
   onSubmit: (amount: number, note?: string) => Promise<void> | void;
   loading?: boolean;
   offersLeftToday?: number;
-  /** Extra seller items bundled with this one. Shows "+N Bundle" under Continue when set. */
+  /** Extra seller items bundled with this one. Shows "+N Bundle" under Continue when > 0. */
   bundleExtraCount?: number;
 }
 
@@ -170,8 +170,7 @@ export function OfferSheet({
             alignItems: 'center',
           }}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          <KeyboardAvoider
             style={{ width: '100%', alignItems: 'center' }}
           >
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
@@ -490,7 +489,7 @@ export function OfferSheet({
                   )}
                 </Pressable>
 
-                {bundleExtraCount != null && (
+                {!!bundleExtraCount && (
                   <View
                     testID="offer-bundle-count"
                     style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
@@ -509,7 +508,7 @@ export function OfferSheet({
                 )}
               </View>
             </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
+          </KeyboardAvoider>
         </View>
       </TouchableWithoutFeedback>
     </Modal>

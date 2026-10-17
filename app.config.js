@@ -28,7 +28,11 @@ module.exports = () => ({
     // Fingerprint policy derives runtimeVersion from the native module set, so an
     // OTA JS update only lands on a build whose native layer actually matches —
     // never a crash from shipping a bundle newer than the installed binary.
-    runtimeVersion: { policy: 'fingerprint' },
+    // EXPO_DEV_SKIP_FINGERPRINT=1 is for `expo start` only: the dev server
+    // re-fingerprints the whole project on every manifest request (~15-20s),
+    // longer than the dev client waits on a phone. Never set it for builds/updates.
+    runtimeVersion:
+      process.env.EXPO_DEV_SKIP_FINGERPRINT === '1' ? 'dev' : { policy: 'fingerprint' },
     // OTA update endpoint, only wired once a project id exists. fallbackToCache
     // timeout 0 = never block cold start on the update fetch; a downloaded
     // update applies on the next launch instead.
@@ -61,6 +65,8 @@ module.exports = () => ({
         backgroundColor: '#ffffff',
       },
       package: 'com.grabsty.app',
+      // FCM credentials for expo-notifications; prebuild wires the google-services Gradle plugin.
+      googleServicesFile: './google-services.json',
     },
     // Only the icon families this app actually renders. The previous `Fonts/*`
     // wildcard declared all 20 @expo/vector-icons families (~4.1 MB) when four

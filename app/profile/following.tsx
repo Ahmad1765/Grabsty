@@ -21,6 +21,7 @@ import {
   useToggleFollowInList,
 } from '@/lib/queries';
 import { fetchFollowing } from '@/lib/follows';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 type Row = Awaited<ReturnType<typeof fetchFollowing>>[number];
 
@@ -63,6 +64,11 @@ export default function FollowingScreen() {
   // The cache holds string[] (see useFollowingMaskQuery); rebuild the Set here
   // so row lookups stay O(1).
   const followingSet = useMemo(() => new Set(maskQuery.data ?? []), [maskQuery.data]);
+  // Until the mask loads the follow state is unknown: showing "Follow" on every
+  // row would flash the wrong button, so your own Following list starts as followed and other lists stay hidden.
+  const maskReady = !authUser || maskQuery.data !== undefined;
+  const isFollowingRow = (id: string) => (maskReady ? followingSet.has(id) : isSelf);
+  const hideButton = (id: string) => id === authUser?.id || (!maskReady && !isSelf);
 
   const toggle = useToggleFollowInList(authUser?.id ?? null, scope);
 
@@ -80,13 +86,11 @@ export default function FollowingScreen() {
   // `isRefetching` is also true while fetchNextPage is in flight, so it has to
   // be excluded — otherwise scrolling to the bottom spins the pull-to-refresh
   // control as well as the list footer.
-  const refreshing =
-    (listQuery.isRefetching && !isFetchingNextPage) || maskQuery.isRefetching;
-
-  const onRefresh = useCallback(() => {
-    listQuery.refetch();
-    maskQuery.refetch();
-  }, [listQuery, maskQuery]);
+  const refetchAll = useCallback(
+    () => Promise.all([listQuery.refetch(), maskQuery.refetch()]),
+    [listQuery, maskQuery],
+  );
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const handleToggle = (row: Row) => {
     if (!authUser) {
@@ -96,7 +100,7 @@ export default function FollowingScreen() {
     }
     if (row.id === authUser.id || toggle.isPending) return;
     toggle.mutate(
-      { id: row.id, currentlyFollowing: followingSet.has(row.id) },
+      { id: row.id, currentlyFollowing: isFollowingRow(row.id) },
       {
         onError: (e: any) =>
           toast.show(e?.message ?? 'Could not update follow', {
@@ -177,8 +181,8 @@ export default function FollowingScreen() {
           renderItem={({ item }) => (
             <UserRow
               row={item}
-              isFollowing={followingSet.has(item.id)}
-              isSelfRow={item.id === authUser?.id}
+              isFollowing={isFollowingRow(item.id)}
+              isSelfRow={hideButton(item.id)}
               busy={toggle.isPending && toggle.variables?.id === item.id}
               onToggle={() => handleToggle(item)}
             />

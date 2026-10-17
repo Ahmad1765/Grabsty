@@ -331,6 +331,8 @@ const TopicTile = memo(function TopicTile({
       <Text
         style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontFamily: type.family.sansBold, color: colors.ink }}
         numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.8}
       >
         {topic.label}
       </Text>

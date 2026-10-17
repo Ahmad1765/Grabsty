@@ -65,7 +65,8 @@ import {
   type MessageReaction,
 } from '@/lib/chat';
 import { deleteListingImages } from '@/lib/upload';
-import { buildThreadRows, listingStatus, type ThreadRow } from '@/components/chat';
+import { buildThreadRows, type ThreadRow } from './format';
+import { listingStatus } from './ListingThumb';
 
 const FETCH_MESSAGES_TIMEOUT = Symbol('FETCH_MESSAGES_TIMEOUT');
 
@@ -478,14 +479,22 @@ export function useConversationThread(
     pinnedRef.current = distanceFromBottom < 80;
   }, []);
 
-  const followEnd = useCallback((force: boolean = false, animated: boolean = false) => {
-    if (force || pinnedRef.current) listRef.current?.scrollToEnd({ animated });
+  // FlatList.scrollToEnd targets its own estimate of the content length, which
+  // lags a just-appended (not yet measured) message, so a send landed one bubble
+  // short. The underlying ScrollView scrolls to the real, already-laid-out end.
+  const scrollListToEnd = useCallback((animated: boolean) => {
+    const list = listRef.current as any;
+    (list?.getNativeScrollRef?.() ?? list)?.scrollToEnd?.({ animated });
   }, []);
+
+  const followEnd = useCallback((force: boolean = false, animated: boolean = false) => {
+    if (force || pinnedRef.current) scrollListToEnd(animated);
+  }, [scrollListToEnd]);
 
   const scrollToBottom = useCallback((animated: boolean = false) => {
     pinnedRef.current = true;
-    listRef.current?.scrollToEnd({ animated });
-  }, []);
+    scrollListToEnd(animated);
+  }, [scrollListToEnd]);
 
   // ── Derived Participant & Listing State ──────────────────────────────────
   const isSupport = useMemo(() => isSupportConversation(conv), [conv]);
@@ -592,8 +601,8 @@ export function useConversationThread(
           // Trigger intelligent support concierge automated response ONLY on initial general inquiries
           // (Disputes and active admin threads are personally handled by the administration team)
           if (isSupport) {
-            const hasDispute = messages.some((m) => (m.content || '').toLowerCase().includes('dispute'));
-            const isInitialInquiry = messages.length <= 2;
+            const hasDispute = messagesRef.current.some((m) => (m.content || '').toLowerCase().includes('dispute'));
+            const isInitialInquiry = messagesRef.current.length <= 2;
 
             if (!hasDispute && isInitialInquiry) {
               let botReply: ChatMessage | null = null;

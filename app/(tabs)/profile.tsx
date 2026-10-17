@@ -52,6 +52,7 @@ import {
   type ProfileTab,
   useProfileCollections,
 } from '@/components/profile';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
@@ -115,9 +116,6 @@ function ProfileScreenInner() {
     userId,
     savedRefetch,
   });
-
-  const refreshing =
-    sellingQ.isRefetching || likedQ.isRefetching || savedQ.isRefetching;
 
   const visibleSavedListings = useMemo(
     () => (collections.activeListId ? collections.listListings : savedItems),
@@ -220,14 +218,16 @@ function ProfileScreenInner() {
     ]),
   );
 
-  const onRefresh = useCallback(async () => {
-    await Promise.all([
+  const refetchAll = useCallback(
+    () => Promise.all([
       sellingRefetch(),
       likedRefetch(),
       savedRefetch(),
       collections.saveListsRefetch(),
-    ]);
-  }, [sellingRefetch, likedRefetch, savedRefetch, collections]);
+    ]),
+    [sellingRefetch, likedRefetch, savedRefetch, collections],
+  );
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const handleShareProfile = useCallback(async () => {
     if (!profileId) return;

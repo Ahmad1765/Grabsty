@@ -9,6 +9,7 @@ import {
   ViewStyle,
   StyleProp,
   ScrollViewProps,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
@@ -53,9 +54,11 @@ export interface SafeContainerProps {
  * Pass `enabled={useAndroidKeyboardShown()}` to zero the padding while it's hidden.
  */
 export function useAndroidKeyboardShown(active = true) {
-  const [shown, setShown] = React.useState(false);
+  // Seed from the live state: a keyboard already up at mount fires no new show event.
+  const [shown, setShown] = React.useState(() => Keyboard.isVisible());
   React.useEffect(() => {
     if (!active || Platform.OS !== 'android') return;
+    setShown(Keyboard.isVisible());
     const show = Keyboard.addListener('keyboardDidShow', () => setShown(true));
     const hide = Keyboard.addListener('keyboardDidHide', () => setShown(false));
     return () => {
@@ -64,6 +67,16 @@ export function useAndroidKeyboardShown(active = true) {
     };
   }, [active]);
   return Platform.OS !== 'android' || shown;
+}
+
+/**
+ * Drop-in KeyboardAvoidingView that also lifts content on Android. Edge-to-edge
+ * disables adjustResize, so `behavior={ios ? 'padding' : undefined}` leaves inputs
+ * hidden under the keyboard there (especially inside `statusBarTranslucent` modals).
+ */
+export function KeyboardAvoider(props: React.ComponentProps<typeof KeyboardAvoidingView>) {
+  const shown = useAndroidKeyboardShown();
+  return <KeyboardAvoidingView behavior="padding" {...props} enabled={shown && props.enabled !== false} />;
 }
 
 /**
@@ -150,6 +163,17 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
     const backgroundColor = bgOverride ?? theme.background;
     const webViewportStyle = useSafeContainerVisualViewport(mode === 'keyboard-avoiding');
     const keyboardShown = useAndroidKeyboardShown(mode === 'keyboard-avoiding');
+    // Once the padding has shrunk the scroll area, bring the focused field into view;
+    // the ScrollView does not do this itself, so a field low on the form stayed hidden.
+    const kavScrollRef = React.useRef<ScrollView>(null);
+    React.useEffect(() => {
+      if (!keyboardShown || Platform.OS !== 'android' || mode !== 'keyboard-avoiding') return;
+      const t = setTimeout(() => {
+        const input = TextInput.State.currentlyFocusedInput();
+        if (input) kavScrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(input as any, 56, true);
+      }, 50);
+      return () => clearTimeout(t);
+    }, [keyboardShown, mode]);
 
   const edgePadding = React.useMemo(() => {
     return {
@@ -290,6 +314,7 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
         children
       ) : (
         <ScrollView
+          ref={kavScrollRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"

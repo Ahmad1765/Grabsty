@@ -9,6 +9,7 @@ import { useOpenedNewsIds } from '@/lib/newsStorage';
 import { NewsSkeletonList } from './NewsRowSkeleton';
 import { NewsActivityRow, type ActivityItem } from './NewsActivityRow';
 import type { Listing } from '@/types';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 function RowSeparator() {
   const { theme } = useTheme();
@@ -23,7 +24,7 @@ export function FollowingTab({
   filter?: 'all' | 'buyer' | 'important';
 }) {
   const { theme } = useTheme();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { openedIds } = useOpenedNewsIds();
   const userId = user?.id ?? null;
 
@@ -31,11 +32,8 @@ export function FollowingTab({
   const followedQ = useNewFromFollowedQuery(userId);
 
   const isLoading = userId ? followedQ.isLoading : false;
-  const refreshing = followedQ.isRefetching;
-
-  const onRefresh = useCallback(async () => {
-    await followedQ.refetch();
-  }, [followedQ]);
+  const refetchAll = useCallback(() => followedQ.refetch(), [followedQ]);
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const activities = useMemo<ActivityItem[]>(() => {
     const followedListings = followedQ.data ?? [];
@@ -116,6 +114,8 @@ export function FollowingTab({
                 ? 'Updates on price drops and new drops from sellers you follow will appear here.'
                 : filter === 'important'
                 ? 'Order updates and critical alerts will appear here.'
+                : (profile?.following_count ?? 0) > 0
+                ? 'Nothing new from the sellers you follow yet. Their new listings will show up here.'
                 : 'Follow creators, curators, and brands to see their new drops, likes, and follows here.'
             }
             cta={{

@@ -6,13 +6,12 @@ import {
   RefreshControl,
   ActivityIndicator,
   Modal,
-  Platform,
   StyleSheet,
   ScrollView,
-  KeyboardAvoidingView,
   Linking,
   useWindowDimensions,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -706,8 +705,7 @@ export default function AdminLogisticsScreen() {
         animationType="fade"
         onRequestClose={() => setShowDispatchModal(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={styles.modalOverlay}
         >
           <View style={styles.modalDialog}>
@@ -796,7 +794,7 @@ export default function AdminLogisticsScreen() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Modal>
 
       {/* ── Modal: Flag Dispute ── */}
@@ -806,8 +804,7 @@ export default function AdminLogisticsScreen() {
         animationType="fade"
         onRequestClose={() => setShowDisputeModal(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={styles.modalOverlay}
         >
           <View style={styles.modalDialog}>
@@ -860,7 +857,7 @@ export default function AdminLogisticsScreen() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Modal>
 
       {/* ── Modal: Cancel & Refund ── */}
@@ -870,8 +867,7 @@ export default function AdminLogisticsScreen() {
         animationType="fade"
         onRequestClose={() => setShowCancelModal(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={styles.modalOverlay}
         >
           <View style={styles.modalDialog}>
@@ -924,7 +920,7 @@ export default function AdminLogisticsScreen() {
               </Pressable>
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Modal>
     </SafeAreaView>
   );

@@ -11,8 +11,9 @@ import {
 import { capture } from '@/lib/analytics';
 import {
   View, Pressable, ScrollView, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform, useWindowDimensions,
+  Platform, useWindowDimensions,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -300,7 +301,7 @@ function RowField({
         </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, marginLeft: 12 }}>
+      <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6, marginLeft: 12 }}>
         {hasValue ? (
           <View
             style={{
@@ -311,6 +312,7 @@ function RowField({
               borderWidth: 1,
               borderColor: theme.border,
               maxWidth: 180,
+              flexShrink: 1,
             }}
           >
             <Text
@@ -457,7 +459,7 @@ export function SellForm({
 
   const tile = useMemo(() => {
     const pagePad = 16 * 2;
-    const cardPad = 14 * 2;
+    const cardPad = 14 * 2 + 2; // + 1px border each side
     const gaps = 10 * 2;
     const usable = Math.min(width, CONTENT_MAX_WIDTH) - pagePad - cardPad;
     return Math.floor((usable - gaps) / 3);
@@ -466,7 +468,7 @@ export function SellForm({
   const pickImages = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsMultipleSelection: true,
         quality: 0.8,
         selectionLimit: MAX_IMAGES,
@@ -790,7 +792,7 @@ export function SellForm({
     } else if (errors.authenticity) {
       toast.show(errors.authenticity.message ?? 'Please declare item authenticity', { variant: 'default', icon: 'shield' });
     } else if (errors.price) {
-      toast.show(errors.price.message ?? 'Please enter a valid price', { variant: 'default', icon: 'dollar-sign' });
+      toast.show(errors.price.message ?? 'Please enter a valid price', { variant: 'default', icon: 'tag' });
     } else if (errors.title) {
       toast.show(errors.title.message ?? 'Please enter a title', { variant: 'default', icon: 'edit-2' });
     }
@@ -857,7 +859,7 @@ export function SellForm({
         <View style={{ width: 36 }} />
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoider style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -1175,7 +1177,7 @@ export function SellForm({
                       value={value}
                       onChangeText={(t) => onChange(t.slice(0, TITLE_MAX))}
                       onBlur={onBlur}
-                      placeholder="e.g. Vintage Oversized Denim Jacket"
+                      placeholder="e.g. Vintage denim jacket"
                       placeholderTextColor={theme.muteSoft ?? theme.mute}
                       maxLength={TITLE_MAX}
                       style={
@@ -1216,6 +1218,7 @@ export function SellForm({
                       </Text>
                       <ScrollView
                         horizontal
+                        keyboardShouldPersistTaps="handled"
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ gap: 8 }}
                       >
@@ -1273,6 +1276,7 @@ export function SellForm({
                       </Text>
                       <ScrollView
                         horizontal
+                        keyboardShouldPersistTaps="handled"
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ gap: 8 }}
                       >
@@ -1646,7 +1650,7 @@ export function SellForm({
           ) : null}
 
           {/* Pricing & Shipping Card */}
-          <SectionHeaderTitle title="Pricing & Shipping" icon="dollar-sign" />
+          <SectionHeaderTitle title="Pricing & Shipping" icon="tag" />
 
           <View
             style={{
@@ -1658,7 +1662,7 @@ export function SellForm({
             }}
           >
             <RowField
-              icon="dollar-sign"
+              icon="tag"
               label="Price"
               value={price && Number.isFinite(parseFloat(price)) ? formatPrice(parseFloat(price), { whole: true }) : ''}
               placeholder={`Set price (${CURRENCY_SYMBOL})`}
@@ -1740,7 +1744,7 @@ export function SellForm({
             )}
           </Pressable>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
 
       {/* Sheets */}
       <CategorySheet

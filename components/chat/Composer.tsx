@@ -71,6 +71,9 @@ export function Composer({
 
   useLayoutEffect(() => {
     if (Platform.OS === 'web') measureWeb();
+    // Android skips onContentSizeChange when the text is cleared programmatically
+    // (after send), which left a multi-line box stuck at its old height.
+    else if (!value) setHeight(MIN_INPUT_HEIGHT);
   }, [value, measureWeb]);
 
   const onContentSize = useCallback(

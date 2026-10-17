@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth';
 import { useInboxQuery } from '@/lib/queries';
 import { isDirectConversation } from '@/lib/support';
 import { type ConversationRow } from '@/lib/chat';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 import { InboxRow } from '@/components/chat/InboxRow';
 
 const EMPTY_CONVERSATIONS: ConversationRow[] = [];
@@ -44,9 +45,7 @@ export function ActivityFeed({ bottomInset = 24 }: Props) {
     }, [userId, inboxStale, inboxRefetch]),
   );
 
-  const onRefresh = useCallback(async () => {
-    await inboxRefetch();
-  }, [inboxRefetch]);
+  const { refreshing, onRefresh } = usePullRefresh(inboxRefetch);
 
   const renderItem = useCallback(
     ({ item }: { item: ConversationRow }) => (
@@ -86,7 +85,7 @@ export function ActivityFeed({ bottomInset = 24 }: Props) {
         }
         refreshControl={
           <RefreshControl
-            refreshing={inboxQ.isRefetching}
+            refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor={theme.primary}
           />

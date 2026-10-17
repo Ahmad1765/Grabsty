@@ -37,7 +37,7 @@ import {
 } from '@/lib/searchFilters';
 
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+const SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
 
 const CONDITIONS: { id: Condition; label: string; desc: string }[] = [
   { id: 'new_with_tags', label: 'New with tags', desc: 'Brand new, never worn with tags' },
@@ -857,7 +857,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
                 ]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                  <Feather name="dollar-sign" size={16} color={filters.priceMin != null || filters.priceMax != null ? theme.purple : theme.mute} />
+                  <Feather name="tag" size={16} color={filters.priceMin != null || filters.priceMax != null ? theme.purple : theme.mute} />
                   <Text style={[styles.filterSummaryLabel, filters.priceMin != null || filters.priceMax != null ? styles.filterSummaryLabelActive : null]}>
                     Price
                   </Text>

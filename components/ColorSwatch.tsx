@@ -47,7 +47,7 @@ export function ColorSwatch({
         }}
       >
         {MULTI_QUAD.map((h, i) => (
-          <View key={i} style={{ width: size / 2, height: size / 2, backgroundColor: h }} />
+          <View key={i} style={{ width: '50%', height: '50%', backgroundColor: h }} />
         ))}
       </View>
     );

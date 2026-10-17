@@ -23,6 +23,7 @@ import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import { deriveInvoiceAmounts } from '@/lib/invoiceStatus';
 import { partitionOrders, getOrderCategory, type OrderSide } from '@/lib/orders';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 import type { MyOrder } from '@/lib/payments';
 
 type FilterStatus = 'all' | 'in_progress' | 'completed' | 'refunds' | 'canceled';
@@ -342,7 +343,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
   }, [initialSide]);
 
   const q = useMyOrdersQuery(userId);
-  const { refetch, isPending, isRefetching } = q;
+  const { refetch, isPending } = q;
 
   // Orders change on other devices too (a buyer's purchase lands in the seller's
   // Selling list), so re-check whenever Activity comes into view.
@@ -405,9 +406,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
     return filterList(subTab === 'bought' ? bought : sold);
   }, [subTab, bought, sold, filterList]);
 
-  const onRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
+  const { refreshing, onRefresh } = usePullRefresh(refetch);
 
   return (
     <View
@@ -715,7 +714,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
+              refreshing={refreshing}
               onRefresh={onRefresh}
               tintColor={theme.purple}
             />

@@ -66,10 +66,10 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
     setContent(null);
   }, []);
 
-  const goAuth = useCallback(() => {
+  const goAuth = useCallback((mode: 'signin' | 'signup') => {
     if (content?.resume) resumeRef.current = content.resume;
     setContent(null);
-    router.push('/auth/login');
+    router.push(`/auth/login?mode=${mode}` as any);
   }, [content]);
 
   // Fire the queued action the moment the user transitions signed-out → signed-in.
@@ -171,7 +171,7 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
                 </Text>
 
                 <Pressable
-                  onPress={goAuth}
+                  onPress={() => goAuth('signup')}
                   accessibilityRole="button"
                   accessibilityLabel={content.cta ?? 'Create free account'}
                   style={({ pressed }) => ({
@@ -190,7 +190,7 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
                 </Pressable>
 
                 <Pressable
-                  onPress={goAuth}
+                  onPress={() => goAuth('signin')}
                   style={({ pressed }) => ({ paddingVertical: 14, alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
                 >
                   <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '700' }}>

@@ -86,18 +86,11 @@ export const ProfileListingTabs = memo(function ProfileListingTabs({
             position: 'relative',
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-            <Ionicons
-              name="grid-outline"
-              size={20}
-              color={activeTab === 'selling' ? colors.ink : colors.mute}
-            />
-            <Ionicons
-              name="caret-down-outline"
-              size={10}
-              color={activeTab === 'selling' ? colors.ink : colors.mute}
-            />
-          </View>
+          <Ionicons
+            name="grid-outline"
+            size={20}
+            color={activeTab === 'selling' ? colors.ink : colors.mute}
+          />
           {activeTab === 'selling' && (
             <View
               style={{

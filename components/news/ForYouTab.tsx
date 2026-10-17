@@ -10,6 +10,7 @@ import { BRAND } from '@/lib/brand';
 import { NewsSkeletonList } from './NewsRowSkeleton';
 import { NewsActivityRow, type ActivityItem } from './NewsActivityRow';
 import type { Listing } from '@/types';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 function RowSeparator() {
   const { theme } = useTheme();
@@ -26,14 +27,14 @@ export function ForYouTab({ bottomInset = 24 }: { bottomInset?: number }) {
   const myFeedQ = useMyFeedListingsQuery(userId);
 
   const isLoading = (userId ? priceDropsQ.isLoading || myFeedQ.isLoading : false);
-  const refreshing = priceDropsQ.isRefetching || myFeedQ.isRefetching;
-
-  const onRefresh = useCallback(async () => {
-    await Promise.all([
+  const refetchAll = useCallback(
+    () => Promise.all([
       priceDropsQ.refetch(),
       myFeedQ.refetch(),
-    ]);
-  }, [priceDropsQ, myFeedQ]);
+    ]),
+    [priceDropsQ, myFeedQ],
+  );
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const activities = useMemo<ActivityItem[]>(() => {
     const list: ActivityItem[] = [];

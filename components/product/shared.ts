@@ -79,7 +79,7 @@ export const iosShadow = IS_IOS
 export const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: 'New with tags',
   like_new: 'Like new',
-  good: 'Very good condition',
+  good: 'Good',
   fair: 'Fair',
 };
 

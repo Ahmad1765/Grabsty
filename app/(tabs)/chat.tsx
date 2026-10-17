@@ -36,10 +36,13 @@ import {
 } from '@/lib/support';
 import { useInboxQuery } from '@/lib/queries';
 import { markActivitySeen } from '@/hooks/useActivityDot';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
+import { isThisDeviceRegistered, pushSupported } from '@/lib/notifications';
 import { colors, radii, shadow, type as typography } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { EmptyState, BellIcon } from '@/components/ui';
 import { InboxRow, InboxSkeleton, OrdersInboxPage } from '@/components/chat';
+import { withBold } from '@/components/chat/MessageRow';
 import { HIT_SLOP_8, useTabBarClearance } from '@/lib/responsive';
 import { PressableScale } from '@/components/PressableScale';
 
@@ -451,13 +454,15 @@ function SupportPage({
               marginBottom: 14,
             }}
           >
-            Support chats are automatically initiated when an order is placed on dispute. To start a new inquiry, you can initiate a support request directly from Settings.
+            A support chat opens automatically when you dispute an order. For anything else, message our team here.
           </Text>
 
           <PressableScale
             onPress={() => {
               haptic();
-              router.push('/settings?open=help' as any);
+              getOrCreateSupportConversation(userId)
+                .then((conv) => router.push((conv ? `/conversation/${conv.id}` : '/conversation/new?support=true') as any))
+                .catch(() => router.push('/conversation/new?support=true' as any));
             }}
             style={{
               height: 42,
@@ -472,9 +477,9 @@ function SupportPage({
               ...shadow.sm,
             }}
           >
-            <Feather name="settings" size={15} color={theme.ink} />
+            <Feather name="message-square" size={15} color={theme.ink} />
             <Text style={{ fontFamily: typography.family.sansBold, fontSize: 13.5, color: theme.ink }}>
-              Open Support in Settings
+              Message Support
             </Text>
           </PressableScale>
         </View>
@@ -568,7 +573,7 @@ function SupportPage({
                         color: theme.ink,
                       }}
                     >
-                      {answer}
+                      {withBold(answer)}
                     </Text>
                   </View>
                 )}
@@ -797,6 +802,22 @@ export default function InboxScreen() {
   const [activeTab, setActiveTab] = useState<InboxTab>(requestedTab);
   const [messageFilter, setMessageFilter] = useState<MessageChip>(initialChip);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  // null until checked, so the banner never flashes for users who already have push on.
+  const [pushReady, setPushReady] = useState<boolean | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!user || !pushSupported()) return;
+      let cancelled = false;
+      isThisDeviceRegistered()
+        .then((on) => {
+          if (!cancelled) setPushReady(on);
+        })
+        .catch(() => {});
+      return () => {
+        cancelled = true;
+      };
+    }, [user]),
+  );
   const [pagerHeight, setPagerHeight] = useState(0);
 
   const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
@@ -807,7 +828,6 @@ export default function InboxScreen() {
   const inboxQ = useInboxQuery(userId);
   const conversations = inboxQ.data ?? EMPTY_CONVERSATIONS;
   const loading = inboxQ.isLoading;
-  const refreshing = inboxQ.isRefetching;
   const { refetch: inboxRefetch } = inboxQ;
 
   const pagerRef = useRef<FlatList<{ value: InboxTab; label: string }>>(null);
@@ -897,9 +917,7 @@ export default function InboxScreen() {
     return { messages: messagesCount, support: supportCount };
   }, [pageData, userId]);
 
-  const onRefresh = useCallback(async () => {
-    await inboxRefetch();
-  }, [inboxRefetch]);
+  const { refreshing, onRefresh } = usePullRefresh(inboxRefetch);
 
   const goToTab = useCallback(
     (tab: InboxTab) => {
@@ -1073,7 +1091,7 @@ export default function InboxScreen() {
       </View>
 
       {/* Push notification banner */}
-      {!bannerDismissed && user && (
+      {!bannerDismissed && user && pushReady === false && (
         <PushNotificationBanner onDismiss={() => setBannerDismissed(true)} />
       )}
     </SafeAreaView>

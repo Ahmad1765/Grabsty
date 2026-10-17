@@ -629,6 +629,8 @@ export function ColorSheet({
               </View>
               <Text
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
                 style={{
                   fontSize: 12,
                   fontFamily: active ? DISPLAY_BOLD : type.family.sansMedium,

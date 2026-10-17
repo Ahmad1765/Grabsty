@@ -231,7 +231,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           .limit(10);
 
         if (!error && data && data.length > 0 && isMounted) {
-          const mapped: RecentMemberItem[] = data.map((p) => ({
+          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id).map((p) => ({
             id: p.id,
             username: p.username || 'user',
             full_name: p.full_name,
@@ -255,7 +255,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user?.id]);
 
   const [tabLayouts, setTabLayouts] = useState<{
     listings: { x: number; width: number };
@@ -974,7 +974,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                   fontSize: 14.5,
                   fontWeight: '600',
                   fontFamily: typography.family.sansBold,
-                  color: '#0055D4',
+                  color: theme.purple,
                 }}
               >
                 Clear All

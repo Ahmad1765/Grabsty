@@ -11,6 +11,7 @@ import { memo, useCallback, useRef } from 'react';
 import { Platform, Pressable, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Text } from '@/lib/rnText';
+
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { PressableScale } from '@/components/PressableScale';
@@ -23,6 +24,14 @@ import { bubbleStamp } from './format';
 import Svg, { Path } from 'react-native-svg';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { getOptimizedImageUrl } from '@/lib/images';
+
+/** Renders **bold** spans (support bot replies and FAQ answers use them) as real bold. */
+export function withBold(text: string | null | undefined) {
+  if (!text || !text.includes('**')) return text;
+  return text.split('**').map((part, i) =>
+    i % 2 === 1 ? <Text key={i} style={{ fontFamily: typography.family.sansBold }}>{part}</Text> : part,
+  );
+}
 
 const HIT_SLOP_8 = { top: 8, bottom: 8, left: 8, right: 8 };
 const TAIL_RADIUS = 6;
@@ -139,7 +148,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
               color: theme.mute,
             }}
           >
-            {msg.content?.replace(/^Done!\s*\n?/, '')}
+            {withBold(msg.content?.replace(/^Done!\s*\n?/, ''))}
           </Text>
         </View>
       </View>
@@ -157,7 +166,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
           textAlign: 'center',
         }}
       >
-        {msg.content}
+        {withBold(msg.content)}
       </Text>
     </View>
   );
@@ -777,7 +786,9 @@ function OfferBubble(
   } else {
     // Pending
     if (mine) {
-      pillText = isCounter ? 'You sent a counter-offer' : 'You made an offer';
+      pillText = isCounter
+        ? `You sent a counter-offer: ${formattedAmt}`
+        : `You made an offer: ${formattedAmt}`;
     } else {
       pillText = `Made you an offer: ${formattedAmt}`;
     }
@@ -881,7 +892,7 @@ function TextBubble({
             : null),
         }}
       >
-        {msg.content}
+        {withBold(msg.content)}
       </Text>
     </View>
   );
