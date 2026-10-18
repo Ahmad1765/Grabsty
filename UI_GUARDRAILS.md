@@ -1,4 +1,4 @@
-# UI Guardrails & AI Safety Protocol (Carrinex / Ceranix)
+# UI Guardrails & AI Safety Protocol (Grabsty)
 
 > **CRITICAL DIRECTIVE FOR ALL AI AGENTS:**
 > Before proposing, planning, or executing **ANY** UI, styling, navigation, or component changes in this codebase, you **MUST** read this document first.
@@ -212,7 +212,7 @@ These rules protect the runtime from silent crashes, style collapse, and mobile/
 
 ## 3. Strict Design Language Invariants ("The Quiet Atelier" - `DESIGN.md`)
 
-Carrinex is a disciplined, quiet-luxury resale marketplace. Restraint communicates trust.
+Grabsty is a disciplined, quiet-luxury resale marketplace. Restraint communicates trust.
 
 | Invariant | Forbidden (AI Must Reject) | Enforced Standard |
 | :--- | :--- | :--- |

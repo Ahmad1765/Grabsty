@@ -1,5 +1,5 @@
 ---
-name: Carrinex
+name: Grabsty
 description: A disciplined, quiet-luxury peer-to-peer fashion resale marketplace
 colors:
   primary: "#6C47FF"
@@ -140,13 +140,13 @@ components:
     padding: "10px 12px"
 ---
 
-# Design System: Carrinex
+# Design System: Grabsty
 
 ## 1. Overview
 
 **Creative North Star: "The Quiet Atelier"**
 
-Carrinex is a peer-to-peer fashion resale marketplace where strangers exchange real money for secondhand clothing sight-unseen. The visual system's entire job is to make that transaction feel safe without ever performing safety, the way a well-run atelier communicates quality through restraint rather than signage. Three hues do all the work: a single confident purple, paper white, and ink black used at varying opacity for every level of hierarchy. There is no fourth color hiding anywhere in the app, and that constraint is deliberate, not a limitation waiting to be lifted.
+Grabsty is a peer-to-peer fashion resale marketplace where strangers exchange real money for secondhand clothing sight-unseen. The visual system's entire job is to make that transaction feel safe without ever performing safety, the way a well-run atelier communicates quality through restraint rather than signage. Three hues do all the work: a single confident purple, paper white, and ink black used at varying opacity for every level of hierarchy. There is no fourth color hiding anywhere in the app, and that constraint is deliberate, not a limitation waiting to be lifted.
 
 The system explicitly rejects the visual language of cluttered resale apps: no Poshmark/Depop-style badges, ribbons, or banners stacked on every listing card, no gradients, no emoji-as-decoration, no sticker overlays competing with the product photography for attention. The product photography and the seller's own words are the content; the interface is the frame, not a second act.
 
@@ -177,7 +177,7 @@ The palette reads as confident rather than colorful: one accent, used sparingly,
 
 ### Named Rules
 
-**The Three-Hue Rule.** Only purple, white, and ink-at-opacity are permitted. Any new "accent" need (success, warning, a category color) must resolve to one of these three, expressed through weight, opacity, or icon choice, never through a new hue. This is the single most load-bearing rule in the system, and it is why Carrinex looks trustworthy without a single line of copy saying so.
+**The Three-Hue Rule.** Only purple, white, and ink-at-opacity are permitted. Any new "accent" need (success, warning, a category color) must resolve to one of these three, expressed through weight, opacity, or icon choice, never through a new hue. This is the single most load-bearing rule in the system, and it is why Grabsty looks trustworthy without a single line of copy saying so.
 
 **The Purpose-Built Alpha Rule.** Every muted neutral is ink at a specific, documented opacity chosen for a specific contrast ratio, not an eyeballed gray. If a new muted tone is needed, compute its contrast ratio against white before shipping it (see Accessibility in `PRODUCT.md`).
 
@@ -207,7 +207,7 @@ The palette reads as confident rather than colorful: one accent, used sparingly,
 
 ## 4. Elevation
 
-Carrinex is flat by default. Most surfaces (cards at rest, chips, the panel/hairline neutrals) carry zero shadow — separation comes from the ink-hairline border or the ink-panel fill, not from drop shadows. Shadows are reserved for elements that are genuinely floating above the page: a filled primary button, an `elevated` card, the floating tab bar. Even there, shadows are soft and low-opacity; they read as a gentle lift, never a hard drama-shadow.
+Grabsty is flat by default. Most surfaces (cards at rest, chips, the panel/hairline neutrals) carry zero shadow — separation comes from the ink-hairline border or the ink-panel fill, not from drop shadows. Shadows are reserved for elements that are genuinely floating above the page: a filled primary button, an `elevated` card, the floating tab bar. Even there, shadows are soft and low-opacity; they read as a gentle lift, never a hard drama-shadow.
 
 ### Shadow Vocabulary
 - **sm** (`0px 2px 6px rgba(0,0,0,0.04)`): The lightest lift — barely-there separation for subtly-raised elements.
@@ -259,7 +259,7 @@ The bottom tab bar (`components/AnimatedTabBar.tsx`) is the system's one deliber
 - **Do** give pressable elements physical, springy feedback (scale + opacity), consistent with the tab bar's physics vocabulary.
 
 ### Don't:
-- **Don't** add Poshmark/Depop-style badges, ribbons, banners, or stickers to listing cards or profiles — this is the system's primary anti-reference and the fastest way to make Carrinex look like every other resale app.
+- **Don't** add Poshmark/Depop-style badges, ribbons, banners, or stickers to listing cards or profiles — this is the system's primary anti-reference and the fastest way to make Grabsty look like every other resale app.
 - **Don't** use gradients anywhere, including "just for a hero" or "just for a button" — the `gradients` token exists in code only for legacy API compatibility and collapses to flat purple; never reintroduce an actual gradient.
 - **Don't** use emoji as decoration in the UI (icons via Feather/Ionicons only).
 - **Don't** introduce a second typeface anywhere, including a serif for a single headline moment — Inter is the only typeface in the app, per the One Typeface Rule.

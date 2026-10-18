@@ -51,7 +51,7 @@ export const LISTING_QUERY_PREFIXES = [
 ] as const;
 
 /**
- * Centralized, strictly-typed query keys for all cache operations in Ceranix.
+ * Centralized, strictly-typed query keys for all cache operations in Grabsty.
  */
 export const qk = {
   // ── Profile & Users ────────────────────────────────────────────────────────

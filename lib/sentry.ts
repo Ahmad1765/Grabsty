@@ -73,7 +73,7 @@ export function initSentry(): void {
     integrations,
     // Surface the app version so dashboard issues are grouped by release.
     release: Constants.expoConfig?.version
-      ? `carrinex@${Constants.expoConfig.version}`
+      ? `grabsty@${Constants.expoConfig.version}`
       : undefined,
   });
 }

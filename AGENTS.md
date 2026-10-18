@@ -1,4 +1,4 @@
-# Antigravity Agent Guidelines (Ceranix / Carrinex)
+# Antigravity Agent Guidelines (Grabsty)
 
 ## Mandatory UI Guardrails & Pre-Flight Protocol
 

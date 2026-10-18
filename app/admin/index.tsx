@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CARRINEX ADMINISTRATION CONSOLE (OFF-PLATFORM UNIFIED OPERATIONAL HUB)
+// GRABSTY ADMINISTRATION CONSOLE (OFF-PLATFORM UNIFIED OPERATIONAL HUB)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // 💡 Architectural Blueprint:

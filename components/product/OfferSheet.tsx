@@ -38,7 +38,7 @@ export interface OfferSheetProps {
 }
 
 /**
- * Make an Offer Bottom Sheet (Reference Image 7 adapted to Ceranix Atelier UI).
+ * Make an Offer Bottom Sheet (Reference Image 7 adapted to Grabsty UI).
  * Features:
  * - Bottom sheet presentation with top pull bar
  * - Title "Select offer amount" with close button

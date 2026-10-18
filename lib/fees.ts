@@ -29,7 +29,7 @@ export const BUYER_PROTECTION_FEE = 6;
  */
 export const BUYER_PROTECTION_PERCENTAGE = 6;
 
-/** Platform-managed delivery fee in PKR (doorstep pickup from seller + delivery by Ceranix). */
+/** Platform-managed delivery fee in PKR (doorstep pickup from seller + delivery by Grabsty). */
 export const MANAGED_SHIPPING_FEE = 250;
 
 /** Parcel delivery rates in PKR based on parcel size. */

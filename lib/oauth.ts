@@ -5,7 +5,7 @@
 // Setup required on the Supabase side (dashboard → Auth → Providers → Google):
 //   1. Enable Google, paste the Google OAuth client id/secret.
 //   2. Add this app's redirect URL (Linking.createURL('auth-callback'),
-//      e.g. carrinex://auth-callback and the Expo Go proxy URL) to the
+//      e.g. grabsty://auth-callback and the Expo Go proxy URL) to the
 //      provider's allowed redirect URLs.
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';

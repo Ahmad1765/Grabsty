@@ -209,7 +209,7 @@ export async function fetchFollowers(
 
 // Free-text search across profiles by username / full name. Powers the
 // "People" results on the discover screen. Leading "@" is stripped so both
-// "@carrinex" and "carrinex" match; LIKE wildcards are escaped so a user
+// "@grabsty" and "grabsty" match; LIKE wildcards are escaped so a user
 // typing "%" can't broaden the query.
 export async function searchUsers(query: string, limit = 20): Promise<FollowListRow[]> {
   const raw = query.trim().replace(/^@+/, '');

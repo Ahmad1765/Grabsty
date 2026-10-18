@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SEARCH FILTER CHIPS & RESULTS HEADER (CERANIX DESIGN SYSTEM)
+// SEARCH FILTER CHIPS & RESULTS HEADER (GRABSTY DESIGN SYSTEM)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Refinement Chips & Micro-Filters:
@@ -1612,7 +1612,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
   );
 });
 
-// ── Styles (Ceranix theme-aware system) ──────────────────────────────────────────
+// ── Styles (Grabsty theme-aware system) ──────────────────────────────────────────
 
 function createStyles(theme: ThemeTokens, isDark: boolean) {
   return StyleSheet.create({

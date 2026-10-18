@@ -10,7 +10,7 @@
 // no .env file here) `extra.eas.projectId` resolved to undefined and OTA updates
 // silently stayed off.
 const easProjectId =
-  process.env.EAS_PROJECT_ID || 'cea63614-ec61-46e8-b410-5fe84a7218bf';
+  process.env.EAS_PROJECT_ID || '601d3c06-7d72-4ab7-88a3-97c570648676';
 
 // This file is the ONLY app config. There is no app.json — a dynamic config that
 // returns an object keyed `expo` makes @expo/config's reduceExpoObject() collapse
@@ -19,10 +19,9 @@ const easProjectId =
 // right and do nothing; check the resolved result with `npx expo config --type public`.
 module.exports = () => ({
     name: 'Grabsty',
-    // Must equal the slug of the EAS project behind `easProjectId` (created as
-    // "carrinex" before the rebrand). A mismatch fails `eas build`. Internal only:
-    // users see `name`, and deep links use `scheme`.
-    slug: 'carrinex',
+    // Must equal the slug of the EAS project behind `easProjectId` (@daku1765/grabsty);
+    // a mismatch fails `eas build`.
+    slug: 'grabsty',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',

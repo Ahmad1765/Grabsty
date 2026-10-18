@@ -6,7 +6,7 @@
 
 ## Problem
 
-The `(tabs)/feed.tsx` screen ("My Feed") currently renders a static, hard-coded mockup of an unrelated refurbished-phone marketplace ("Carrinex" / "Nybegagnat"). It uses a purple gradient hero, fake iPhone product photos, and Swedish copy. None of it touches Supabase, none of it reflects the user's account, and none of it has anything to do with Carrinex (a peer-to-peer second-hand marketplace for clothing, shoes, bags, accessories, electronics, and beauty).
+The `(tabs)/feed.tsx` screen ("My Feed") currently renders a static, hard-coded mockup of an unrelated refurbished-phone marketplace ("Grabsty" / "Nybegagnat"). It uses a purple gradient hero, fake iPhone product photos, and Swedish copy. None of it touches Supabase, none of it reflects the user's account, and none of it has anything to do with Grabsty (a peer-to-peer second-hand marketplace for clothing, shoes, bags, accessories, electronics, and beauty).
 
 The tab is labeled "My Feed" with a dashboard-style icon, and currently has no purpose in the app's information architecture.
 
@@ -190,7 +190,7 @@ Layout:
 
 ## Removed code
 
-- Entire current `app/(tabs)/feed.tsx` (Carrinex hero + iPhone mockup + USP grid + product cards)
+- Entire current `app/(tabs)/feed.tsx` (Grabsty hero + iPhone mockup + USP grid + product cards)
 - `tests/e2e/feed-static.spec.ts` replaced by a new spec
 
 ## Tests

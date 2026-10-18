@@ -10,7 +10,7 @@ export interface SoldBadgeProps {
 const BRAND_PURPLE = '#6C47FF';
 
 /**
- * Canonical Plick-style "Sold" badge styled in Carrinex's Signal Purple (#6C47FF) and Paper White (#FFFFFF) theme.
+ * Canonical Plick-style "Sold" badge styled in Grabsty's Signal Purple (#6C47FF) and Paper White (#FFFFFF) theme.
  * Compact rounded rectangle (borderRadius: 4) with bold Inter title-case typography.
  */
 export const SoldBadge = memo(function SoldBadge({ size = 'md', style }: SoldBadgeProps) {

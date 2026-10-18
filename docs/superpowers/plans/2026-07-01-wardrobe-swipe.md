@@ -34,7 +34,7 @@
 - [ ] **Step 1: Write `supabase/wardrobe.sql`**
 
 ```sql
--- Ceranix — wardrobe (social style discovery). Mirrors follows.sql patterns.
+-- Grabsty — wardrobe (social style discovery). Mirrors follows.sql patterns.
 -- Idempotent: safe to re-run.
 
 -- ── posts ────────────────────────────────────────────────────────────────

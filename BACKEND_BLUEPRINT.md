@@ -1,4 +1,4 @@
-# Carrinex — Backend Architecture Blueprint
+# Grabsty — Backend Architecture Blueprint
 
 > Stack: Expo Router (React Native) + Supabase (PostgreSQL + Auth + Storage + Realtime + Edge Functions)
 > Date: 2026-04-19 | Author: Architecture Plan
@@ -28,7 +28,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     CARRINEX MOBILE APP                           │
+│                     GRABSTY MOBILE APP                           │
 │              (Expo Router + React Native + NativeWind)           │
 └────────────────────────────┬────────────────────────────────────┘
                              │ HTTPS / WSS
