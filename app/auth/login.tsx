@@ -757,9 +757,23 @@ function LoginScreen() {
                     paddingHorizontal: 16,
                   }}
                 >
-                  {mode === 'signup'
-                    ? 'By creating an account you agree to our Terms and Privacy.'
-                    : 'By continuing you agree to our Terms and Privacy.'}
+                  {mode === 'signup' ? 'By creating an account you agree to our ' : 'By continuing you agree to our '}
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => router.push('/legal/terms' as any)}
+                    style={{ textDecorationLine: 'underline', color: colors.ink }}
+                  >
+                    Terms
+                  </Text>
+                  {' and '}
+                  <Text
+                    accessibilityRole="link"
+                    onPress={() => router.push('/legal/privacy' as any)}
+                    style={{ textDecorationLine: 'underline', color: colors.ink }}
+                  >
+                    Privacy Policy
+                  </Text>
+                  .
                 </Text>
               </View>
             )}
