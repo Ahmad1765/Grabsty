@@ -9,7 +9,7 @@ export const SUPPORT_KNOWLEDGE_BASE: { keywords: string[]; title: string; answer
     title: 'Order Tracking & Delivery',
     answer:
       `📦 **Tracking Your Order**\n\n` +
-      `1. Head to your **Profile** > **My Orders**.\n` +
+      `1. Open the **Activity** tab > **Orders**.\n` +
       `2. Tap on your active order to view live courier status, tracking number, and estimated delivery date.\n` +
       `3. Sellers have up to **5 business days** to dispatch. Once shipped, standard delivery takes 2–4 business days across Pakistan.\n\n` +
       `Need help with a delayed parcel? Feel free to reply with your order details.`,
