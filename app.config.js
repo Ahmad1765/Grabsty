@@ -19,7 +19,10 @@ const easProjectId =
 // right and do nothing; check the resolved result with `npx expo config --type public`.
 module.exports = () => ({
     name: 'Grabsty',
-    slug: 'grabsty',
+    // Must equal the slug of the EAS project behind `easProjectId` (created as
+    // "carrinex" before the rebrand). A mismatch fails `eas build`. Internal only:
+    // users see `name`, and deep links use `scheme`.
+    slug: 'carrinex',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
