@@ -39,8 +39,8 @@ import type {
 import type { PayoutMethod, ShippingAddress, Verification } from '@/types';
 
 export const SUPPORT_EMAIL = 'support@grabsty.com';
-export const TERMS_URL = `${APP_URL}/terms`;
-export const PRIVACY_URL = `${APP_URL}/privacy`;
+export const TERMS_URL = `${APP_URL}/legal/terms`;
+export const PRIVACY_URL = `${APP_URL}/legal/privacy`;
 
 export type Section =
   | 'general'
