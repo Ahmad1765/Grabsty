@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Full history so the merge job can fast-forward main → test.
           fetch-depth: 0
@@ -116,7 +116,7 @@ jobs:
       # Cache the Playwright browser binary so reruns don't redownload ~150MB.
       - name: Cache Playwright browsers
         id: cache-playwright
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: pw-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -234,7 +234,7 @@ jobs:
 
       - name: Upload Playwright HTML report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report-${{ github.sha }}
           path: playwright-report
@@ -243,7 +243,7 @@ jobs:
 
       - name: Upload Playwright raw traces / screenshots / videos
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-test-results-${{ github.sha }}
           path: test-results
@@ -252,7 +252,7 @@ jobs:
 
       - name: Upload built web bundle (debugging aid)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-bundle-${{ github.sha }}
           path: dist
@@ -272,7 +272,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
