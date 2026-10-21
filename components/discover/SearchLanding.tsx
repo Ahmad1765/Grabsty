@@ -230,9 +230,10 @@ const BrowseChipView = memo(function BrowseChipView({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 6,
-          height: 32,
-          paddingHorizontal: 12,
-          borderRadius: 10,
+          // Universal 30px pill chip (UI_GUARDRAILS §3).
+          height: 30,
+          paddingHorizontal: 14,
+          borderRadius: radii.pill,
           borderWidth: 1,
           borderColor: isActive ? theme.ink : theme.border,
           backgroundColor: isActive

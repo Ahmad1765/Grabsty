@@ -29,9 +29,25 @@ const INK = '#0F0F0F';
 const WHITE = '#FFFFFF';
 const MIN_SHOW_MS = 1500;
 const BG_FADE_MS = 320;
+// The collage is composed on a 390x844 portrait canvas (height/width). Laying
+// it out on raw screen width/height stretched it: pieces drifted apart on tall
+// 20:9 phones and piled up on short/wide ones.
+const DESIGN_AR = 844 / 390;
+// Widest the canvas gets relative to screen height, so tablets / landscape
+// get a centred collage instead of a giant cropped close-up.
+const MAX_CANVAS_W_PER_H = 0.62;
 
-// x/y = centre as a fraction of screen width/height, w = width as a fraction
-// of screen width, ar = height/width of the asset. Edge pieces bleed off-screen.
+type Canvas = { x: number; y: number; w: number; h: number };
+
+/** Cover the screen with the design canvas, centred; overflow bleeds off-edge. */
+function fitCanvas(sw: number, sh: number): Canvas {
+  const w = Math.max(Math.min(sw, sh * MAX_CANVAS_W_PER_H), sh / DESIGN_AR);
+  const h = w * DESIGN_AR;
+  return { x: (sw - w) / 2, y: (sh - h) / 2, w, h };
+}
+
+// x/y = centre as a fraction of canvas width/height, w = width as a fraction
+// of canvas width, ar = height/width of the asset. Edge pieces bleed off-screen.
 const PIECES = [
   { src: require('@/assets/images/splash/headphones.webp'), x: 0.22, y: 0.12, w: 0.7, ar: 354 / 420, rot: -14, spin: -30 },
   { src: require('@/assets/images/splash/hoodie.webp'), x: 0.88, y: 0.13, w: 0.46, ar: 560 / 335, rot: 10, spin: 25 },
@@ -57,20 +73,19 @@ const DOODLES: { x: number; y: number; rot: number; d: string[]; circle?: [numbe
   { x: 0.58, y: 0.06, rot: -16, d: ['M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z'], circle: [7, 7, 1.2] },
 ];
 
-function Piece({ p, w, h, exit }: {
+function Piece({ p, c, exit }: {
   p: (typeof PIECES)[number];
-  w: number;
-  h: number;
+  c: Canvas;
   exit: SharedValue<number>;
 }) {
-  const pw = p.w * w;
+  const pw = p.w * c.w;
   const ph = pw * p.ar;
   // Spin a little extra as the collage gets sucked into the centre.
   const style = useAnimatedStyle(() => ({
     transform: [{ rotate: `${p.rot + p.spin * exit.value}deg` }],
   }));
   return (
-    <Animated.View style={[styles.abs, { left: p.x * w - pw / 2, top: p.y * h - ph / 2, width: pw, height: ph }, style]}>
+    <Animated.View style={[styles.abs, { left: c.x + p.x * c.w - pw / 2, top: c.y + p.y * c.h - ph / 2, width: pw, height: ph }, style]}>
       <Image source={p.src} style={StyleSheet.absoluteFill} contentFit="contain" />
     </Animated.View>
   );
@@ -133,8 +148,9 @@ export function AnimatedSplash({ appReady }: { appReady: boolean }) {
 
   if (reduced || done) return null;
 
-  const logoSize = Math.round(w * 0.27);
-  const doodle = Math.round(w * 0.09);
+  const c = fitCanvas(w, h);
+  const logoSize = Math.round(c.w * 0.27);
+  const doodle = Math.round(c.w * 0.09);
 
   return (
     <Animated.View
@@ -148,7 +164,7 @@ export function AnimatedSplash({ appReady }: { appReady: boolean }) {
         {DOODLES.map((dd, i) => (
           <View
             key={`d${i}`}
-            style={[styles.abs, { left: dd.x * w - doodle / 2, top: dd.y * h - doodle / 2, transform: [{ rotate: `${dd.rot}deg` }] }]}
+            style={[styles.abs, { left: c.x + dd.x * c.w - doodle / 2, top: c.y + dd.y * c.h - doodle / 2, transform: [{ rotate: `${dd.rot}deg` }] }]}
           >
             <Svg width={doodle} height={doodle} viewBox="0 0 24 24" fill="none" stroke={WHITE} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
               {dd.d.map((d, j) => <Path key={j} d={d} />)}
@@ -157,7 +173,7 @@ export function AnimatedSplash({ appReady }: { appReady: boolean }) {
           </View>
         ))}
         {PIECES.map((p, i) => (
-          <Piece key={i} p={p} w={w} h={h} exit={exit} />
+          <Piece key={i} p={p} c={c} exit={exit} />
         ))}
       </Animated.View>
       <Animated.View

@@ -4,7 +4,7 @@ import {
   Modal,
   Pressable,
   ScrollView,
-  Dimensions,
+  useWindowDimensions,
   StyleSheet,
   ViewStyle,
   Platform,
@@ -29,8 +29,6 @@ import * as Haptics from 'expo-haptics';
 import { Text } from '@/lib/rnText';
 import { colors, radii, type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
-
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface BottomSheetModalProps {
   visible: boolean;
@@ -91,6 +89,9 @@ export function BottomSheetModal({
   style,
 }: BottomSheetModalProps) {
   const insets = useSafeAreaInsets();
+  // Live window height: a module-level Dimensions read goes stale on
+  // foldables, split-screen and web resize, mis-sizing the sheet.
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const { theme } = useTheme();
   const calculatedHeight = fixedHeight ?? (autoHeight ? undefined : SCREEN_HEIGHT * Math.min(Math.max(snapHeightRatio, 0.3), 0.95));
   const fallbackDismissHeight = calculatedHeight ?? 400;
@@ -115,6 +116,8 @@ export function BottomSheetModal({
         runOnJS(setInternalVisible)(false);
       });
     }
+    // Resize alone must not replay the open haptic/spring.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible, translateY]);
 
   const handleDismiss = () => {

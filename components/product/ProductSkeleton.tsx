@@ -9,6 +9,7 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useProductDimensions } from '@/components/product/shared';
 
 export function SkeletonBlock({
   width,
@@ -58,6 +59,8 @@ export function ProductSkeleton({
   placeholderImage?: string;
 }) {
   const { theme } = useTheme();
+  // Same 4:5 height as the real hero so nothing jumps when data lands.
+  const { imageHeight } = useProductDimensions();
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {/* Header (back button area) */}
@@ -80,7 +83,7 @@ export function ProductSkeleton({
 
       {/* Hero image */}
       {placeholderImage ? (
-        <View style={{ width: '100%', height: 420, marginTop: 4, overflow: 'hidden', backgroundColor: theme.panel }}>
+        <View style={{ width: '100%', height: imageHeight, marginTop: 4, overflow: 'hidden', backgroundColor: theme.panel }}>
           <Image
             source={{ uri: placeholderImage }}
             style={{ width: '100%', height: '100%' }}
@@ -91,7 +94,7 @@ export function ProductSkeleton({
       ) : (
         <SkeletonBlock
           width="100%"
-          height={420}
+          height={imageHeight}
           radius={0}
           style={{ marginTop: 4 }}
         />

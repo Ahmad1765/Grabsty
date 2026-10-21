@@ -68,7 +68,7 @@ export default function LoginRoute() {
 function LoginScreen() {
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
-  const { height } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const [step, setStep] = useState<Step>(() =>
     params.step === 'form' || params.mode === 'signin' || params.mode === 'signup' ? 'form' : 'welcome'
   );
@@ -117,8 +117,11 @@ function LoginScreen() {
     }).start();
   }, [mode, switchAnim]);
 
-  const welcomeHeight = Math.min(height * 0.42, 460);
-  const formHeight = Math.min(height * 0.28, 240);
+  // Short or narrow phones: smaller headline, and a height floor so the
+  // panel's chip + headline + subtitle never clip.
+  const compact = height < 760 || width < 375;
+  const welcomeHeight = Math.max(Math.min(height * 0.42, 460), compact ? 270 : 300);
+  const formHeight = Math.max(Math.min(height * 0.28, 240), 180);
   const panelHeight = stepAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [welcomeHeight, formHeight],
@@ -422,10 +425,10 @@ function LoginScreen() {
 
               <Text
                 style={{
-                  fontSize: step === 'welcome' ? (height < 760 ? 44 : 52) : 40,
+                  fontSize: step === 'welcome' ? (compact ? 40 : 52) : compact ? 36 : 40,
                   fontWeight: '900',
                   color: colors.white,
-                  lineHeight: step === 'welcome' ? (height < 760 ? 46 : 54) : 42,
+                  lineHeight: step === 'welcome' ? (compact ? 42 : 54) : compact ? 38 : 42,
                   letterSpacing: -1.8,
                 }}
               >

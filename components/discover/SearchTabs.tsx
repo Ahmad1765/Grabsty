@@ -292,7 +292,7 @@ function TagTile({
         >
           {uri ? (
             <Image
-              source={{ uri: getOptimizedImageUrl(uri, { width: 160 }) }}
+              source={{ uri }}
               style={{ width: '100%', height: '100%' }}
               contentFit="cover"
               cachePolicy="memory-disk"
@@ -429,7 +429,7 @@ function BrandCard({ brand, onPress }: { brand: BrandEntry; onPress: () => void 
               >
                 {uri ? (
                   <Image
-                    source={{ uri: getOptimizedImageUrl(uri, { width: 160 }) }}
+                    source={{ uri }}
                     style={{ width: '100%', height: '100%' }}
                     contentFit="cover"
                     cachePolicy="memory-disk"
