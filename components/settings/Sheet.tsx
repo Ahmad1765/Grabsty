@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { KeyboardAvoider, useAndroidKeyboardShown } from '@/components/ui/SafeContainer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
@@ -27,6 +27,9 @@ export function SheetModal({
 }) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  // The keyboard covers the nav-bar area, so its inset would just leave a
+  // blank band between the last field and the keyboard.
+  const androidKeyboardUp = useAndroidKeyboardShown(visible) && Platform.OS === 'android';
 
   return (
     <Modal
@@ -59,7 +62,7 @@ export function SheetModal({
               }),
               paddingTop: 16,
               paddingHorizontal: 20,
-              paddingBottom: Platform.OS === 'ios' ? 32 : Math.max(insets.bottom + 8, 20),
+              paddingBottom: Platform.OS === 'ios' ? 32 : androidKeyboardUp ? 12 : Math.max(insets.bottom + 8, 20),
               maxHeight: '100%',
               borderWidth: isDark ? 1 : 0,
               borderColor: theme.border,

@@ -99,20 +99,20 @@ export function OrderRow({ order, side }: { order: MyOrder; side: OrderSide }) {
     badgeColor = theme.ink;
   } else if (isCompleted) {
     badgeLabel = 'Completed';
-    badgeBg = isDark ? 'rgba(16, 185, 129, 0.18)' : '#D1FAE5';
-    badgeColor = '#10B981';
+    badgeBg = isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)';
+    badgeColor = isDark ? '#FFFFFF' : theme.purple;
   } else if (isDelivered) {
     badgeLabel = 'Delivered';
-    badgeBg = isDark ? 'rgba(16, 185, 129, 0.14)' : '#D1FAE5';
-    badgeColor = '#10B981';
+    badgeBg = isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)';
+    badgeColor = isDark ? '#FFFFFF' : theme.purple;
   } else if (isShipped) {
     badgeLabel = 'In Transit';
     badgeBg = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E5E7EB';
     badgeColor = theme.ink;
   } else if (isPicked) {
     badgeLabel = 'Picked';
-    badgeBg = isDark ? 'rgba(37, 99, 235, 0.14)' : '#EFF6FF';
-    badgeColor = isDark ? '#93C5FD' : '#2563EB';
+    badgeBg = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E5E7EB';
+    badgeColor = theme.ink;
   } else if (isPacking) {
     badgeLabel = 'Packing';
     badgeBg = isDark ? 'rgba(255, 255, 255, 0.12)' : '#E5E7EB';
@@ -563,10 +563,13 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
             paddingBottom: 2,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {/* Label gives way (ellipsis) so the two actions never get pushed off-screen at large font scales. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, marginRight: 8 }}>
             <Feather name="tag" size={13} color={theme.primary} />
             <Text
+              numberOfLines={1}
               style={{
+                flexShrink: 1,
                 fontSize: 13,
                 fontFamily: typography.family.sansBold,
                 color: theme.ink,
@@ -576,7 +579,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
             </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <Pressable
               onPress={() => sell.open()}
               style={({ pressed }) => [

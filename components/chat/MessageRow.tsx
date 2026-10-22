@@ -479,14 +479,14 @@ function DealAcceptedCard({
         padding: 16,
       }}
     >
-      {/* Top Row: "It's a deal" in green */}
+      {/* Top Row: "It's a deal" in purple */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <OfferTagIcon size={14} color="#16A34A" />
+        <OfferTagIcon size={14} color={theme.purple} />
         <Text
           style={{
             fontSize: 14,
             fontFamily: typography.family.sansBold,
-            color: '#16A34A',
+            color: theme.purple,
           }}
         >
           It&apos;s a deal
@@ -681,6 +681,7 @@ function OfferBubble(
     onCounterOffer,
     onPay,
   } = props;
+  const { theme } = useTheme();
 
   const amount = msg.metadata?.amount ?? 0;
   const isExpiredTtl = Boolean(
@@ -711,13 +712,13 @@ function OfferBubble(
           paddingHorizontal: 14,
           paddingVertical: 9,
           borderRadius: 18,
-          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          backgroundColor: 'rgba(108, 71, 255, 0.10)',
           borderWidth: 1,
-          borderColor: 'rgba(16, 185, 129, 0.24)',
+          borderColor: 'rgba(108, 71, 255, 0.24)',
         }}
       >
         <ShieldCheckIcon size={15} />
-        <Text style={{ fontSize: 14, fontFamily: typography.family.sansBold, color: '#10B981' }}>
+        <Text style={{ fontSize: 14, fontFamily: typography.family.sansBold, color: theme.purple }}>
           Paid · {formatPrice(amount)}
         </Text>
       </View>

@@ -1226,11 +1226,11 @@ export function OrderDetailsTrackingView({
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 {pickupConfirmed ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Feather name="check-circle" size={14} color="#10B981" />
+                    <Feather name="check-circle" size={14} color={theme.purple} />
                     <Text
                       style={{
                         fontSize: 13,
-                        color: '#10B981',
+                        color: theme.purple,
                         fontFamily: typography.family.sansBold,
                       }}
                     >
@@ -2182,10 +2182,10 @@ export function OrderDetailsTrackingView({
                       paddingHorizontal: 8,
                       paddingVertical: 3,
                       borderRadius: radii.pill,
-                      backgroundColor: isDark ? 'rgba(16, 185, 129, 0.16)' : '#D1FAE5',
+                      backgroundColor: isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)',
                     }}
                   >
-                    <Text style={{ fontSize: 11, fontFamily: typography.family.sansBold, color: '#10B981' }}>
+                    <Text style={{ fontSize: 11, fontFamily: typography.family.sansBold, color: isDark ? '#FFFFFF' : theme.purple }}>
                       Recommended
                     </Text>
                   </View>

@@ -536,6 +536,22 @@ export function SellForm({
     Boolean(condition) &&
     Boolean(gender) &&
     isAuthenticityValid;
+  // First thing still blocking publish, so a tap on the greyed button says why.
+  const missingField = !slots.length
+    ? 'Add at least one photo'
+    : !title?.trim()
+      ? 'Add a title'
+      : !category || (hasSubcategories(category as Category) && !subcategory)
+        ? 'Choose a category'
+        : !condition
+          ? 'Choose the condition'
+          : !gender
+            ? 'Choose a gender'
+            : !isAuthenticityValid
+              ? 'Confirm authenticity for this brand'
+              : !(parseFloat(price || '0') > 0)
+                ? 'Set a price'
+                : null;
 
   const onValidSubmit = async (formData: SellFormValues) => {
     if (!user) {
@@ -1723,12 +1739,16 @@ export function SellForm({
           {/* Submit CTA */}
           <Pressable
             onPress={() => {
+              if (!canPublish) {
+                if (missingField) toast.show(missingField, { variant: 'default', icon: 'alert-circle' });
+                return;
+              }
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               }
               handleSubmit(onValidSubmit, onInvalidSubmit)();
             }}
-            disabled={publishing || !canPublish}
+            disabled={publishing}
             accessibilityRole="button"
             accessibilityLabel={
               publishing

@@ -79,8 +79,8 @@ export function SwipeDeck({
       <GestureDetector gesture={pan}>
         <Animated.View style={[{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }, topStyle]}>
           <WardrobeCard post={top} />
-          <Animated.View style={[{ position: 'absolute', top: 24, left: 20, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, borderWidth: 3, borderColor: '#22C55E', transform: [{ rotate: '-14deg' }] }, likeStyle]}>
-            <Animated.Text style={{ color: '#22C55E', fontFamily: 'Inter_700Bold', fontWeight: '900', fontSize: 22 }}>LIKE</Animated.Text>
+          <Animated.View style={[{ position: 'absolute', top: 24, left: 20, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, borderWidth: 3, borderColor: '#6C47FF', transform: [{ rotate: '-14deg' }] }, likeStyle]}>
+            <Animated.Text style={{ color: '#6C47FF', fontFamily: 'Inter_700Bold', fontWeight: '900', fontSize: 22 }}>LIKE</Animated.Text>
           </Animated.View>
           <Animated.View style={[{ position: 'absolute', top: 24, right: 20, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 10, borderWidth: 3, borderColor: '#EF4444', transform: [{ rotate: '14deg' }] }, passStyle]}>
             <Animated.Text style={{ color: '#EF4444', fontFamily: 'Inter_700Bold', fontWeight: '900', fontSize: 22 }}>PASS</Animated.Text>

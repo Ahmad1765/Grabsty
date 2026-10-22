@@ -45,6 +45,7 @@ import { InboxRow, InboxSkeleton, OrdersInboxPage } from '@/components/chat';
 import { withBold } from '@/components/chat/MessageRow';
 import { HIT_SLOP_8, useTabBarClearance } from '@/lib/responsive';
 import { PressableScale } from '@/components/PressableScale';
+import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 
 type InboxTab = 'orders' | 'messages' | 'support';
 type MessageChip = 'all' | 'buying' | 'selling' | 'socials';
@@ -414,7 +415,7 @@ function SupportPage({
                   width: 13,
                   height: 13,
                   borderRadius: 7,
-                  backgroundColor: '#10B981',
+                  backgroundColor: theme.purple,
                   borderWidth: 2,
                   borderColor: theme.surface,
                 }}
@@ -431,10 +432,10 @@ function SupportPage({
                     paddingHorizontal: 6,
                     paddingVertical: 1,
                     borderRadius: radii.pill,
-                    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                    backgroundColor: 'rgba(108, 71, 255, 0.10)',
                   }}
                 >
-                  <Text style={{ fontSize: 10, fontFamily: typography.family.sansBold, color: '#10B981' }}>
+                  <Text style={{ fontSize: 10, fontFamily: typography.family.sansBold, color: theme.purple }}>
                     ONLINE
                   </Text>
                 </View>
@@ -535,7 +536,11 @@ function SupportPage({
                       justifyContent: 'center',
                     }}
                   >
-                    <Feather name={topic.icon as any} size={17} color={theme.primary} />
+                    {topic.icon === 'shield' ? (
+                      <ShieldCheckIcon size={22} />
+                    ) : (
+                      <Feather name={topic.icon as any} size={17} color={theme.primary} />
+                    )}
                   </View>
 
                   <View style={{ flex: 1 }}>

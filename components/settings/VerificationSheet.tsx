@@ -360,7 +360,7 @@ export function VerificationSheet({
                           }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Feather name="check-circle" size={15} color="#10B981" />
+                            <Feather name="check-circle" size={15} color={theme.purple} />
                             <Text style={{ fontSize: 13, fontWeight: '700', color: theme.text }}>
                               CNIC / ID photo attached
                             </Text>

@@ -603,8 +603,8 @@ export function PaymentOptionsModal({
                   <Text style={{ fontSize: 15, fontWeight: '700', color: theme.ink, fontFamily: typography.family.sansBold }}>
                     Easypaisa
                   </Text>
-                  <View style={{ paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, backgroundColor: isDark ? 'rgba(0, 168, 89, 0.15)' : '#DCFCE7' }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#16A34A', fontFamily: typography.family.sansBold }}>
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E5E7EB' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: theme.ink, fontFamily: typography.family.sansBold }}>
                       Preview
                     </Text>
                   </View>

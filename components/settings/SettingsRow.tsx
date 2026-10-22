@@ -560,6 +560,9 @@ export function ChatGPTItem({
           style={{
             fontSize: 14,
             color: theme.textMuted,
+            // Gap so a label that just fits ("Identity verification") wraps
+            // instead of running into the value.
+            marginLeft: 12,
             marginRight: chevron ? 6 : 0,
             maxWidth: 160,
           }}

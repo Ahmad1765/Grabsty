@@ -123,6 +123,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   const [hasSubmitted, setHasSubmitted] = useState(
     initialQuery.trim().length > 0 || !!initialCategory,
   );
+  const hasSubmittedOnOpen = useRef(hasSubmitted);
   const { previousSearches, historyItems, addSearch, removeSearch, clearAll } = useSearchHistory();
 
   const suggestions = useMemo(
@@ -413,6 +414,9 @@ export const HomeSearchView = memo(function HomeSearchView({
       duration: 400,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     });
+    // Opened onto results (a category or preset query): show them, don't
+    // throw the keyboard over them.
+    if (hasSubmittedOnOpen.current) return;
     const focusTimer = setTimeout(() => {
       inputRef.current?.focus?.();
     }, 260);
@@ -949,14 +953,14 @@ export const HomeSearchView = memo(function HomeSearchView({
           >
             <Text
               style={{
-                fontSize: 15.5,
+                fontSize: 15,
                 fontWeight: '700',
                 fontFamily: typography.family.sansBold,
-                color: isDark ? '#9CA3AF' : '#4B5563',
+                color: theme.text,
                 letterSpacing: -0.2,
               }}
             >
-              Your Recent Searches
+              Recent searches
             </Text>
 
             <Pressable
@@ -979,7 +983,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                   color: theme.purple,
                 }}
               >
-                Clear All
+                Clear all
               </Text>
             </Pressable>
           </View>
@@ -1376,19 +1380,19 @@ export const HomeSearchView = memo(function HomeSearchView({
               height: 44,
               borderRadius: 22,
               backgroundColor: isSaved
-                ? (isDark ? 'rgba(245, 158, 11, 0.22)' : '#FEF3C7')
+                ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
                 : (isDark ? theme.panel : theme.surface),
               borderWidth: 1,
               borderColor: isSaved
-                ? (isDark ? 'rgba(245, 158, 11, 0.5)' : '#FDE68A')
+                ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
                 : theme.border,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.75 : 1,
               transform: [{ scale: pressed ? 0.92 : 1 }],
-              shadowColor: isSaved ? '#F59E0B' : '#000000',
+              shadowColor: isSaved ? theme.purple : '#000000',
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isSaved ? 0.35 : 0.05,
+              shadowOpacity: isSaved ? 0.16 : 0.05,
               shadowRadius: 6,
               elevation: isSaved ? 3 : 1,
             })}
@@ -1396,7 +1400,7 @@ export const HomeSearchView = memo(function HomeSearchView({
             <Ionicons
               name={isSaved ? "star" : "star-outline"}
               size={21}
-              color={isSaved ? "#F59E0B" : (isDark ? "#9CA3AF" : "#6B7280")}
+              color={isSaved ? theme.purple : theme.mute}
             />
           </Pressable>
         )}
@@ -1602,6 +1606,9 @@ export const HomeSearchView = memo(function HomeSearchView({
           horizontal
           pagingEnabled
           scrollEnabled={true}
+          // The inner lists persist taps too; without it here the first tap on
+          // a recent/popular chip only closed the keyboard.
+          keyboardShouldPersistTaps="handled"
           showsHorizontalScrollIndicator={false}
           contentOffset={{ x: activeTab === 'listings' ? 0 : screenWidth, y: 0 }}
           onScroll={handleScroll}

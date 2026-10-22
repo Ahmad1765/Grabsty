@@ -46,7 +46,13 @@ describe('buyerProtectionFee', () => {
     expect(buyerProtectionFee(500)).toBe(30);
     expect(buyerProtectionFee(5_000)).toBe(300);
     expect(buyerProtectionFee(50_000)).toBe(3000);
-    expect(buyerProtectionFee(1)).toBe(0.06);
+  });
+
+  it('rounds to whole rupees (COD cash has no paise)', () => {
+    expect(buyerProtectionFee(2_999)).toBe(180); // 179.94
+    expect(buyerProtectionFee(1_234)).toBe(74); // 74.04
+    expect(buyerProtectionFee(25)).toBe(2); // 1.5 rounds half up, like Postgres round()
+    expect(orderTotal(2_999)).toBe(3_179);
   });
 
   it('scales proportionally with item price', () => {
@@ -84,8 +90,8 @@ describe('priceBreakdown', () => {
   it('returns item, protection, and total that add up', () => {
     const { item, protection, total } = priceBreakdown(2_499);
     expect(item).toBe(2_499);
-    expect(protection).toBe(149.94);
-    expect(total).toBe(2648.94);
+    expect(protection).toBe(150);
+    expect(total).toBe(2_649);
     expect(item + protection).toBe(total);
   });
 

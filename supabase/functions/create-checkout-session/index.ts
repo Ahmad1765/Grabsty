@@ -203,7 +203,7 @@ Deno.serve(async (req: Request) => {
     const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
     const feeDollars =
       BUYER_PROTECTION_MODE === 'percentage'
-        ? round2(round2(chargeDollars) * (BUYER_PROTECTION_PERCENTAGE / 100))
+        ? Math.round(round2(chargeDollars) * (BUYER_PROTECTION_PERCENTAGE / 100))
         : BUYER_PROTECTION_FEE;
     const feeCents = Math.round(feeDollars * 100);
 
