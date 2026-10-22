@@ -5,7 +5,7 @@
 // edge (SheetShell below) so the screen underneath stays visible — that strip
 // is what makes it read as a sheet rather than a page, and it's tappable to
 // dismiss. The layout mirrors the reference: grabber, one search field, a
-// BROWSE chip row and a TOPICS grid (components/discover/SearchLanding.tsx
+// tab-chip row and a row list (components/discover/SearchLanding.tsx
 // renders the last two, shared with the Discover screen's own focus landing).
 //
 // Nothing here holds search state. Every tap closes the sheet and navigates to
@@ -50,6 +50,8 @@ import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react
 import { BRAND } from '@/lib/brand';
 import { buildTopicCovers } from '@/lib/discover';
 import { useFeedListingsQuery } from '@/lib/queries';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { colors, radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
@@ -368,6 +370,23 @@ function DiscoverSheetBody({
 
   const gridQ = useFeedListingsQuery({ tab: 'popular', limit: 60, enabled: settled });
   const covers = useMemo(() => buildTopicCovers(gridQ.data ?? []), [gridQ.data]);
+  const trending = useMemo(
+    () => gridQ.data?.filter((l) => !l.is_sold).slice(0, 10),
+    [gridQ.data],
+  );
+  // Rank snapshot from ~24h ago, for the Trending arrows. Snapshots are hourly.
+  const baselineQ = useQuery({
+    queryKey: ['trendingRankBaseline'],
+    enabled: settled,
+    staleTime: 10 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('trending_rank_baseline');
+      if (error) throw error;
+      return Object.fromEntries(
+        (data as { listing_id: string; rank: number }[]).map((r) => [r.listing_id, r.rank]),
+      );
+    },
+  });
 
   const go = useCallback(
     (path: string) => {
@@ -531,8 +550,11 @@ function DiscoverSheetBody({
         >
           <SearchLanding
             covers={covers}
+            trending={trending}
+            baseline={baselineQ.data}
             onBrowse={onBrowse}
             onTopic={onTopic}
+            onListing={(id) => go(`/product/${id}`)}
             activeChipId={activeBrowseChipId}
           />
         </ScrollView>

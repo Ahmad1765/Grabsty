@@ -1,28 +1,31 @@
-// Discover's search panel body — the BROWSE chip row and the TOPICS grid.
-// Rendered by two hosts: the search sheet the Discover tab opens
-// (components/discover/DiscoverSheet.tsx) and the Discover screen's own
-// search-focus landing.
+// Discover's search panel body, rendered inside the search sheet
+// (components/discover/DiscoverSheet.tsx).
 //
-//   BROWSE  — outlined icon chips that wrap: three catalog sorts onto the
-//             Items grid, the three hub tabs, and the user's saved searches.
-//   TOPICS  — a two-column tile grid over the live category taxonomy, each
-//             tile fronted by a real cover shot from that category (falling
-//             back to the taxonomy's own Feather icon until one loads).
+// Layout follows a music-picker style list: one row of tab chips, then a
+// single-column list of rows (thumbnail · title · subtitle · trailing icon).
+//
+//   For you   — the live category taxonomy, each row fronted by a real cover
+//               shot from that category (falling back to its Feather icon).
+//   Trending  — the top popular listings, ranked, with a "New" tag on fresh
+//               ones. A trailing row opens the full popular sort.
+//   The rest  — catalog sorts and hub destinations; they navigate away.
 //
 // Presentational: every tap emits a typed action the host applies. Deliberately
-// un-animated — see the note on the entrance animation below.
+// un-animated — it mounts inside a sheet that is already sliding up.
 
-import { memo, useCallback, useState, useEffect, useMemo } from 'react';
-import { View, Pressable, Platform } from 'react-native';
+import { memo, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { View, Pressable, ScrollView, Platform } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
-import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
+import { cardImageUrl, getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { CATEGORIES, type CategoryId } from '@/lib/categories';
-import { colors, radii, type } from '@/lib/theme';
+import { formatPrice } from '@/lib/currency';
+import { radii, type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import type { SortKey } from '@/lib/listings';
+import type { Listing } from '@/types';
 import type { DiscoverTab } from './SearchTabs';
 
 function haptic() {
@@ -32,7 +35,24 @@ function haptic() {
 }
 
 const PAD = 16;
-const GAP = 10;
+const THUMB = 56;
+const NEW_MS = 72 * 60 * 60 * 1000;
+const TREND_UP = '#22C55E';
+const TREND_DOWN = '#EF4444';
+
+type Move = 'up' | 'down' | 'same' | 'new';
+
+// Movement against the server's rank snapshot from ~24h ago (pg_cron, hourly —
+// supabase/migrations/20261022110000_trending_rank_snapshots.sql). Rows
+// missing from the snapshot are new to the chart.
+export function rankMoves(trending: Listing[], baseline: Record<string, number>): Record<string, Move> {
+  const moves: Record<string, Move> = {};
+  trending.forEach((l, i) => {
+    const was = baseline[l.id];
+    moves[l.id] = was == null ? 'new' : was > i + 1 ? 'up' : was < i + 1 ? 'down' : 'same';
+  });
+  return moves;
+}
 
 // ── Actions ─────────────────────────────────────────────────────────────────
 export type BrowseAction =
@@ -46,213 +66,157 @@ type ChipDef = {
   id: string;
   label: string;
   icon: keyof typeof Feather.glyphMap;
-  action: BrowseAction;
+  /** Absent = an in-panel tab that swaps the list below instead of navigating. */
+  action?: BrowseAction;
 };
 
-// Sorts first, then the hub destinations — one wrapping group, ordered so the
-// row reads "how do I rank the catalog" → "where else can I look".
-//
-// The three sorts are real server-side orderings (lib/listings' SortKey, the
-// same values the category grid's SORT row uses), not the editorial digest
-// "themes" — that rail is switched off in Discover, so a chip pointing at it
-// would land the user on a header they can't see the source of.
-const BROWSE_CHIPS: ChipDef[] = [
+const TABS: ChipDef[] = [
+  { id: 'foryou', label: 'For you', icon: 'star' },
+  { id: 'trending', label: 'Trending', icon: 'trending-up' },
+  { id: 'saved', label: 'Saved', icon: 'bookmark', action: { kind: 'saved' } },
   { id: 'new', label: 'New', icon: 'zap', action: { kind: 'sort', sort: 'newest' } },
-  { id: 'trending', label: 'Trending', icon: 'trending-up', action: { kind: 'sort', sort: 'popular' } },
   { id: 'cheapest', label: 'Lowest price', icon: 'arrow-down', action: { kind: 'sort', sort: 'price_asc' } },
   { id: 'aesthetics', label: 'Aesthetics', icon: 'hash', action: { kind: 'tab', tab: 'aesthetics' } },
   { id: 'brands', label: 'Brands', icon: 'award', action: { kind: 'tab', tab: 'brands' } },
   { id: 'sellers', label: 'Sellers', icon: 'users', action: { kind: 'tab', tab: 'users' } },
-  { id: 'saved', label: 'Saved', icon: 'bookmark', action: { kind: 'saved' } },
 ];
+
+const TRENDING_ALL: ChipDef = {
+  id: 'trending',
+  label: 'Trending',
+  icon: 'trending-up',
+  action: { kind: 'sort', sort: 'popular' },
+};
 
 type TopicDef = {
   id: string;
   label: string;
+  sub: string;
   icon: keyof typeof Feather.glyphMap;
   action: TopicAction;
 };
 
-// The taxonomy itself plus an "All items" tile — which both fills the grid to
-// an even eight and gives the panel a one-tap way back to the full catalog.
-const TOPIC_TILES: TopicDef[] = [
+const TOPICS: TopicDef[] = [
   ...CATEGORIES.map((c) => ({
     id: c.id,
     label: c.label,
+    sub: c.subs.slice(0, 3).map((s) => s.label).join(' · '),
     icon: c.icon,
     action: { kind: 'category', category: c.id } as TopicAction,
   })),
-  { id: '__all', label: 'All items', icon: 'grid', action: { kind: 'all' } },
+  { id: '__all', label: 'All items', sub: 'The full catalog', icon: 'grid', action: { kind: 'all' } },
 ];
 
 // ── Panel ───────────────────────────────────────────────────────────────────
 export function SearchLanding({
   covers,
+  trending,
+  baseline,
   onBrowse,
   onTopic,
+  onListing,
   activeChipId,
 }: {
-  /** category id → a live cover shot, so tiles show real stock, not clip art. */
+  /** category id → a live cover shot, so rows show real stock, not clip art. */
   covers: Partial<Record<string, string>>;
+  /** Popular listings, best first. `undefined` while loading. */
+  trending: Listing[] | undefined;
+  /** listing id → rank in the ~24h-old snapshot. `undefined` while loading. */
+  baseline: Record<string, number> | undefined;
   onBrowse: (action: BrowseAction, chip?: ChipDef) => void;
   onTopic: (action: TopicAction, topic?: TopicDef) => void;
+  onListing: (id: string) => void;
   activeChipId?: string | null;
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(activeChipId ?? null);
+  const moves = useMemo(
+    () => (trending && baseline ? rankMoves(trending, baseline) : {}),
+    [trending, baseline],
+  );
+  const [tab, setTab] = useState<'foryou' | 'trending'>(
+    activeChipId === 'trending' ? 'trending' : 'foryou',
+  );
 
-  useEffect(() => {
-    if (activeChipId !== undefined) {
-      setSelectedId(activeChipId);
-    }
-  }, [activeChipId]);
-
-  const handleSelectChip = useCallback(
-    (action: BrowseAction, id: string) => {
-      setSelectedId(id);
-      const chip = BROWSE_CHIPS.find((c) => c.id === id);
-      onBrowse(action, chip);
+  const onChip = useCallback(
+    (chip: ChipDef) => {
+      haptic();
+      if (chip.action) onBrowse(chip.action, chip);
+      else setTab(chip.id as 'foryou' | 'trending');
     },
     [onBrowse],
   );
 
-  const handleSelectTopic = useCallback(
-    (action: TopicAction) => {
-      const topic = TOPIC_TILES.find((t) =>
-        action.kind === 'all' ? t.id === '__all' : t.id === action.category,
-      );
-      onTopic(action, topic);
-    },
-    [onTopic],
-  );
-
-  // Group topics into pairs of two for a rock-solid, responsive 2-column grid.
-  // Using explicit rows with flex: 1 eliminates subpixel rounding and Yoga flexWrap
-  // bugs where calculated pixel widths overflow the row on devices with odd screen
-  // widths or fractional DPRs (e.g. 393px iPhone 14/15/16 Pro, Pixel), which previously
-  // caused every tile to wrap onto its own row in a single column.
-  const topicRows = useMemo(() => {
-    const rows: TopicDef[][] = [];
-    for (let i = 0; i < TOPIC_TILES.length; i += 2) {
-      rows.push(TOPIC_TILES.slice(i, i + 2));
-    }
-    return rows;
-  }, []);
-
   return (
-    <View style={{ paddingHorizontal: PAD, marginTop: 20 }}>
-      <SectionLabel>Browse</SectionLabel>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-        {BROWSE_CHIPS.map((c) => (
-          <BrowseChipView
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: PAD, gap: 8, paddingTop: 16, paddingBottom: 8 }}
+      >
+        {TABS.map((c) => (
+          <TabChip
             key={c.id}
             chip={c}
-            selected={selectedId === c.id}
-            onSelect={handleSelectChip}
+            selected={c.action ? activeChipId === c.id : tab === c.id}
+            onSelect={onChip}
           />
         ))}
-      </View>
+      </ScrollView>
 
-      <View style={{ marginTop: 24 }}>
-        <SectionLabel>Topics</SectionLabel>
-        <View style={{ gap: GAP, marginTop: 10 }}>
-          {topicRows.map((row, rowIdx) => (
-            <View key={rowIdx} style={{ flexDirection: 'row', gap: GAP }}>
-              {row.map((t) => (
-                <TopicTile
-                  key={t.id}
-                  topic={t}
-                  cover={covers[t.id]}
-                  onSelect={handleSelectTopic}
-                />
-              ))}
-              {row.length === 1 ? <View style={{ flex: 1 }} /> : null}
-            </View>
-          ))}
-        </View>
-      </View>
+      {tab === 'foryou'
+        ? TOPICS.map((t) => (
+            <TopicRow key={t.id} topic={t} cover={covers[t.id]} onSelect={onTopic} />
+          ))
+        : (
+          <>
+            {trending
+              ? trending.map((l, i) => (
+                  <TrendingRow key={l.id} rank={i + 1} listing={l} move={moves[l.id]} onSelect={onListing} />
+                ))
+              : Array.from({ length: 6 }, (_, i) => <PlaceholderRow key={i} />)}
+            <SeeAllRow onPress={() => onBrowse(TRENDING_ALL.action!, TRENDING_ALL)} />
+          </>
+        )}
     </View>
   );
 }
 
-// Uppercase micro-eyebrow — the panel's only chrome, deliberately quiet so the
-// chips and tiles carry the hierarchy. Same 11/1.4 uppercase eyebrow the
-// editorial rails use, so anything rendered below stays in rhythm.
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <Text
-      style={{
-        fontSize: 11,
-        fontFamily: type.family.sansBold,
-        color: colors.mute,
-        letterSpacing: 1.4,
-        textTransform: 'uppercase',
-      }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-// ── Browse chip ─────────────────────────────────────────────────────────────
-// No entrance animation on purpose. These 15 nodes mount inside a sheet that
-// is *already* sliding up, and per-item springs meant 15 concurrent animations
-// competing with that transition on the frame the user is watching most
-// closely. Press feedback stays on transform + a background swap — never a
-// layout property — so it composites instead of triggering layout.
-const BrowseChipView = memo(function BrowseChipView({
+// ── Tab chip ────────────────────────────────────────────────────────────────
+// 30px squircle chip (borderRadius 8), Paper White resting / Solid Ink active
+// (UI_GUARDRAILS §3). Press feedback stays on transform + background only.
+const TabChip = memo(function TabChip({
   chip,
   selected,
   onSelect,
 }: {
   chip: ChipDef;
   selected: boolean;
-  onSelect: (action: BrowseAction, chipId: string) => void;
+  onSelect: (chip: ChipDef) => void;
 }) {
   const { theme } = useTheme();
-  const [hovered, setHovered] = useState(false);
-  const onPress = useCallback(() => {
-    haptic();
-    onSelect(chip.action, chip.id);
-  }, [onSelect, chip.action, chip.id]);
-
   return (
     <Pressable
-      onPress={onPress}
-      onHoverIn={() => setHovered(true)}
-      onHoverOut={() => setHovered(false)}
+      onPress={() => onSelect(chip)}
       accessibilityRole="button"
       accessibilityLabel={`Browse ${chip.label.toLowerCase()}`}
       accessibilityState={{ selected }}
-      style={({ pressed }) => {
-        const isActive = selected;
-        return {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6,
-          // Universal 30px pill chip (UI_GUARDRAILS §3).
-          height: 30,
-          paddingHorizontal: 14,
-          borderRadius: radii.pill,
-          borderWidth: 1,
-          borderColor: isActive ? theme.ink : theme.border,
-          backgroundColor: isActive
-            ? theme.ink
-            : pressed || hovered
-              ? theme.surface
-              : theme.panel,
-          transform: [{ scale: pressed ? 0.96 : 1 }],
-        };
-      }}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 30,
+        paddingHorizontal: 14,
+        // Squircle, not pill — approved exception (UI_GUARDRAILS §3).
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: selected ? theme.ink : theme.border,
+        backgroundColor: selected ? theme.ink : pressed ? theme.surface : theme.panel,
+        transform: [{ scale: pressed ? 0.96 : 1 }],
+      })}
     >
-      <Feather
-        name={chip.icon}
-        size={13}
-        color={selected ? theme.background : theme.ink}
-      />
       <Text
         style={{
-          fontSize: 12.5,
+          fontSize: 13,
           fontFamily: type.family.sansBold,
           color: selected ? theme.background : theme.ink,
           letterSpacing: -0.2,
@@ -264,79 +228,217 @@ const BrowseChipView = memo(function BrowseChipView({
   );
 });
 
-// ── Topic tile ──────────────────────────────────────────────────────────────
-const TopicTile = memo(function TopicTile({
+// ── Rows ────────────────────────────────────────────────────────────────────
+function Row({
+  onPress,
+  label,
+  leading,
+  thumb,
+  title,
+  subtitle,
+}: {
+  onPress: () => void;
+  label: string;
+  leading?: ReactNode;
+  thumb: ReactNode;
+  title: string;
+  subtitle: ReactNode;
+}) {
+  const { theme } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        paddingHorizontal: PAD,
+        paddingVertical: 8,
+        backgroundColor: pressed ? theme.surface : 'transparent',
+      })}
+    >
+      {leading}
+      {thumb}
+      <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+        <Text
+          numberOfLines={1}
+          style={{ fontSize: 15, fontFamily: type.family.sansBold, color: theme.ink }}
+        >
+          {title}
+        </Text>
+        {subtitle}
+      </View>
+      <Feather name="chevron-right" size={18} color={theme.muteSoft} />
+    </Pressable>
+  );
+}
+
+function Thumb({ uri, icon }: { uri: string | null; icon: keyof typeof Feather.glyphMap }) {
+  const { theme } = useTheme();
+  return (
+    <View
+      style={{
+        width: THUMB,
+        height: THUMB,
+        borderRadius: 8,
+        overflow: 'hidden',
+        backgroundColor: theme.purpleSoft,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* Icon is a layer under the photo, so a slow or broken image degrades
+          to the icon instead of an empty square. */}
+      <Feather name={icon} size={20} color={theme.purple} />
+      {uri ? (
+        <Image
+          source={{ uri }}
+          // Radius repeated on the image: Android doesn't reliably clip an
+          // absolute child to a rounded parent's overflow: hidden.
+          style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 8 }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={IMAGE_TRANSITION}
+        />
+      ) : null}
+    </View>
+  );
+}
+
+function Subtitle({ children, trend }: { children: string; trend?: boolean }) {
+  const { theme } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+      {trend ? <Feather name="arrow-up-right" size={14} color={theme.mute} /> : null}
+      <Text
+        numberOfLines={1}
+        style={{ flexShrink: 1, fontSize: 13.5, fontFamily: type.family.sans, color: theme.mute }}
+      >
+        {children}
+      </Text>
+    </View>
+  );
+}
+
+const TopicRow = memo(function TopicRow({
   topic,
   cover,
   onSelect,
 }: {
   topic: TopicDef;
   cover?: string;
-  onSelect: (action: TopicAction) => void;
+  onSelect: (action: TopicAction, topic?: TopicDef) => void;
 }) {
-  const onPress = useCallback(() => onSelect(topic.action), [onSelect, topic.action]);
-  const uri = cover ? getOptimizedImageUrl(cover, { width: 120 }) : null;
+  return (
+    <Row
+      onPress={() => onSelect(topic.action, topic)}
+      label={`Browse ${topic.label}`}
+      thumb={<Thumb uri={cover ? getOptimizedImageUrl(cover, { width: 120 }) : null} icon={topic.icon} />}
+      title={topic.label}
+      subtitle={<Subtitle>{topic.sub}</Subtitle>}
+    />
+  );
+});
+
+const TrendingRow = memo(function TrendingRow({
+  rank,
+  listing,
+  move,
+  onSelect,
+}: {
+  rank: number;
+  listing: Listing;
+  move?: Move;
+  onSelect: (id: string) => void;
+}) {
+  const { theme } = useTheme();
+  const img = cardImageUrl(listing, 0);
+  // An arrow wins when the row moved; "New" marks chart entries and fresh listings holding steady.
+  const isNew =
+    move === 'new' ||
+    (move !== 'up' && move !== 'down' && Date.now() - new Date(listing.created_at).getTime() < NEW_MS);
+  const who = listing.brand?.trim() || listing.seller?.username;
+  return (
+    <Row
+      onPress={() => onSelect(listing.id)}
+      label={`Trending #${rank}: ${listing.title}`}
+      leading={
+        <View style={{ width: 30, alignItems: 'center', gap: 4 }}>
+          <Text style={{ fontSize: 15, fontFamily: type.family.sansBold, color: theme.ink }}>
+            {rank}
+          </Text>
+          {isNew ? (
+            <View
+              style={{
+                paddingHorizontal: 5,
+                height: 16,
+                justifyContent: 'center',
+                borderRadius: radii.pill,
+                backgroundColor: theme.purple,
+              }}
+            >
+              <Text style={{ fontSize: 9.5, fontFamily: type.family.sansBold, color: '#FFFFFF' }}>
+                New
+              </Text>
+            </View>
+          ) : move === 'up' || move === 'down' ? (
+            // Rank-movement arrows: approved green/red exception (UI_GUARDRAILS §3).
+            <Feather
+              name={move === 'up' ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={move === 'up' ? TREND_UP : TREND_DOWN}
+            />
+          ) : null}
+        </View>
+      }
+      thumb={<Thumb uri={img ? getOptimizedImageUrl(img, { width: 120 }) : null} icon="image" />}
+      title={listing.title}
+      subtitle={
+        <Subtitle trend>
+          {[who, formatPrice(listing.price, { whole: true })].filter(Boolean).join(' · ')}
+        </Subtitle>
+      }
+    />
+  );
+});
+
+function PlaceholderRow() {
+  const { theme } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: PAD, paddingVertical: 8 }}>
+      <View style={{ width: 30 }} />
+      <View style={{ width: THUMB, height: THUMB, borderRadius: 8, backgroundColor: theme.surface }} />
+      <View style={{ flex: 1, gap: 8 }}>
+        <View style={{ width: '70%', height: 12, borderRadius: 6, backgroundColor: theme.surface }} />
+        <View style={{ width: '45%', height: 10, borderRadius: 5, backgroundColor: theme.surface }} />
+      </View>
+    </View>
+  );
+}
+
+function SeeAllRow({ onPress }: { onPress: () => void }) {
+  const { theme } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Browse ${topic.label}`}
+      accessibilityLabel="See all trending"
       style={({ pressed }) => ({
-        flex: 1,
-        minWidth: 0,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 9,
-        padding: 9,
-        // Explicit height rather than deriving it from the 34px thumb — keeps
-        // every tile on one rhythm whether or not a cover has loaded.
-        height: 54,
-        borderRadius: radii.lg,
-        borderWidth: 1,
-        borderColor: colors.hair,
-        backgroundColor: pressed ? colors.panel : colors.white,
-        transform: [{ scale: pressed ? 0.97 : 1 }],
+        justifyContent: 'center',
+        gap: 4,
+        marginTop: 8,
+        paddingVertical: 12,
+        opacity: pressed ? 0.6 : 1,
       })}
     >
-      {/* The taxonomy icon is a layer, not a branch: it sits under the cover
-          so a slow, missing or broken photo degrades to the icon instead of
-          an empty purple circle. */}
-      <View
-        style={{
-          width: 34,
-          height: 34,
-          // Circular, per the reference — the tile's only round element,
-          // which is what makes the cover read as a topic avatar.
-          borderRadius: 17,
-          overflow: 'hidden',
-          backgroundColor: colors.purpleSoft,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Feather name={topic.icon} size={15} color={colors.purple} />
-        {uri ? (
-          <Image
-            source={{ uri }}
-            // borderRadius is repeated on the image, not just the parent:
-            // Android does not reliably clip an absolutely-positioned child to
-            // a rounded parent's `overflow: hidden`, which left the cover as a
-            // square patch over the circle on native while web looked right.
-            style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 17 }}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            transition={IMAGE_TRANSITION}
-          />
-        ) : null}
-      </View>
-      <Text
-        style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontFamily: type.family.sansBold, color: colors.ink }}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
-      >
-        {topic.label}
+      <Text style={{ fontSize: 14, fontFamily: type.family.sansBold, color: theme.ink }}>
+        See all trending
       </Text>
+      <Feather name="chevron-right" size={16} color={theme.ink} />
     </Pressable>
   );
-});
+}
