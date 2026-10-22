@@ -583,6 +583,42 @@ export default function InvoiceScreen() {
     order?.fulfillment_status === 'shifting'
   );
 
+  // Mirrors cancel_order: either party, until the courier has the parcel.
+  const canCancel =
+    (isBuyer || isSeller) &&
+    (order?.status === 'pending' || order?.status === 'paid') &&
+    !isShipped &&
+    ['pending', 'awaiting_payment', 'packing', undefined, null].includes(order?.fulfillment_status as any);
+  const withCancel = (primary: React.ReactNode) =>
+    primary || canCancel ? (
+      <View style={{ gap: 10 }}>
+        {primary}
+        {canCancel ? (
+          <Pressable
+            testID="cancel-order-button"
+            onPress={() => setShowCancelModal(true)}
+            accessibilityRole="button"
+            style={({ pressed }) => [
+              {
+                height: 40,
+                borderRadius: radii.pill,
+                borderWidth: 1,
+                borderColor: theme.border,
+                backgroundColor: theme.panel,
+                alignItems: 'center',
+                justifyContent: 'center',
+              },
+              pressed && { opacity: 0.8 },
+            ]}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '600', color: theme.danger, fontFamily: typography.family.sansSemibold }}>
+              Cancel order
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+    ) : null;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
       {/* ── Screen Reader & E2E Test Compatibility Anchors (Playwright) ── */}
@@ -603,7 +639,7 @@ export default function InvoiceScreen() {
         onOrderUpdate={(updated) => setOrder(updated)}
         onBack={() => safeBack()}
         onShare={onShare}
-        actionButtons={
+        actionButtons={withCancel(
           isSeller && (order?.fulfillment_status === 'pending' || !order?.fulfillment_status || order?.fulfillment_status === 'awaiting_payment') && isOrderActive && order?.status !== 'completed' && order?.status !== 'canceled' && order?.status !== 'refunded' ? (
             <Pressable
               onPress={handleStartPacking}
@@ -634,7 +670,8 @@ export default function InvoiceScreen() {
           ) : isSeller && order?.fulfillment_status === 'packing' ? (
             <View
               style={{
-                height: 48,
+                minHeight: 48,
+                paddingVertical: 8,
                 borderRadius: radii.pill,
                 backgroundColor: theme.surface,
                 borderWidth: 1,
@@ -642,11 +679,11 @@ export default function InvoiceScreen() {
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',
-                paddingHorizontal: 16,
+                paddingHorizontal: 20,
               }}
             >
               <Feather name="truck" size={16} color={theme.mute} style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
+              <Text style={{ flexShrink: 1, textAlign: 'center', fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
                 Ready for Pickup · Our courier will collect it
               </Text>
             </View>
@@ -850,7 +887,7 @@ export default function InvoiceScreen() {
               </Pressable>
             </View>
           ) : null
-        }
+        )}
       />
 
       {/* Cancel Order Modal */}

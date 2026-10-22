@@ -365,7 +365,7 @@ function IncomingOfferCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -510,7 +510,7 @@ function DealAcceptedCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -629,7 +629,7 @@ function SpecialOfferCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -768,7 +768,7 @@ function OfferBubble(
 
   // 5. Image 1, 2, 3, 4: Clean Offer Pill Bubbles
   let pillText = '';
-  const formattedAmt = formatPrice(amount, { forceDecimals: true });
+  const formattedAmt = formatPrice(amount);
   if (status === 'declined') {
     pillText = mine
       ? `You declined their offer: ${formattedAmt}`

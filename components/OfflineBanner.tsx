@@ -11,6 +11,7 @@ import { Animated, Easing, Platform, View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { colors } from '@/lib/theme';
 import { useIsOffline } from '@/lib/offline';
 
@@ -19,6 +20,10 @@ const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 export function OfflineBanner() {
   const offline = useIsOffline();
   const insets = useSafeAreaInsets();
+  // With a real status bar, live inside that strip so the banner never covers
+  // screen headers (it hid the top half of the chat Back button). No inset
+  // (web) -> a normal thin bar at the top edge.
+  const inStatusBar = insets.top >= 20;
   const [translateY] = useState(() => new Animated.Value(-80));
   const [opacity] = useState(() => new Animated.Value(0));
 
@@ -50,7 +55,7 @@ export function OfflineBanner() {
         top: 0,
         left: 0,
         right: 0,
-        paddingTop: insets.top,
+        paddingTop: inStatusBar ? 0 : insets.top,
         zIndex: 9999,
         transform: [{ translateY }],
         opacity,
@@ -63,16 +68,19 @@ export function OfflineBanner() {
           justifyContent: 'center',
           gap: 8,
           backgroundColor: colors.ink,
-          paddingVertical: 8,
+          ...(inStatusBar ? { height: insets.top } : { paddingVertical: 8 }),
           paddingHorizontal: 16,
         }}
       >
+        {offline && inStatusBar ? <StatusBar style="light" /> : null}
         <Feather name="wifi-off" size={14} color={colors.white} />
         <Text
           accessibilityRole="alert"
+          accessibilityLabel="No internet connection"
           style={{ color: colors.white, fontSize: 13, fontWeight: '700', letterSpacing: 0.1 }}
         >
-          No internet connection
+          {/* Short in the status-bar strip so it clears the clock and icons. */}
+          {inStatusBar ? 'Offline' : 'No internet connection'}
         </Text>
       </View>
     </Animated.View>

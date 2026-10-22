@@ -482,7 +482,7 @@ export default function ProductScreen() {
   if (notFound) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: insets.top }}>
-        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }}>
+        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }} accessibilityRole="button" accessibilityLabel="Go back">
           <Feather name="arrow-left" size={22} color={theme.ink} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
@@ -501,7 +501,7 @@ export default function ProductScreen() {
   if (listingQ.isError && !listing) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: insets.top }}>
-        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }}>
+        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }} accessibilityRole="button" accessibilityLabel="Go back">
           <Feather name="arrow-left" size={22} color={theme.ink} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>

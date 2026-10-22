@@ -31,7 +31,9 @@ import { useToast } from '@/lib/toast';
 import { putCachedListing } from '@/lib/listingCache';
 import { emitListingCreated } from '@/lib/listingEvents';
 import { invalidateFresh } from '@/lib/freshness';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
+import { confirm } from '@/lib/confirm';
 import type { Category, Condition, Gender, Listing } from '@/types';
 import { categoryLabel, hasSubcategories, subcategoryLabel } from '@/lib/categories';
 import { formatPrice, CURRENCY_SYMBOL } from '@/lib/currency';
@@ -357,6 +359,7 @@ export function SellForm({
   const toast = useToast();
   const { width } = useWindowDimensions();
   const [publishing, setPublishing] = useState(false);
+  const navigation = useNavigation();
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const isNavigatingSheetRef = useRef(Platform.OS === 'web');
 
@@ -411,6 +414,22 @@ export function SellForm({
   useEffect(() => {
     reset(initialValues);
   }, [initialValues, reset]);
+
+  // Leaving with unsaved input (Back, swipe, or X) asks first instead of
+  // silently dropping it. Compared by value: photos go in via setValue, which
+  // react-hook-form's isDirty doesn't track.
+  const hasUnsaved = JSON.stringify(watch()) !== JSON.stringify(initialValues);
+  usePreventRemove(hasUnsaved && !publishing, ({ data }) => {
+    confirm({
+      title: isEditing ? 'Discard changes?' : 'Discard this listing?',
+      message: 'What you entered will be lost.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+      destructive: true,
+    }).then((ok) => {
+      if (ok) navigation.dispatch(data.action);
+    });
+  });
 
   const slots = watch('slots');
   const title = watch('title');

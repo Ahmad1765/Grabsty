@@ -76,6 +76,12 @@ export function SellerPickupModal({
       setValidationError('Contact phone is required for courier rider');
       return;
     }
+    // Same rule as the buyer's checkout address: the rider has to reach this number.
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    if (!/^\+?\d{10,15}$/.test(cleanPhone)) {
+      setValidationError('Enter a valid phone number (10 to 15 digits)');
+      return;
+    }
     if (!line1.trim()) {
       setValidationError('Pickup street address is required');
       return;

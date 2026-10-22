@@ -155,7 +155,7 @@ export function ProductActionBar({
       >
         <View style={styles.actionRow}>
           <View style={{ flex: 1, marginRight: 10, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#10B981', fontFamily: 'Inter_700Bold' }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: theme.ink, fontFamily: 'Inter_700Bold' }}>
               You purchased this item
             </Text>
             <Text style={{ fontSize: 11.5, color: theme.mute, fontFamily: 'Inter_500Medium' }}>

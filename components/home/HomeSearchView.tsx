@@ -23,7 +23,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { Text, TextInput } from '@/lib/rnText';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -442,7 +442,9 @@ export const HomeSearchView = memo(function HomeSearchView({
     );
   }, [isClosing, onClose, animProgress, query, activeTab, addSearch]);
 
-  useEffect(() => {
+  // Focus-scoped: this overlay stays mounted under any pushed screen (product,
+  // profile), and an always-on listener returning true swallowed Back there.
+  useFocusEffect(useCallback(() => {
     const onBackPress = () => {
       if (hasSubmitted) {
         setHasSubmitted(false);
@@ -460,7 +462,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => subscription.remove();
-  }, [hasSubmitted, handleClose]);
+  }, [hasSubmitted, handleClose]));
 
   const rootAnimatedStyle = useAnimatedStyle(() => {
     const translateX = interpolate(

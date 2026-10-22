@@ -111,7 +111,9 @@ export function OfferSheet({
   };
 
   const handleCustomChange = (text: string) => {
-    const clean = text.replace(/[^0-9.]/g, '');
+    // Whole rupees only, like every other price in the app ("1,500" -> 1500).
+    // Cut at a decimal point rather than stripping it: "12.5" must not become 125.
+    const clean = text.split('.')[0].replace(/[^0-9]/g, '');
     setCustomAmount(clean);
   };
 
@@ -325,7 +327,7 @@ export function OfferSheet({
                         onChangeText={handleCustomChange}
                         placeholder={`Enter amount lower than ${formatPrice(askingPrice)}`}
                         placeholderTextColor={theme.muteSoft}
-                        keyboardType="decimal-pad"
+                        keyboardType="number-pad"
                         returnKeyType="done"
                         selectTextOnFocus
                         style={
@@ -411,7 +413,7 @@ export function OfferSheet({
                         style={{
                           fontSize: 20,
                           fontFamily: type.family.sansBold,
-                          color: isValidOffer ? '#16A34A' : theme.ink,
+                          color: isValidOffer ? theme.purple : theme.ink,
                         }}
                       >
                         {activeOfferAmount > 0

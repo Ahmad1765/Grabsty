@@ -184,6 +184,8 @@ export function Composer({
             placeholder={placeholder}
             placeholderTextColor={theme.muteSoft}
             value={value}
+            // Matches messages_text_length on the server.
+            maxLength={4000}
             onChangeText={onChangeText}
             onChange={
               Platform.OS === 'web'

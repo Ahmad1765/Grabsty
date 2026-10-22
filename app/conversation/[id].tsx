@@ -341,7 +341,10 @@ export default function ConversationScreen() {
     const actions: MessageAction[] = [
       { id: 'copy', label: 'Copy', icon: 'copy', onPress: handleCopy },
     ];
-    if (pressed?.msg && user && pressed.msg.sender_id === user.id) {
+    // System notices and offers are the record of the deal: never deletable
+    // (the server refuses too). Offers are withdrawn instead.
+    const deletable = !pressed?.msg?.kind || pressed.msg.kind === 'text';
+    if (pressed?.msg && user && pressed.msg.sender_id === user.id && deletable) {
       const isImage = isImageMessage(pressed.msg);
       actions.push({
         id: 'delete',
