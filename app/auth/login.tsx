@@ -8,6 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { signInWithGoogle } from '@/lib/oauth';
+import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
 import { colors } from '@/lib/theme';
 import { BRAND } from '@/lib/brand';
@@ -153,6 +154,7 @@ function LoginScreen() {
           password,
         });
         if (error) throw error;
+        capture('signed_in', { method: 'password' });
         toast.show('Welcome back', { variant: 'success', icon: 'check' });
         if (router.canDismiss()) router.dismiss();
         else router.replace('/(tabs)');
@@ -162,6 +164,7 @@ function LoginScreen() {
           password,
         });
         if (error) throw error;
+        capture('signed_up', { method: 'password', needs_email_confirm: !data.session });
         if (data.session) {
           toast.show('Account created', { variant: 'success', icon: 'check' });
           router.replace('/onboarding');

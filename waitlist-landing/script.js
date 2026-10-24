@@ -637,6 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeWaitlistData = null;
 
   function renderWaitlistSuccess({ name, phone, email, city, role, interest, ticketCode, isReturning }) {
+    // No name/phone/email: only the structured choices go to analytics.
+    window.posthog?.capture(isReturning ? 'waitlist_returned' : 'waitlist_joined', {
+      role, interest, city, referred: new URLSearchParams(location.search).has('ref'),
+    });
     activeWaitlistData = { name, phone, email, city, role, interest, ticketCode };
 
     const siteBase = window.location.origin + window.location.pathname.replace(/\/$/, '');

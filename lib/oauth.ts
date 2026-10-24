@@ -10,6 +10,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '@/lib/supabase';
+import { capture } from '@/lib/analytics';
 
 // Dismisses any lingering auth popup (web) and completes the session handshake.
 WebBrowser.maybeCompleteAuthSession();
@@ -35,6 +36,7 @@ export async function signInWithGoogle(): Promise<OAuthResult> {
     if (typeof code === 'string' && code) {
       const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
       if (exErr) return { ok: false, error: exErr.message };
+      capture('signed_in', { method: 'google' });
       return { ok: true };
     }
 
@@ -47,6 +49,7 @@ export async function signInWithGoogle(): Promise<OAuthResult> {
       if (access_token && refresh_token) {
         const { error: sErr } = await supabase.auth.setSession({ access_token, refresh_token });
         if (sErr) return { ok: false, error: sErr.message };
+        capture('signed_in', { method: 'google' });
         return { ok: true };
       }
     }
