@@ -26,7 +26,7 @@ const apiKey = (extra.posthogKey ?? process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '').t
 const host = (
   extra.posthogHost ??
   process.env.EXPO_PUBLIC_POSTHOG_HOST ??
-  'https://eu.i.posthog.com'
+  'https://us.i.posthog.com'
 ).trim();
 
 // A key is the only thing that turns analytics on. No key → every helper below
@@ -53,11 +53,17 @@ export function initAnalytics(): void {
   }
   client = new PostHog(apiKey, {
     host,
-    // Session replay: sampled at 10 % + mask all text inputs/text (privacy posture).
+    // Session replay (native only), sampled at 10 %. Android replay is
+    // screenshot-based, so images stay masked: ID/CNIC photos render in
+    // Settings → Verification and the admin KYC queue. maskAllTextInputs
+    // masks all rendered text too, not just inputs. Logcat and network
+    // telemetry are off: request URLs carry search terms and logs carry errors.
     enableSessionReplay: true,
     sessionReplayConfig: {
       maskAllTextInputs: true,
-      maskAllImages: false,
+      maskAllImages: true,
+      captureLog: false,
+      captureNetworkTelemetry: false,
       sampleRate: 0.1,
     },
   });
@@ -88,7 +94,11 @@ export function identify(userId: string, traits: Record<string, unknown> = {}): 
 }
 
 export function resetIdentity(): void {
-  client?.reset();
+  if (!client) return;
+  client.reset();
+  // reset() also wipes the SDK's persisted opt-out, and lifecycle events and
+  // session replay only consult the SDK's flag, not ours. Re-apply it.
+  if (optedOut) client.optOut().catch(() => {});
 }
 
 export function capture(event: string, props: Record<string, unknown> = {}): void {

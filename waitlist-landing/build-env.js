@@ -3,7 +3,7 @@
 const fs = require('fs');
 const cfg = {
   key: (process.env.POSTHOG_KEY || '').trim(),
-  host: (process.env.POSTHOG_HOST || 'https://eu.i.posthog.com').trim(),
+  host: (process.env.POSTHOG_HOST || 'https://us.i.posthog.com').trim(),
 };
 fs.writeFileSync('env.js', `window.__POSTHOG__ = ${JSON.stringify(cfg)};\n`);
 console.log(cfg.key ? 'env.js: PostHog enabled' : 'env.js: POSTHOG_KEY not set, analytics off');

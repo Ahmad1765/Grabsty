@@ -609,8 +609,13 @@ export function useSettingsManager() {
         try {
           photoUrl = await uploadVerificationDocument(form.local_image, user.id);
         } catch (uploadErr) {
-          console.warn('[settings] verification photo upload failed; using fallback', uploadErr);
-          photoUrl = form.local_image.uri;
+          // Never store the device-local URI: an admin can't open it.
+          console.warn('[settings] verification photo upload failed', uploadErr);
+          toast.show('Could not upload your ID photo. Please try again.', {
+            variant: 'default',
+            icon: 'alert-triangle',
+          });
+          return false;
         }
       }
 

@@ -57,11 +57,18 @@ import {
   type AdminSupportConversation,
 } from '@/lib/support';
 import type { ChatMessage } from '@/lib/chat';
+import { useVerificationPhotoUrl } from '@/lib/upload';
 
 type AdminTab = 'overview' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
 type LogisticsFilter = 'all' | 'active' | 'IN_TRANSIT' | 'DELIVERED' | 'COMPLETED_FUNDS_RELEASED';
 
 const COURIER_PRESETS = ['Internal Fleet', 'TCS', 'Leopards', 'Trax', 'PostEx', 'M&P', 'Custom'];
+
+// ID photos are in a private bucket; this resolves the stored path to a signed URL.
+function KycPhoto({ value, style }: { value: string; style: React.ComponentProps<typeof Image>['style'] }) {
+  const uri = useVerificationPhotoUrl(value);
+  return <Image source={uri ? { uri } : undefined} style={style} contentFit="cover" />;
+}
 
 function deriveRef(id: string): string {
   const hex = id.replace(/-/g, '').slice(0, 8);
@@ -1509,8 +1516,8 @@ export default function AdminConsoleScreen() {
                           <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textMuted, marginBottom: 6 }}>
                             Attached CNIC / ID Photo:
                           </Text>
-                          <Image
-                            source={{ uri: (item.id_photo_url || item.notes)! }}
+                          <KycPhoto
+                            value={(item.id_photo_url || item.notes)!}
                             style={{
                               width: 200,
                               height: 120,
@@ -1519,7 +1526,6 @@ export default function AdminConsoleScreen() {
                               borderWidth: 1,
                               borderColor: theme.border,
                             }}
-                            contentFit="cover"
                           />
                         </View>
                       )}
