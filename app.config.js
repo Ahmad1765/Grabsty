@@ -10,7 +10,7 @@
 // no .env file here) `extra.eas.projectId` resolved to undefined and OTA updates
 // silently stayed off.
 const easProjectId =
-  process.env.EAS_PROJECT_ID || 'cea63614-ec61-46e8-b410-5fe84a7218bf';
+  process.env.EAS_PROJECT_ID || '601d3c06-7d72-4ab7-88a3-97c570648676';
 
 // This file is the ONLY app config. There is no app.json — a dynamic config that
 // returns an object keyed `expo` makes @expo/config's reduceExpoObject() collapse
@@ -19,6 +19,8 @@ const easProjectId =
 // right and do nothing; check the resolved result with `npx expo config --type public`.
 module.exports = () => ({
     name: 'Grabsty',
+    // Must equal the slug of the EAS project behind `easProjectId` (@daku1765/grabsty);
+    // a mismatch fails `eas build`.
     slug: 'grabsty',
     version: '1.0.0',
     orientation: 'portrait',
@@ -28,7 +30,11 @@ module.exports = () => ({
     // Fingerprint policy derives runtimeVersion from the native module set, so an
     // OTA JS update only lands on a build whose native layer actually matches —
     // never a crash from shipping a bundle newer than the installed binary.
-    runtimeVersion: { policy: 'fingerprint' },
+    // EXPO_DEV_SKIP_FINGERPRINT=1 is for `expo start` only: the dev server
+    // re-fingerprints the whole project on every manifest request (~15-20s),
+    // longer than the dev client waits on a phone. Never set it for builds/updates.
+    runtimeVersion:
+      process.env.EXPO_DEV_SKIP_FINGERPRINT === '1' ? 'dev' : { policy: 'fingerprint' },
     // OTA update endpoint, only wired once a project id exists. fallbackToCache
     // timeout 0 = never block cold start on the update fetch; a downloaded
     // update applies on the next launch instead.
@@ -58,9 +64,11 @@ module.exports = () => ({
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#5959ED',
       },
       package: 'com.grabsty.app',
+      // FCM credentials for expo-notifications; prebuild wires the google-services Gradle plugin.
+      googleServicesFile: './google-services.json',
     },
     // Only the icon families this app actually renders. The previous `Fonts/*`
     // wildcard declared all 20 @expo/vector-icons families (~4.1 MB) when four

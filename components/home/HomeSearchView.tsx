@@ -23,7 +23,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { Text, TextInput } from '@/lib/rnText';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -52,6 +52,7 @@ import { ListingCard } from '@/components/ListingCard';
 import { useGridDimensions } from '@/lib/responsive';
 import { radii, type as typography } from '@/lib/theme';
 import type { Category, Listing } from '@/types';
+import { getOptimizedImageUrl } from '@/lib/images';
 
 function haptic() {
   if (Platform.OS !== 'web') {
@@ -122,6 +123,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   const [hasSubmitted, setHasSubmitted] = useState(
     initialQuery.trim().length > 0 || !!initialCategory,
   );
+  const hasSubmittedOnOpen = useRef(hasSubmitted);
   const { previousSearches, historyItems, addSearch, removeSearch, clearAll } = useSearchHistory();
 
   const suggestions = useMemo(
@@ -230,7 +232,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           .limit(10);
 
         if (!error && data && data.length > 0 && isMounted) {
-          const mapped: RecentMemberItem[] = data.map((p) => ({
+          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id).map((p) => ({
             id: p.id,
             username: p.username || 'user',
             full_name: p.full_name,
@@ -254,7 +256,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user?.id]);
 
   const [tabLayouts, setTabLayouts] = useState<{
     listings: { x: number; width: number };
@@ -412,6 +414,9 @@ export const HomeSearchView = memo(function HomeSearchView({
       duration: 400,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     });
+    // Opened onto results (a category or preset query): show them, don't
+    // throw the keyboard over them.
+    if (hasSubmittedOnOpen.current) return;
     const focusTimer = setTimeout(() => {
       inputRef.current?.focus?.();
     }, 260);
@@ -441,7 +446,9 @@ export const HomeSearchView = memo(function HomeSearchView({
     );
   }, [isClosing, onClose, animProgress, query, activeTab, addSearch]);
 
-  useEffect(() => {
+  // Focus-scoped: this overlay stays mounted under any pushed screen (product,
+  // profile), and an always-on listener returning true swallowed Back there.
+  useFocusEffect(useCallback(() => {
     const onBackPress = () => {
       if (hasSubmitted) {
         setHasSubmitted(false);
@@ -459,7 +466,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => subscription.remove();
-  }, [hasSubmitted, handleClose]);
+  }, [hasSubmitted, handleClose]));
 
   const rootAnimatedStyle = useAnimatedStyle(() => {
     const translateX = interpolate(
@@ -877,7 +884,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           >
             {item.avatar_url ? (
               <Image
-                source={{ uri: item.avatar_url }}
+                source={{ uri: getOptimizedImageUrl(item.avatar_url, { width: 120 }) }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
               />
@@ -946,14 +953,14 @@ export const HomeSearchView = memo(function HomeSearchView({
           >
             <Text
               style={{
-                fontSize: 15.5,
+                fontSize: 15,
                 fontWeight: '700',
                 fontFamily: typography.family.sansBold,
-                color: isDark ? '#9CA3AF' : '#4B5563',
+                color: theme.text,
                 letterSpacing: -0.2,
               }}
             >
-              Your Recent Searches
+              Recent searches
             </Text>
 
             <Pressable
@@ -973,10 +980,10 @@ export const HomeSearchView = memo(function HomeSearchView({
                   fontSize: 14.5,
                   fontWeight: '600',
                   fontFamily: typography.family.sansBold,
-                  color: '#0055D4',
+                  color: theme.purple,
                 }}
               >
-                Clear All
+                Clear all
               </Text>
             </Pressable>
           </View>
@@ -1152,7 +1159,7 @@ export const HomeSearchView = memo(function HomeSearchView({
             >
               {member.avatar_url ? (
                 <Image
-                  source={{ uri: member.avatar_url }}
+                  source={{ uri: getOptimizedImageUrl(member.avatar_url, { width: 120 }) }}
                   style={{ width: '100%', height: '100%' }}
                   contentFit="cover"
                 />
@@ -1373,19 +1380,19 @@ export const HomeSearchView = memo(function HomeSearchView({
               height: 44,
               borderRadius: 22,
               backgroundColor: isSaved
-                ? (isDark ? 'rgba(245, 158, 11, 0.22)' : '#FEF3C7')
+                ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
                 : (isDark ? theme.panel : theme.surface),
               borderWidth: 1,
               borderColor: isSaved
-                ? (isDark ? 'rgba(245, 158, 11, 0.5)' : '#FDE68A')
+                ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
                 : theme.border,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.75 : 1,
               transform: [{ scale: pressed ? 0.92 : 1 }],
-              shadowColor: isSaved ? '#F59E0B' : '#000000',
+              shadowColor: isSaved ? theme.purple : '#000000',
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isSaved ? 0.35 : 0.05,
+              shadowOpacity: isSaved ? 0.16 : 0.05,
               shadowRadius: 6,
               elevation: isSaved ? 3 : 1,
             })}
@@ -1393,7 +1400,7 @@ export const HomeSearchView = memo(function HomeSearchView({
             <Ionicons
               name={isSaved ? "star" : "star-outline"}
               size={21}
-              color={isSaved ? "#F59E0B" : (isDark ? "#9CA3AF" : "#6B7280")}
+              color={isSaved ? theme.purple : theme.mute}
             />
           </Pressable>
         )}
@@ -1599,6 +1606,9 @@ export const HomeSearchView = memo(function HomeSearchView({
           horizontal
           pagingEnabled
           scrollEnabled={true}
+          // The inner lists persist taps too; without it here the first tap on
+          // a recent/popular chip only closed the keyboard.
+          keyboardShouldPersistTaps="handled"
           showsHorizontalScrollIndicator={false}
           contentOffset={{ x: activeTab === 'listings' ? 0 : screenWidth, y: 0 }}
           onScroll={handleScroll}

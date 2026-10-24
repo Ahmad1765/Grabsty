@@ -205,7 +205,7 @@ export function OrderStepper({
                       justifyContent: 'center',
                       marginBottom: 6,
                     },
-                    isDone && { backgroundColor: '#10B981' },
+                    isDone && { backgroundColor: theme.purple },
                     isCurrent && {
                       backgroundColor: theme.purpleSoft,
                       borderWidth: 2,
@@ -270,7 +270,7 @@ export function OrderStepper({
                   style={{
                     flex: 1,
                     height: 2,
-                    backgroundColor: stepNum < currentStage ? '#10B981' : theme.border,
+                    backgroundColor: stepNum < currentStage ? theme.purple : theme.border,
                     marginTop: 12,
                     marginHorizontal: -4,
                   }}

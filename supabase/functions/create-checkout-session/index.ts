@@ -203,7 +203,7 @@ Deno.serve(async (req: Request) => {
     const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
     const feeDollars =
       BUYER_PROTECTION_MODE === 'percentage'
-        ? round2(round2(chargeDollars) * (BUYER_PROTECTION_PERCENTAGE / 100))
+        ? Math.round(round2(chargeDollars) * (BUYER_PROTECTION_PERCENTAGE / 100))
         : BUYER_PROTECTION_FEE;
     const feeCents = Math.round(feeDollars * 100);
 
@@ -221,11 +221,9 @@ Deno.serve(async (req: Request) => {
       // `urlOrigin` it never used, then substring-matched the caller's hostname
       // INTO each allow-list entry — which passes for any hostname that happens
       // to be a substring of an allowed origin, i.e. an open redirect.
-      if (
-        isWeb &&
-        ALLOWED_ORIGINS.length > 0 &&
-        !ALLOWED_ORIGINS.includes(successUrlObj.origin)
-      ) {
+      // An empty allow-list fails closed: with no secret set, any web origin
+      // would otherwise become a Stripe post-payment redirect target.
+      if (isWeb && !ALLOWED_ORIGINS.includes(successUrlObj.origin)) {
         throw new Error('Redirect origin not allowed');
       }
       cancelUrlObj = new URL(returnUrl);

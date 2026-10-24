@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SEARCH FILTER CHIPS & RESULTS HEADER (CERANIX DESIGN SYSTEM)
+// SEARCH FILTER CHIPS & RESULTS HEADER (GRABSTY DESIGN SYSTEM)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Refinement Chips & Micro-Filters:
@@ -23,6 +23,7 @@ import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { FilterSlidersIcon } from '@/components/ui';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { radii, type as typography, type ThemeTokens } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { CURRENCY_SYMBOL } from '@/lib/currency';
@@ -37,7 +38,7 @@ import {
 } from '@/lib/searchFilters';
 
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+const SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
 
 const CONDITIONS: { id: Condition; label: string; desc: string }[] = [
   { id: 'new_with_tags', label: 'New with tags', desc: 'Brand new, never worn with tags' },
@@ -679,7 +680,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
         onRequestClose={closeModal}
       >
         <Pressable style={styles.modalBackdrop} onPress={closeModal}>
-          <Pressable style={[styles.modalCard, { maxHeight: '90%' }]} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <FilterSlidersIcon size={16} color={theme.text} />
@@ -731,7 +732,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </View>
             </View>
 
-            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 400, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               {/* Row 1: Sort by */}
               <Pressable
                 onPress={() => openSubModal('sort')}
@@ -857,7 +858,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
                 ]}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                  <Feather name="dollar-sign" size={16} color={filters.priceMin != null || filters.priceMax != null ? theme.purple : theme.mute} />
+                  <Feather name="tag" size={16} color={filters.priceMin != null || filters.priceMax != null ? theme.purple : theme.mute} />
                   <Text style={[styles.filterSummaryLabel, filters.priceMin != null || filters.priceMax != null ? styles.filterSummaryLabelActive : null]}>
                     Price
                   </Text>
@@ -964,7 +965,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 380, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               <Pressable
                 onPress={() => handleSelectCategory(null)}
                 style={[
@@ -1023,90 +1024,92 @@ export const SearchFilterChips = memo(function SearchFilterChips({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <Pressable style={styles.modalBackdrop} onPress={closeModal}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {prevModal && (
-                  <Pressable hitSlop={8} onPress={handleSubModalClose} style={styles.modalCloseBtn} accessibilityLabel="Back to all filters">
-                    <Feather name="chevron-left" size={18} color={theme.text} />
-                  </Pressable>
-                )}
-                <Text style={styles.modalTitle}>Brand</Text>
-              </View>
-              <Pressable hitSlop={10} onPress={closeModal} style={styles.modalCloseBtn} accessibilityLabel="Close brand modal">
-                <Feather name="x" size={18} color={theme.text} />
-              </Pressable>
-            </View>
-
-            {/* Custom Brand Input */}
-            <View style={styles.brandInputRow}>
-              <View style={styles.brandInputBox}>
-                <Feather name="search" size={15} color={theme.mute} style={{ marginRight: 8 }} />
-                <TextInput
-                  value={brandInput}
-                  onChangeText={setBrandInput}
-                  placeholder="Type a brand name…"
-                  placeholderTextColor={theme.mute}
-                  onSubmitEditing={handleApplyCustomBrand}
-                  style={styles.brandTextInput as any}
-                />
-                {brandInput.length > 0 && (
-                  <Pressable onPress={() => setBrandInput('')} hitSlop={6}>
-                    <Feather name="x" size={14} color={theme.mute} />
-                  </Pressable>
-                )}
-              </View>
-              <Pressable
-                onPress={handleApplyCustomBrand}
-                style={({ pressed }) => [
-                  styles.brandApplyBtn,
-                  { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] },
-                ]}
-              >
-                <Text style={styles.brandApplyBtnText}>Apply</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
-              {filters.brand && (
-                <Pressable
-                  onPress={() => handleSelectBrand(null)}
-                  style={styles.optionRow}
-                >
-                  <Text style={[styles.optionText, { color: '#EF4444' }]}>
-                    Clear brand ({filters.brand})
-                  </Text>
-                  <Feather name="x" size={15} color="#EF4444" />
+        <KeyboardAvoider style={{ flex: 1 }}>
+          <Pressable style={styles.modalBackdrop} onPress={closeModal}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {prevModal && (
+                    <Pressable hitSlop={8} onPress={handleSubModalClose} style={styles.modalCloseBtn} accessibilityLabel="Back to all filters">
+                      <Feather name="chevron-left" size={18} color={theme.text} />
+                    </Pressable>
+                  )}
+                  <Text style={styles.modalTitle}>Brand</Text>
+                </View>
+                <Pressable hitSlop={10} onPress={closeModal} style={styles.modalCloseBtn} accessibilityLabel="Close brand modal">
+                  <Feather name="x" size={18} color={theme.text} />
                 </Pressable>
-              )}
+              </View>
 
-              {POPULAR_BRANDS.map((b) => {
-                const isSelected = filters.brand?.toLowerCase() === b.toLowerCase();
-                return (
+              {/* Custom Brand Input */}
+              <View style={styles.brandInputRow}>
+                <View style={styles.brandInputBox}>
+                  <Feather name="search" size={15} color={theme.mute} style={{ marginRight: 8 }} />
+                  <TextInput
+                    value={brandInput}
+                    onChangeText={setBrandInput}
+                    placeholder="Type a brand name…"
+                    placeholderTextColor={theme.mute}
+                    onSubmitEditing={handleApplyCustomBrand}
+                    style={styles.brandTextInput as any}
+                  />
+                  {brandInput.length > 0 && (
+                    <Pressable onPress={() => setBrandInput('')} hitSlop={6}>
+                      <Feather name="x" size={14} color={theme.mute} />
+                    </Pressable>
+                  )}
+                </View>
+                <Pressable
+                  onPress={handleApplyCustomBrand}
+                  style={({ pressed }) => [
+                    styles.brandApplyBtn,
+                    { opacity: pressed ? 0.8 : 1, transform: [{ scale: pressed ? 0.96 : 1 }] },
+                  ]}
+                >
+                  <Text style={styles.brandApplyBtnText}>Apply</Text>
+                </Pressable>
+              </View>
+
+              <ScrollView style={{ maxHeight: 300, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
+                {filters.brand && (
                   <Pressable
-                    key={b}
-                    onPress={() => handleSelectBrand(b)}
-                    style={[
-                      styles.optionRow,
-                      isSelected && styles.optionRowSelected,
-                    ]}
+                    onPress={() => handleSelectBrand(null)}
+                    style={styles.optionRow}
                   >
-                    <Text
+                    <Text style={[styles.optionText, { color: '#EF4444' }]}>
+                      Clear brand ({filters.brand})
+                    </Text>
+                    <Feather name="x" size={15} color="#EF4444" />
+                  </Pressable>
+                )}
+
+                {POPULAR_BRANDS.map((b) => {
+                  const isSelected = filters.brand?.toLowerCase() === b.toLowerCase();
+                  return (
+                    <Pressable
+                      key={b}
+                      onPress={() => handleSelectBrand(b)}
                       style={[
-                        styles.optionText,
-                        isSelected && styles.optionTextSelected,
+                        styles.optionRow,
+                        isSelected && styles.optionRowSelected,
                       ]}
                     >
-                      {b}
-                    </Text>
-                    {isSelected && <Feather name="check" size={16} color={theme.purple} />}
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {b}
+                      </Text>
+                      {isSelected && <Feather name="check" size={16} color={theme.purple} />}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoider>
       </Modal>
 
       {/* Size Modal */}
@@ -1197,7 +1200,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 320, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               {CONDITIONS.map((cond) => {
                 const isSelected = filters.conditions.includes(cond.id);
                 return (
@@ -1257,95 +1260,97 @@ export const SearchFilterChips = memo(function SearchFilterChips({
         animationType="fade"
         onRequestClose={closeModal}
       >
-        <Pressable style={styles.modalBackdrop} onPress={closeModal}>
-          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalHeader}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                {prevModal && (
-                  <Pressable hitSlop={8} onPress={handleSubModalClose} style={styles.modalCloseBtn} accessibilityLabel="Back to all filters">
-                    <Feather name="chevron-left" size={18} color={theme.text} />
-                  </Pressable>
-                )}
-                <Text style={styles.modalTitle}>Price Range</Text>
+        <KeyboardAvoider style={{ flex: 1 }}>
+          <Pressable style={styles.modalBackdrop} onPress={closeModal}>
+            <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  {prevModal && (
+                    <Pressable hitSlop={8} onPress={handleSubModalClose} style={styles.modalCloseBtn} accessibilityLabel="Back to all filters">
+                      <Feather name="chevron-left" size={18} color={theme.text} />
+                    </Pressable>
+                  )}
+                  <Text style={styles.modalTitle}>Price Range</Text>
+                </View>
+                <Pressable hitSlop={10} onPress={closeModal} style={styles.modalCloseBtn} accessibilityLabel="Close price modal">
+                  <Feather name="x" size={18} color={theme.text} />
+                </Pressable>
               </View>
-              <Pressable hitSlop={10} onPress={closeModal} style={styles.modalCloseBtn} accessibilityLabel="Close price modal">
-                <Feather name="x" size={18} color={theme.text} />
-              </Pressable>
-            </View>
 
-            {/* Quick Presets */}
-            <View style={styles.pricePresetsRow}>
-              {PRICE_PRESETS.map((p, idx) => {
-                const isMatch =
-                  filters.priceMin === p.min && filters.priceMax === p.max;
-                return (
-                  <Pressable
-                    key={idx}
-                    onPress={() => handleSelectPricePreset(p.min, p.max)}
-                    style={[
-                      styles.pricePresetChip,
-                      isMatch && styles.pricePresetChipActive,
-                    ]}
-                  >
-                    <Text
+              {/* Quick Presets */}
+              <View style={styles.pricePresetsRow}>
+                {PRICE_PRESETS.map((p, idx) => {
+                  const isMatch =
+                    filters.priceMin === p.min && filters.priceMax === p.max;
+                  return (
+                    <Pressable
+                      key={idx}
+                      onPress={() => handleSelectPricePreset(p.min, p.max)}
                       style={[
-                        styles.pricePresetText,
-                        isMatch && styles.pricePresetTextActive,
+                        styles.pricePresetChip,
+                        isMatch && styles.pricePresetChipActive,
                       ]}
                     >
-                      {p.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            {/* Custom Min / Max */}
-            <View style={styles.priceInputsContainer}>
-              <View style={styles.priceInputBox}>
-                <Text style={styles.pricePrefix}>{CURRENCY_SYMBOL}</Text>
-                <TextInput
-                  value={customMin}
-                  onChangeText={setCustomMin}
-                  placeholder="Min"
-                  placeholderTextColor={theme.mute}
-                  keyboardType="numeric"
-                  style={styles.numericInput as any}
-                />
+                      <Text
+                        style={[
+                          styles.pricePresetText,
+                          isMatch && styles.pricePresetTextActive,
+                        ]}
+                      >
+                        {p.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
               </View>
 
-              <Text style={{ color: theme.mute, fontSize: 16 }}>–</Text>
+              {/* Custom Min / Max */}
+              <View style={styles.priceInputsContainer}>
+                <View style={styles.priceInputBox}>
+                  <Text style={styles.pricePrefix}>{CURRENCY_SYMBOL}</Text>
+                  <TextInput
+                    value={customMin}
+                    onChangeText={setCustomMin}
+                    placeholder="Min"
+                    placeholderTextColor={theme.mute}
+                    keyboardType="numeric"
+                    style={styles.numericInput as any}
+                  />
+                </View>
 
-              <View style={styles.priceInputBox}>
-                <Text style={styles.pricePrefix}>{CURRENCY_SYMBOL}</Text>
-                <TextInput
-                  value={customMax}
-                  onChangeText={setCustomMax}
-                  placeholder="Max"
-                  placeholderTextColor={theme.mute}
-                  keyboardType="numeric"
-                  style={styles.numericInput as any}
-                />
+                <Text style={{ color: theme.mute, fontSize: 16 }}>–</Text>
+
+                <View style={styles.priceInputBox}>
+                  <Text style={styles.pricePrefix}>{CURRENCY_SYMBOL}</Text>
+                  <TextInput
+                    value={customMax}
+                    onChangeText={setCustomMax}
+                    placeholder="Max"
+                    placeholderTextColor={theme.mute}
+                    keyboardType="numeric"
+                    style={styles.numericInput as any}
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.modalFooterRow}>
-              <Pressable
-                onPress={() => {
-                  setCustomMin('');
-                  setCustomMax('');
-                  handleSelectPricePreset(null, null);
-                }}
-                style={styles.modalClearBtn}
-              >
-                <Text style={styles.modalClearBtnText}>Reset</Text>
-              </Pressable>
-              <Pressable onPress={handleApplyCustomPrice} style={styles.modalDoneBtn}>
-                <Text style={styles.modalDoneBtnText}>Apply</Text>
-              </Pressable>
-            </View>
+              <View style={styles.modalFooterRow}>
+                <Pressable
+                  onPress={() => {
+                    setCustomMin('');
+                    setCustomMax('');
+                    handleSelectPricePreset(null, null);
+                  }}
+                  style={styles.modalClearBtn}
+                >
+                  <Text style={styles.modalClearBtnText}>Reset</Text>
+                </Pressable>
+                <Pressable onPress={handleApplyCustomPrice} style={styles.modalDoneBtn}>
+                  <Text style={styles.modalDoneBtnText}>Apply</Text>
+                </Pressable>
+              </View>
+            </Pressable>
           </Pressable>
-        </Pressable>
+        </KeyboardAvoider>
       </Modal>
 
       {/* Color Modal */}
@@ -1371,7 +1376,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 340, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               <Pressable
                 onPress={() => handleSelectColor('')}
                 style={[
@@ -1463,7 +1468,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 340, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               <Pressable
                 onPress={() => handleSelectMaterial('')}
                 style={[
@@ -1528,7 +1533,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               </Pressable>
             </View>
 
-            <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 340, flexShrink: 1 }} showsVerticalScrollIndicator={false}>
               {SORT_OPTIONS.map((opt) => {
                 const isSelected =
                   opt.id === 'relevance'
@@ -1612,7 +1617,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
   );
 });
 
-// ── Styles (Ceranix theme-aware system) ──────────────────────────────────────────
+// ── Styles (Grabsty theme-aware system) ──────────────────────────────────────────
 
 function createStyles(theme: ThemeTokens, isDark: boolean) {
   return StyleSheet.create({
@@ -1746,6 +1751,9 @@ function createStyles(theme: ThemeTokens, isDark: boolean) {
     modalCard: {
       width: '100%',
       maxWidth: 420,
+      // Short phones: the card caps at 90% and its list (flexShrink) gives up
+      // height, so the header and Apply/Clear row are never pushed off-screen.
+      maxHeight: '90%',
       backgroundColor: isDark ? theme.panel : '#FFFFFF',
       borderRadius: radii.xl,
       padding: 18,

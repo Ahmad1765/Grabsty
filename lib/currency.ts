@@ -1,4 +1,4 @@
-// Single source of truth for how money is shown across the app. Ceranix trades
+// Single source of truth for how money is shown across the app. Grabsty trades
 // in Pakistani Rupees (PKR), so every price, fee, offer, and total routes
 // through here — the symbol and formatting can never drift between screens.
 //

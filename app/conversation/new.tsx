@@ -11,6 +11,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
+import { useAndroidKeyboardShown } from '@/components/ui';
 import { useLocalSearchParams, router } from 'expo-router';
 import { safeBack } from '@/lib/nav';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -90,6 +91,7 @@ export default function NewConversationScreen() {
   const { user } = useAuth();
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const keyboardShown = useAndroidKeyboardShown();
   const { width: winWidth, height: winHeight } = useWindowDimensions();
   const compact = winHeight < 700 || winWidth < 360;
 
@@ -449,7 +451,9 @@ export default function NewConversationScreen() {
       style={{ flex: 1, backgroundColor: theme.background, overflow: 'hidden' }}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        // Edge-to-edge (Expo 54) disables adjustResize, so Android needs padding too
+        behavior={Platform.OS === 'web' ? undefined : 'padding'}
+        enabled={keyboardShown}
         style={{ flex: 1 }}
       >
         {/* Top Header */}
@@ -591,7 +595,7 @@ export default function NewConversationScreen() {
                     numberOfLines={1}
                     style={[
                       styles.itemTitle,
-                      { color: theme.ink, fontFamily: type.family.sansBold },
+                      { color: theme.ink, fontFamily: type.family.sansBold, flexShrink: 1 },
                     ]}
                   >
                     {targetName}
@@ -602,10 +606,11 @@ export default function NewConversationScreen() {
                         paddingHorizontal: 7,
                         paddingVertical: 1.5,
                         borderRadius: radii.pill,
-                        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                        backgroundColor: theme.purpleSoft,
+                        flexShrink: 0,
                       }}
                     >
-                      <Text style={{ fontSize: 10, fontFamily: type.family.sansBold, color: '#10B981' }}>
+                      <Text style={{ fontSize: 10, fontFamily: type.family.sansBold, color: theme.purple }}>
                         OFFICIAL SUPPORT
                       </Text>
                     </View>

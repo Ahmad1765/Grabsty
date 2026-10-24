@@ -14,16 +14,12 @@
 // is checked before any other database access — same shape as stripe-webhook's
 // signature check.
 //
-// The shared secret exists in two places by necessity, and they MUST match or
-// every push 401s:
-//   • DB side  — Supabase Vault, secret name `push_webhook_secret`, read by
-//                push.notify_send_push() at trigger time.
-//   • Here     — the `PUSH_WEBHOOK_SECRET` function secret.
-// Reading Vault from this side too would be tidier, but the `vault` schema is
-// not exposed through PostgREST, and the only way to reach it would be a
-// SECURITY DEFINER function in `public` that returns a secret — one loosened
-// grant away from leaking it. Env var it is, same as stripe-webhook.
-// PUSH_NOTIFICATIONS.md documents copying the value out of Vault.
+// The shared secret lives in Supabase Vault (`push_webhook_secret`), read by
+// push.notify_send_push() at trigger time. This side verifies it through
+// public.push_webhook_secret_matches(), which only answers yes/no and is
+// executable by the service role alone — the secret itself never leaves the
+// database. The optional `PUSH_WEBHOOK_SECRET` env var still works as a fast
+// path, but a stale copy no longer breaks delivery.
 //
 // Why the trigger is a committed row change and not a client call: the client
 // is never trusted to send a notification to another user. Only rows that
@@ -66,6 +62,24 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 type Admin = ReturnType<typeof createClient>;
+
+/**
+ * The trigger sends the Vault secret. Vault is the source of truth: the DB
+ * answers whether the header matches it (yes/no only, service-role only), so
+ * a stale or missing PUSH_WEBHOOK_SECRET env var can no longer silently 401
+ * every push, as it did from 2026-10-14. The env var, when set and equal, is
+ * accepted without the round trip.
+ */
+async function isTrustedCaller(admin: Admin, provided: string): Promise<boolean> {
+  const envSecret = Deno.env.get('PUSH_WEBHOOK_SECRET');
+  if (envSecret && timingSafeEqual(provided, envSecret)) return true;
+  const { data, error } = await admin.rpc('push_webhook_secret_matches', { p_secret: provided });
+  if (error) {
+    console.error('[send-push] secret check failed', error.message);
+    return false;
+  }
+  return data === true;
+}
 
 /**
  * Fetch everything the mapper needs for this payload. Kept here (impure) so
@@ -217,6 +231,18 @@ async function sendWeb(device: Device, n: PushNotification): Promise<boolean> {
   }
 }
 
+/** Token groups from Expo's PUSH_TOO_MANY_EXPERIENCE_IDS error, else null. */
+function mixedProjectGroups(errorBody: string): string[][] | null {
+  try {
+    const err = (JSON.parse(errorBody) as {
+      errors?: { code?: string; details?: Record<string, string[]> }[];
+    }).errors?.find((e) => e.code === 'PUSH_TOO_MANY_EXPERIENCE_IDS');
+    return err?.details ? Object.values(err.details).filter((g) => g.length > 0) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** POST one batch and return the tokens Expo reported as unregistered. */
 async function sendBatch(batch: ExpoMessage[]): Promise<string[]> {
   const res = await fetch(EXPO_PUSH_URL, {
@@ -230,7 +256,20 @@ async function sendBatch(batch: ExpoMessage[]): Promise<string[]> {
   });
 
   if (!res.ok) {
-    throw new Error(`Expo push API ${res.status}: ${await res.text()}`);
+    const text = await res.text();
+    // Expo refuses a request whose tokens belong to different Expo projects
+    // (e.g. a token left over from before the Carrinex -> Grabsty rename), and
+    // the whole batch fails with it. Its error lists the tokens per project:
+    // resend each group on its own so one stale install can't block the rest.
+    const groups = mixedProjectGroups(text);
+    if (groups && groups.length > 1) {
+      const dead: string[] = [];
+      for (const tokens of groups) {
+        dead.push(...(await sendBatch(batch.filter((m) => tokens.includes(m.to)))));
+      }
+      return dead;
+    }
+    throw new Error(`Expo push API ${res.status}: ${text}`);
   }
 
   const body = (await res.json()) as {
@@ -257,13 +296,8 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
 
-  const secret = Deno.env.get('PUSH_WEBHOOK_SECRET');
-  if (!secret) {
-    console.error('[send-push] PUSH_WEBHOOK_SECRET is not set');
-    return json({ error: 'not configured' }, 500);
-  }
   const provided = req.headers.get('x-webhook-secret');
-  if (!provided || !timingSafeEqual(provided, secret)) {
+  if (!provided || !(await isTrustedCaller(admin, provided))) {
     return json({ error: 'unauthorized' }, 401);
   }
 

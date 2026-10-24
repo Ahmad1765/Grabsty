@@ -1,4 +1,4 @@
-# Carrinex — React Native / Expo Performance Audit
+# Grabsty — React Native / Expo Performance Audit
 
 **Date:** 2026-07-30
 **Branch:** `feature/push-notifications`

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Ceranix Local Seed Data: Test Actors, Listings & Orders
+-- Grabsty Local Seed Data: Test Actors, Listings & Orders
 -- =============================================================================
 -- This seed file provisions canonical test actors, listings, and order fixtures
 -- required by:
@@ -46,7 +46,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       'authenticated',
       'authenticated',
-      'test_seller@ceranix.internal',
+      'test_seller@grabsty.internal',
       v_password_hash,
       now(),
       '',
@@ -63,7 +63,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       'authenticated',
       'authenticated',
-      'test_buyer@ceranix.internal',
+      'test_buyer@grabsty.internal',
       v_password_hash,
       now(),
       '',
@@ -80,7 +80,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       'authenticated',
       'authenticated',
-      'test_attacker@ceranix.internal',
+      'test_attacker@grabsty.internal',
       v_password_hash,
       now(),
       '',
@@ -97,7 +97,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       'authenticated',
       'authenticated',
-      'support@ceranix.internal',
+      'support@grabsty.internal',
       v_password_hash,
       now(),
       '',
@@ -105,7 +105,7 @@ BEGIN
       '',
       '',
       '{"provider": "system", "providers": ["system"]}'::jsonb,
-      '{"full_name": "Ceranix Support"}'::jsonb,
+      '{"full_name": "Grabsty Support"}'::jsonb,
       now(),
       now()
     )
@@ -133,7 +133,7 @@ BEGIN
       (
         v_seller_id,
         v_seller_id,
-        jsonb_build_object('sub', v_seller_id::text, 'email', 'test_seller@ceranix.internal'),
+        jsonb_build_object('sub', v_seller_id::text, 'email', 'test_seller@grabsty.internal'),
         'email',
         v_seller_id::text,
         now(),
@@ -143,7 +143,7 @@ BEGIN
       (
         v_buyer_id,
         v_buyer_id,
-        jsonb_build_object('sub', v_buyer_id::text, 'email', 'test_buyer@ceranix.internal'),
+        jsonb_build_object('sub', v_buyer_id::text, 'email', 'test_buyer@grabsty.internal'),
         'email',
         v_buyer_id::text,
         now(),
@@ -153,7 +153,7 @@ BEGIN
       (
         v_attacker_id,
         v_attacker_id,
-        jsonb_build_object('sub', v_attacker_id::text, 'email', 'test_attacker@ceranix.internal'),
+        jsonb_build_object('sub', v_attacker_id::text, 'email', 'test_attacker@grabsty.internal'),
         'email',
         v_attacker_id::text,
         now(),
@@ -169,7 +169,7 @@ BEGIN
     (v_seller_id, 'test_seller', 'Test Seller', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb', 'Verified Power Seller', 5.0, 42),
     (v_buyer_id, 'test_buyer', 'Test Buyer', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d', 'Collector & Buyer', 5.0, 0),
     (v_attacker_id, 'test_attacker', 'Test Attacker', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e', 'Security Researcher', 4.8, 5),
-    (v_support_id, 'ceranix_support', 'Ceranix Support', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2', 'Official Automated Concierge', 5.0, 0)
+    (v_support_id, 'grabsty_support', 'Grabsty Support', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2', 'Official Automated Concierge', 5.0, 0)
   ON CONFLICT (id) DO UPDATE SET
     username = excluded.username,
     full_name = excluded.full_name;

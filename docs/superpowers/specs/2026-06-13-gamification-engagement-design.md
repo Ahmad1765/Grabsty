@@ -5,7 +5,7 @@ Status: Phase 1 in progress; Phases 2–4 pending backend go-ahead.
 
 ## Goal
 
-Increase engagement on Carrinex (secondhand fashion marketplace) by adding a
+Increase engagement on Grabsty (secondhand fashion marketplace) by adding a
 unified **Status & Progress** system. One coherent mental model — "level up your
 shop" — rather than four disconnected mechanics. Drives the supply side (more,
 better, fresher listings), new-user activation, and daily return.

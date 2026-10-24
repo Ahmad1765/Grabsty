@@ -5,10 +5,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
@@ -126,8 +125,7 @@ export function DropAlertSheet({ visible, userId, onClose, onCreated }: Props) {
             paddingHorizontal: 18,
           }}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          <KeyboardAvoider
             style={{ width: '100%', maxWidth: 390 }}
           >
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
@@ -318,7 +316,7 @@ export function DropAlertSheet({ visible, userId, onClose, onCreated }: Props) {
                 </ScrollView>
               </View>
             </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
+          </KeyboardAvoider>
         </View>
       </TouchableWithoutFeedback>
     </Modal>

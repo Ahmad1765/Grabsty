@@ -1,5 +1,5 @@
-// Carrinex Category & Brand Taxonomy (v3 Launch)
-// Single source of truth derived from Icons/carrinex_taxonomy_v3.xlsx
+// Grabsty Category & Brand Taxonomy (v3 Launch)
+// Single source of truth derived from Icons/grabsty_taxonomy_v3.xlsx
 import Feather from '@expo/vector-icons/Feather';
 import type { Category, Gender } from '@/types';
 

@@ -53,7 +53,7 @@ const CATEGORIES: { id: Category; label: string; icon: keyof typeof Feather.glyp
   { id: 'other', label: 'Other', icon: 'grid' },
 ];
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'One Size'];
+const SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
 
 const CONDITIONS: { id: Condition; label: string }[] = [
   { id: 'new_with_tags', label: 'New with tags' },

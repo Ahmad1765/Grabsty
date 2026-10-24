@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { decode } from 'base64-arraybuffer';
 import { Platform, Image as RNImage } from 'react-native';
 // SDK 54 moved readAsStringAsync/EncodingType to the legacy entry point; the
@@ -416,12 +417,40 @@ export async function uploadAvatar(image: LocalImage, userId: string): Promise<s
 // keyed on the first path segment being the caller's own user id, so writing
 // here needs no new bucket and no new storage policy — see the banner_url
 // migration for the full reasoning.
-// Verification documents (CNIC / ID Card) also share the `avatars` bucket under
-// the user's folder (`avatars/${userId}/verification/...`), satisfying the existing
-// owner-only write policy without needing an extra storage bucket.
+// ID / CNIC photos live in a PRIVATE bucket: only the owner and admins can
+// read them, and only through short-lived signed URLs. Returns the storage
+// path (what verifications.notes stores), never a URL.
+export const VERIFICATION_BUCKET = 'verification-docs';
+
 export async function uploadVerificationDocument(image: LocalImage, userId: string): Promise<string> {
   const compressed = await compressImage(image, BANNER_MAX_EDGE, BANNER_QUALITY);
-  return uploadOne('avatars', compressed, `${userId}/verification`, 0);
+  const path = `${userId}/${randomId()}.${inferExt(compressed.uri)}`;
+  await uploadToPath(VERIFICATION_BUCKET, compressed, path);
+  return path;
+}
+
+// Displayable URI for a verification photo: a just-picked local image or a
+// legacy URL passes through; a stored path becomes a 1-hour signed URL.
+const DIRECT_URI = /^(https?:|file:|content:|data:|blob:|ph:)/;
+
+export function useVerificationPhotoUrl(value?: string | null): string | null {
+  const direct = !value || DIRECT_URI.test(value);
+  const [signed, setSigned] = useState<string | null>(null);
+  useEffect(() => {
+    setSigned(null);
+    if (direct || !value) return;
+    let live = true;
+    supabase.storage
+      .from(VERIFICATION_BUCKET)
+      .createSignedUrl(value, 3600)
+      .then(({ data }) => {
+        if (live) setSigned(data?.signedUrl ?? null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [value, direct]);
+  return direct ? (value ?? null) : signed;
 }
 
 export async function uploadBanner(image: LocalImage, userId: string): Promise<string> {

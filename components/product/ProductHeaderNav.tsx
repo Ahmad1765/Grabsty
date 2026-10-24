@@ -50,9 +50,8 @@ export const ProductHeaderNav = memo(function ProductHeaderNav({
           backgroundColor: showStickyHeader
             ? Platform.OS === 'ios'
               ? 'transparent'
-              : isDark
-                ? 'rgba(15, 15, 15, 0.94)'
-                : 'rgba(255, 255, 255, 0.94)'
+              // No blur off iOS, so translucency just shows text through the bar: go solid.
+              : theme.background
             : 'transparent',
         },
       ]}

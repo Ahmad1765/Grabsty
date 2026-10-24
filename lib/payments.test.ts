@@ -19,6 +19,20 @@ describe('lib/payments fetchOrderForListing dual-lookup', () => {
     vi.clearAllMocks();
   });
 
+  // Both lookups (by order id, by listing id) now start together, so every
+  // test's query builder must support both chains.
+  function mockBothLookups(directData: unknown, listingData: unknown) {
+    const maybeDirect = vi.fn().mockResolvedValue({ data: directData, error: null });
+    const maybeListing = vi.fn().mockResolvedValue({ data: listingData, error: null });
+    const eqMock = vi.fn((col: string) =>
+      col === 'id'
+        ? { maybeSingle: maybeDirect }
+        : { neq: () => ({ order: () => ({ limit: () => ({ maybeSingle: maybeListing }) }) }) },
+    );
+    (supabase.from as any).mockReturnValue({ select: vi.fn().mockReturnValue({ eq: eqMock }) });
+    return { eqMock, maybeDirect, maybeListing };
+  }
+
   const mockOrderData = {
     id: 'a0000000-0000-0000-0000-000000000001',
     listing_id: 'b0000000-0000-0000-0000-000000000002',
@@ -32,16 +46,7 @@ describe('lib/payments fetchOrderForListing dual-lookup', () => {
   };
 
   it('resolves directly by order UUID when an order UUID is passed', async () => {
-    const maybeSingleMock = vi.fn().mockResolvedValue({
-      data: mockOrderData,
-      error: null,
-    });
-    const eqMock = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock });
-    const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
-
-    (supabase.from as any).mockReturnValue({
-      select: selectMock,
-    });
+    const { eqMock } = mockBothLookups(mockOrderData, null);
 
     const res = await fetchOrderForListing('a0000000-0000-0000-0000-000000000001');
 
@@ -94,19 +99,26 @@ describe('lib/payments fetchOrderForListing dual-lookup', () => {
       listing: { id: 'listing-1', title: 'Silk Scarf' },
     };
 
-    const maybeSingleMock = vi.fn().mockResolvedValue({
-      data: singleObjOrder,
-      error: null,
-    });
-    const eqMock = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock });
-    const selectMock = vi.fn().mockReturnValue({ eq: eqMock });
-
-    (supabase.from as any).mockReturnValue({ select: selectMock });
+    mockBothLookups(singleObjOrder, null);
 
     const res = await fetchOrderForListing('a0000000-0000-0000-0000-000000000001');
 
     expect(res?.seller_pickup_address).toEqual({ city: 'Karachi' });
     expect(res?.listing).toEqual({ id: 'listing-1', title: 'Silk Scarf' });
+  });
+
+  it('starts both lookups before either finishes (one round trip, not two)', async () => {
+    const { eqMock } = mockBothLookups(null, mockOrderData);
+    const pending = fetchOrderForListing('b0000000-0000-0000-0000-000000000002');
+    expect(eqMock.mock.calls.map((c) => c[0])).toEqual(['id', 'listing_id']);
+    const res = await pending;
+    expect(res?.listing_id).toBe('b0000000-0000-0000-0000-000000000002');
+  });
+
+  it('prefers the direct order match when both lookups return a row', async () => {
+    mockBothLookups({ ...mockOrderData, id: 'direct' }, { ...mockOrderData, id: 'by-listing' });
+    const res = await fetchOrderForListing('a0000000-0000-0000-0000-000000000001');
+    expect(res?.id).toBe('direct');
   });
 
   it('returns null immediately for non-UUID strings without querying Supabase', async () => {

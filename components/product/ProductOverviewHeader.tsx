@@ -50,7 +50,6 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
   // Metadata segments (only non-empty values)
   const metaSegments = useMemo(() => {
     const cond = conditionLabel(listing.condition);
-    const uploaded = listing.created_at ? timeAgo(listing.created_at) : '';
     const sizeVal = listing.size?.trim();
     const brandVal = listing.brand?.trim();
     const catVal = listing.category ? categoryLabel(listing.category) : '';
@@ -62,9 +61,11 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
       cond ? { text: cond } : null,
       brandVal ? { text: brandVal, link: true, isCategory: false } : null,
       locationVal ? { text: locationVal } : null,
-      uploaded ? { text: `Uploaded ${uploaded}` } : null,
     ].filter(Boolean) as { text: string; link?: boolean; isCategory?: boolean; categoryKey?: string }[];
-  }, [listing.category, listing.size, listing.condition, listing.brand, listing.seller?.location, listing.created_at]);
+  }, [listing.category, listing.size, listing.condition, listing.brand, listing.seller?.location]);
+  // Outside the memo: a relative time must re-render, not freeze at first paint.
+  const uploaded = listing.created_at ? timeAgo(listing.created_at) : '';
+  const segments = uploaded ? [...metaSegments, { text: `Uploaded ${uploaded}` }] : metaSegments;
 
   return (
     <View style={{ paddingHorizontal: 20, paddingTop: 22, paddingBottom: 14 }}>
@@ -137,12 +138,12 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
         {listing.title}
       </Text>
 
-      {metaSegments.length > 0 && (
+      {segments.length > 0 && (
         <Text
           numberOfLines={2}
           style={{ marginTop: 10, fontSize: 14, lineHeight: 20, color: theme.mute, fontFamily: 'Inter_500Medium' }}
         >
-          {metaSegments.map((s, i) => (
+          {segments.map((s: (typeof metaSegments)[number], i) => (
             <Text key={i}>
               {i > 0 ? <Text style={{ color: theme.muteSoft }}>{' · '}</Text> : null}
               {s.link ? (

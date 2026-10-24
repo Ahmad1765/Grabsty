@@ -448,10 +448,12 @@ export function PriceSheet({
           </Text>
           <TextInput
             value={draft}
-            onChangeText={setDraft}
+            // Whole rupees (listings.price is an integer): cut at a decimal
+            // point rather than strip it, and drop leading zeros.
+            onChangeText={(t) => setDraft(t.split('.')[0].replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, ''))}
             placeholder="0"
             placeholderTextColor={theme.muteSoft ?? theme.mute}
-            keyboardType="decimal-pad"
+            keyboardType="number-pad"
             autoFocus
             style={
               {
@@ -629,6 +631,8 @@ export function ColorSheet({
               </View>
               <Text
                 numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
                 style={{
                   fontSize: 12,
                   fontFamily: active ? DISPLAY_BOLD : type.family.sansMedium,

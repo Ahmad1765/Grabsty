@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useFollowStateQuery, useToggleFollow, useListingLikersQuery } from '@/lib/queries';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { getOptimizedImageUrl } from '@/lib/images';
 
 import type { ListingLiker } from '@/types';
 
@@ -61,7 +62,7 @@ function LikerRow({ liker, onClose }: { liker: ListingLiker; onClose: () => void
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
         {liker.avatar_url ? (
           <Image
-            source={{ uri: liker.avatar_url }}
+            source={{ uri: getOptimizedImageUrl(liker.avatar_url, { width: 120 }) }}
             style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: theme.surface }}
             contentFit="cover"
           />

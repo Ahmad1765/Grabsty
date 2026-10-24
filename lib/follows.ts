@@ -115,7 +115,8 @@ export async function fetchSuggestedFollows(
     // Buffer limit to ensure we hit the target limit after exclusion
     .limit(limit + Math.max(20, excluded.length * 3));
   if (excluded.length > 0) {
-    query = query.not('id', 'in', excluded);
+    // PostgREST needs the list parenthesised; a bare array serialises to `not.in.a,b` and 400s
+    query = query.not('id', 'in', `(${excluded.join(',')})`);
   }
   const { data, error } = await query;
   if (error) {
@@ -208,7 +209,7 @@ export async function fetchFollowers(
 
 // Free-text search across profiles by username / full name. Powers the
 // "People" results on the discover screen. Leading "@" is stripped so both
-// "@carrinex" and "carrinex" match; LIKE wildcards are escaped so a user
+// "@grabsty" and "grabsty" match; LIKE wildcards are escaped so a user
 // typing "%" can't broaden the query.
 export async function searchUsers(query: string, limit = 20): Promise<FollowListRow[]> {
   const raw = query.trim().replace(/^@+/, '');

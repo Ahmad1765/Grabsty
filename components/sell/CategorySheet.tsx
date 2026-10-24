@@ -653,7 +653,7 @@ export function CategorySheet({
                                     e.stopPropagation();
                                     handleSelectLevel1(m.categoryId);
                                   }}
-                                  style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}
+                                  style={{ alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 }}
                                 >
                                   <Text style={{ fontSize: 12.5, color: theme.purple, fontFamily: DISPLAY_BOLD }}>
                                     {m.categoryTitle}

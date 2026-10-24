@@ -1,4 +1,4 @@
-# Carrinex — What We're Building (Plain English)
+# Grabsty — What We're Building (Plain English)
 
 > A simple guide for anyone who wants to understand the backend plan without needing a tech background.
 
@@ -6,7 +6,7 @@
 
 ## The Big Picture
 
-Think of Carrinex like a combination of **Depop + WhatsApp + a small online mall**.
+Think of Grabsty like a combination of **Depop + WhatsApp + a small online mall**.
 
 People can list things they want to sell, others can browse, message the seller, make offers, and buy. We need a reliable "engine" running behind the scenes that makes all of this work.
 
@@ -241,7 +241,7 @@ We build in order of dependency — you can't build the roof before the walls.
 
 ## Summary
 
-In short, we're building a reliable, secure, and scalable engine that powers every tap, swipe, and transaction in the Carrinex app. The frontend already looks great — now we're wiring up the brain behind it.
+In short, we're building a reliable, secure, and scalable engine that powers every tap, swipe, and transaction in the Grabsty app. The frontend already looks great — now we're wiring up the brain behind it.
 
 The approach keeps things simple: **one platform (Supabase), clear rules for every action, and build in logical order** so we don't have to redo work.
 

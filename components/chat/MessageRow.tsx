@@ -11,6 +11,7 @@ import { memo, useCallback, useRef } from 'react';
 import { Platform, Pressable, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Text } from '@/lib/rnText';
+
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { PressableScale } from '@/components/PressableScale';
@@ -22,6 +23,15 @@ import type { Anchor } from './ReactionPicker';
 import { bubbleStamp } from './format';
 import Svg, { Path } from 'react-native-svg';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { getOptimizedImageUrl } from '@/lib/images';
+
+/** Renders **bold** spans (support bot replies and FAQ answers use them) as real bold. */
+export function withBold(text: string | null | undefined) {
+  if (!text || !text.includes('**')) return text;
+  return text.split('**').map((part, i) =>
+    i % 2 === 1 ? <Text key={i} style={{ fontFamily: typography.family.sansBold }}>{part}</Text> : part,
+  );
+}
 
 const HIT_SLOP_8 = { top: 8, bottom: 8, left: 8, right: 8 };
 const TAIL_RADIUS = 6;
@@ -138,7 +148,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
               color: theme.mute,
             }}
           >
-            {msg.content?.replace(/^Done!\s*\n?/, '')}
+            {withBold(msg.content?.replace(/^Done!\s*\n?/, ''))}
           </Text>
         </View>
       </View>
@@ -156,7 +166,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
           textAlign: 'center',
         }}
       >
-        {msg.content}
+        {withBold(msg.content)}
       </Text>
     </View>
   );
@@ -355,7 +365,7 @@ function IncomingOfferCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -469,14 +479,14 @@ function DealAcceptedCard({
         padding: 16,
       }}
     >
-      {/* Top Row: "It's a deal" in green */}
+      {/* Top Row: "It's a deal" in purple */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <OfferTagIcon size={14} color="#16A34A" />
+        <OfferTagIcon size={14} color={theme.purple} />
         <Text
           style={{
             fontSize: 14,
             fontFamily: typography.family.sansBold,
-            color: '#16A34A',
+            color: theme.purple,
           }}
         >
           It&apos;s a deal
@@ -500,7 +510,7 @@ function DealAcceptedCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -619,7 +629,7 @@ function SpecialOfferCard({
             letterSpacing: -0.4,
           }}
         >
-          {formatPrice(amount, { forceDecimals: true })}
+          {formatPrice(amount)}
         </Text>
         {showStruck && (
           <Text
@@ -671,6 +681,7 @@ function OfferBubble(
     onCounterOffer,
     onPay,
   } = props;
+  const { theme } = useTheme();
 
   const amount = msg.metadata?.amount ?? 0;
   const isExpiredTtl = Boolean(
@@ -701,13 +712,13 @@ function OfferBubble(
           paddingHorizontal: 14,
           paddingVertical: 9,
           borderRadius: 18,
-          backgroundColor: 'rgba(16, 185, 129, 0.12)',
+          backgroundColor: 'rgba(108, 71, 255, 0.10)',
           borderWidth: 1,
-          borderColor: 'rgba(16, 185, 129, 0.24)',
+          borderColor: 'rgba(108, 71, 255, 0.24)',
         }}
       >
         <ShieldCheckIcon size={15} />
-        <Text style={{ fontSize: 14, fontFamily: typography.family.sansBold, color: '#10B981' }}>
+        <Text style={{ fontSize: 14, fontFamily: typography.family.sansBold, color: theme.purple }}>
           Paid · {formatPrice(amount)}
         </Text>
       </View>
@@ -758,7 +769,7 @@ function OfferBubble(
 
   // 5. Image 1, 2, 3, 4: Clean Offer Pill Bubbles
   let pillText = '';
-  const formattedAmt = formatPrice(amount, { forceDecimals: true });
+  const formattedAmt = formatPrice(amount);
   if (status === 'declined') {
     pillText = mine
       ? `You declined their offer: ${formattedAmt}`
@@ -776,7 +787,9 @@ function OfferBubble(
   } else {
     // Pending
     if (mine) {
-      pillText = isCounter ? 'You sent a counter-offer' : 'You made an offer';
+      pillText = isCounter
+        ? `You sent a counter-offer: ${formattedAmt}`
+        : `You made an offer: ${formattedAmt}`;
     } else {
       pillText = `Made you an offer: ${formattedAmt}`;
     }
@@ -814,7 +827,9 @@ function ImageBubble({
       }}
     >
       <Image
-        source={{ uri: imageUrl }}
+        // 220pt bubble at 3x. Above 640 so the optimizer never swaps in a
+        // listing-style _thumb sibling, which chat uploads do not have.
+        source={{ uri: getOptimizedImageUrl(imageUrl, { width: 660 }) }}
         style={{ width: '100%', height: '100%' }}
         contentFit="cover"
         transition={200}
@@ -878,7 +893,7 @@ function TextBubble({
             : null),
         }}
       >
-        {msg.content}
+        {withBold(msg.content)}
       </Text>
     </View>
   );

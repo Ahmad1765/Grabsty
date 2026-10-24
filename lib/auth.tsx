@@ -68,14 +68,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [session?.user?.id, profile?.username, profile?.is_verified]);
 
-  const fetchProfileWithRetry = async (userId: string) => {
-    let p = await loadProfile(userId);
-    if (!p) {
-      // The handle_new_user trigger occasionally lags right after signup.
-      await new Promise((r) => setTimeout(r, 600));
-      p = await loadProfile(userId);
-    }
-    if (mounted.current) setProfile(p);
+  // getSession() and the INITIAL_SESSION event both load the profile at startup;
+  // concurrent loads for the same user share one request instead of two.
+  const profileInFlight = useRef<{ userId: string; promise: Promise<void> } | null>(null);
+  const fetchProfileWithRetry = (userId: string): Promise<void> => {
+    if (profileInFlight.current?.userId === userId) return profileInFlight.current.promise;
+    const promise = (async () => {
+      let p = await loadProfile(userId);
+      if (!p) {
+        // The handle_new_user trigger occasionally lags right after signup.
+        await new Promise((r) => setTimeout(r, 600));
+        p = await loadProfile(userId);
+      }
+      if (mounted.current) setProfile(p);
+    })().finally(() => {
+      if (profileInFlight.current?.promise === promise) profileInFlight.current = null;
+    });
+    profileInFlight.current = { userId, promise };
+    return promise;
   };
 
   useEffect(() => {

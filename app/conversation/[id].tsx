@@ -262,7 +262,8 @@ export default function ConversationScreen() {
 
   const overviewMaxHeight = slideAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 72],
+    // Cap, not exact height: the card is ~80dp and grows with system font scale
+    outputRange: [0, 140],
   });
 
   const overviewOpacity = slideAnim.interpolate({
@@ -279,6 +280,13 @@ export default function ConversationScreen() {
     inputRange: [0, 1],
     outputRange: [0, 6],
   });
+
+  // Android's back-to-dismiss hides the keyboard without blurring the input, so
+  // onBlur never fires (and re-tapping the still-focused input skips onFocus);
+  // follow the keyboard so the listing card comes back when it goes away.
+  useEffect(() => {
+    setIsWriting(keyboardUp);
+  }, [keyboardUp]);
 
   // Ensure message list follows bottom when keyboard opens
   useEffect(() => {
@@ -333,7 +341,10 @@ export default function ConversationScreen() {
     const actions: MessageAction[] = [
       { id: 'copy', label: 'Copy', icon: 'copy', onPress: handleCopy },
     ];
-    if (pressed?.msg && user && pressed.msg.sender_id === user.id) {
+    // System notices and offers are the record of the deal: never deletable
+    // (the server refuses too). Offers are withdrawn instead.
+    const deletable = !pressed?.msg?.kind || pressed.msg.kind === 'text';
+    if (pressed?.msg && user && pressed.msg.sender_id === user.id && deletable) {
       const isImage = isImageMessage(pressed.msg);
       actions.push({
         id: 'delete',
@@ -464,7 +475,7 @@ export default function ConversationScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false,
         quality: 0.8,
         base64: true,
@@ -654,10 +665,7 @@ export default function ConversationScreen() {
         />
       </View>
 
-      {/* Safety Notice Box (At the top of the chat interface, Reference Image 5) */}
-      <SafetyNote onPress={explainCoverage} />
-
-      {/* Message Thread FlatList */}
+      {/* Message Thread FlatList (safety note is the list header so it scrolls away like WhatsApp's notice) */}
       <FlatList
         ref={thread.listRef}
         data={thread.rows}
@@ -689,6 +697,7 @@ export default function ConversationScreen() {
         scrollEventThrottle={16}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={<SafetyNote onPress={explainCoverage} />}
         ListEmptyComponent={
           <View style={{ paddingHorizontal: 32, paddingVertical: 16 }}>
             <Text

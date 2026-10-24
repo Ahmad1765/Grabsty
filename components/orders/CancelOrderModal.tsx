@@ -4,11 +4,11 @@ import {
   View,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
   ActivityIndicator,
   Platform,
   StyleSheet,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
@@ -104,8 +104,7 @@ export function CancelOrderModal({
           accessibilityLabel="Dismiss"
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        <KeyboardAvoider
           style={{ width: '100%', maxWidth: 480 }}
         >
           <View
@@ -333,7 +332,7 @@ export function CancelOrderModal({
             </Pressable>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </View>
   </Modal>
   );

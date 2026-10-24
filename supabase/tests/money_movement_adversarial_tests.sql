@@ -24,9 +24,9 @@ begin
   -- Setup test fixtures: create auth.users first to satisfy profiles_id_fkey constraint
   insert into auth.users (id, aud, role, email, created_at, updated_at)
   values 
-    (v_seller_id, 'authenticated', 'authenticated', 'test_seller@ceranix.internal', clock_timestamp(), clock_timestamp()),
-    (v_buyer_id, 'authenticated', 'authenticated', 'test_buyer@ceranix.internal', clock_timestamp(), clock_timestamp()),
-    (v_attacker_id, 'authenticated', 'authenticated', 'test_attacker@ceranix.internal', clock_timestamp(), clock_timestamp())
+    (v_seller_id, 'authenticated', 'authenticated', 'test_seller@grabsty.internal', clock_timestamp(), clock_timestamp()),
+    (v_buyer_id, 'authenticated', 'authenticated', 'test_buyer@grabsty.internal', clock_timestamp(), clock_timestamp()),
+    (v_attacker_id, 'authenticated', 'authenticated', 'test_attacker@grabsty.internal', clock_timestamp(), clock_timestamp())
   on conflict (id) do nothing;
 
   insert into public.profiles (id, username, full_name)

@@ -5,7 +5,8 @@
 // Mounting is cheap — the heavy fetch only runs when `visible` flips on.
 
 import { useEffect, useMemo, useState } from 'react';
-import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, Dimensions, KeyboardAvoidingView } from 'react-native';
+import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, ScrollView, useWindowDimensions } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { BlurView } from 'expo-blur';
 import Feather from '@expo/vector-icons/Feather';
@@ -24,7 +25,6 @@ import { useTheme } from '@/context/ThemeContext';
 
 const IS_IOS = Platform.OS === 'ios';
 const HAIRLINE = StyleSheet.hairlineWidth;
-const { width } = Dimensions.get('window');
 
 function tap(style: 'light' | 'medium' | 'selection' = 'selection') {
   if (!IS_IOS) return;
@@ -48,6 +48,8 @@ export function SaveListSheet({
   onChanged?: (isSavedSomewhere: boolean) => void;
 }) {
   const { theme, isDark } = useTheme();
+  const { width, height } = useWindowDimensions();
+  const [autoSaved, setAutoSaved] = useState(false);
   const [lists, setLists] = useState<SaveList[]>([]);
   const [containedIn, setContainedIn] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -68,6 +70,21 @@ export function SaveListSheet({
         getListsContaining(userId, listingId).catch(() => new Set<string>()),
       ]);
       if (cancelled) return;
+      // Tapping Save means "save it": if it isn't in any list yet, drop it into
+      // the default Saved list right away. The sheet then just offers extra lists.
+      const def = ls.find((l) => l.is_default);
+      let saved = false;
+      if (contained.size === 0 && def) {
+        saved = await addToList(def.id, listingId, userId);
+        if (cancelled) return;
+        if (saved) {
+          contained.add(def.id);
+          def.item_count = (def.item_count ?? 0) + 1;
+          onChanged?.(true);
+          tap('light');
+        }
+      }
+      setAutoSaved(saved);
       setLists(ls);
       setContainedIn(contained);
       setLoading(false);
@@ -83,6 +100,7 @@ export function SaveListSheet({
     if (!visible) {
       setCreating(false);
       setNewName('');
+      setAutoSaved(false);
     }
   }, [visible]);
 
@@ -95,6 +113,7 @@ export function SaveListSheet({
     if (isIn) nextContained.delete(list.id);
     else nextContained.add(list.id);
     setContainedIn(nextContained);
+    if (isIn) setAutoSaved(false);
     setLists((prev) =>
       prev.map((l) =>
         l.id === list.id
@@ -145,13 +164,6 @@ export function SaveListSheet({
     tap('light');
   };
 
-  // "Save to list" header copy. When the listing is already in at least
-  // one list we shift the prompt to make the toggle behavior obvious.
-  const headerText = useMemo(() => {
-    if (loading) return 'Save to list';
-    return containedIn.size > 0 ? 'Save to lists' : 'Save to list';
-  }, [loading, containedIn.size]);
-
   return (
     <Modal
       visible={visible}
@@ -166,18 +178,19 @@ export function SaveListSheet({
         ) : (
           <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.55)' }]} />
         )}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ width: width - 56, maxWidth: 360, alignItems: 'center', justifyContent: 'center' }}
+        <KeyboardAvoider
+          style={{ width: width - 40, maxWidth: 380, alignItems: 'center', justifyContent: 'center' }}
         >
           <Pressable
             onPress={() => {}}
             style={{
               width: '100%',
-              maxHeight: '80%',
+              // Pixel cap: a % maxHeight resolved against an auto-height parent
+              // and let long list sets spill out of the card.
+              maxHeight: height * 0.72,
               backgroundColor: isDark ? theme.panel : '#FFFFFF',
-              borderRadius: 18,
-              paddingVertical: 6,
+              borderRadius: 20,
+              overflow: 'hidden',
               borderWidth: isDark ? 1 : 0,
               borderColor: theme.border,
               shadowColor: '#000',
@@ -187,145 +200,163 @@ export function SaveListSheet({
               elevation: 12,
             }}
           >
-          <Text
-            style={{
-              fontSize: 13,
-              fontWeight: '600',
-              color: theme.mute,
-              textAlign: 'center',
-              paddingTop: 14,
-              paddingBottom: 10,
-              letterSpacing: 0.2,
-            }}
-          >
-            {headerText}
-          </Text>
-          <View style={{ height: HAIRLINE, backgroundColor: theme.border, marginHorizontal: 12 }} />
-
-          {loading ? (
-            <View style={{ paddingVertical: 32, alignItems: 'center' }}>
-              <ActivityIndicator color={theme.purple} />
-            </View>
-          ) : (
-            <View>
-              {lists.map((list, i) => {
-                const isLast = i === lists.length - 1;
-                const isIn = containedIn.has(list.id);
-                const isBusy = busyListId === list.id;
-                return (
-                  <Pressable
-                    key={list.id}
-                    onPress={() => handleToggleList(list)}
-                    disabled={isBusy}
-                    style={({ pressed }) => ({
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      paddingVertical: 14,
-                      paddingHorizontal: 18,
-                      borderBottomWidth: isLast ? 0 : HAIRLINE,
-                      borderBottomColor: theme.border,
-                      opacity: pressed ? 0.55 : 1,
-                    })}
-                  >
-                    <Text style={{ fontSize: 22, marginRight: 12 }}>{list.emoji}</Text>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 16, fontWeight: '600', color: theme.text }}>
-                        {list.name}
-                      </Text>
-                      <Text style={{ fontSize: 12, color: theme.mute, marginTop: 2 }}>
-                        {list.item_count ?? 0} {list.item_count === 1 ? 'item' : 'items'}
-                      </Text>
-                    </View>
-                    {isBusy ? (
-                      <ActivityIndicator color={theme.purple} size="small" />
-                    ) : isIn ? (
-                      <Ionicons name="checkmark-circle" size={22} color={theme.purple} />
-                    ) : (
-                      <View
-                        style={{
-                          width: 22,
-                          height: 22,
-                          borderRadius: 11,
-                          borderWidth: 1.5,
-                          borderColor: theme.border,
-                        }}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-
-          <View style={{ height: HAIRLINE, backgroundColor: theme.border, marginHorizontal: 12 }} />
-
-          {creating ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 10,
-                paddingHorizontal: 18,
-                gap: 8,
-              }}
-            >
-              <TextInput
-                value={newName}
-                onChangeText={setNewName}
-                placeholder="List name"
-                placeholderTextColor={theme.mute}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={handleCreate}
-                style={{
-                  flex: 1,
-                  fontSize: 15,
-                  fontWeight: '600',
-                  color: theme.text,
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  backgroundColor: isDark ? theme.surface : 'rgba(15,15,15,0.05)',
-                  borderWidth: isDark ? 1 : 0,
-                  borderColor: theme.border,
-                }}
-              />
+            <View style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 10, paddingTop: 16, paddingBottom: 12 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 17, fontWeight: '700', color: theme.ink }}>Save to list</Text>
+                {autoSaved ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 3, gap: 4 }}>
+                    <Ionicons name="checkmark-circle" size={14} color={theme.purple} />
+                    <Text testID="save-list-autosaved" style={{ fontSize: 13, fontWeight: '600', color: theme.purple }}>
+                      Added to Saved
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
               <Pressable
-                onPress={handleCreate}
-                disabled={newName.trim().length === 0}
-                style={({ pressed }) => ({
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 10,
-                  backgroundColor: theme.purple,
-                  opacity: newName.trim().length === 0 ? 0.4 : pressed ? 0.7 : 1,
-                })}
+                onPress={onClose}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                style={({ pressed }) => ({ width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
               >
-                <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>Add</Text>
+                <Feather name="x" size={20} color={theme.ink} />
               </Pressable>
             </View>
-          ) : (
-            <Pressable
-              onPress={() => {
-                tap('selection');
-                setCreating(true);
-              }}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: 14,
-                opacity: pressed ? 0.55 : 1,
-              })}
-            >
-              <Feather name="plus" size={18} color={theme.purple} />
-              <Text style={{ fontSize: 15, fontWeight: '700', color: theme.purple, marginLeft: 6 }}>
-                Create new list
-              </Text>
-            </Pressable>
-          )}
+            <View style={{ height: HAIRLINE, backgroundColor: theme.border }} />
+
+            {loading ? (
+              <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+                <ActivityIndicator color={theme.purple} />
+              </View>
+            ) : (
+              <ScrollView style={{ flexShrink: 1 }} bounces={false} keyboardShouldPersistTaps="handled">
+                {lists.map((list) => {
+                  const isIn = containedIn.has(list.id);
+                  const isBusy = busyListId === list.id;
+                  return (
+                    <Pressable
+                      key={list.id}
+                      onPress={() => handleToggleList(list)}
+                      disabled={isBusy}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: isIn }}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        paddingVertical: 10,
+                        paddingHorizontal: 16,
+                        backgroundColor: pressed ? theme.purpleSoft : 'transparent',
+                      })}
+                    >
+                      <View
+                        style={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: 12,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: isIn ? theme.purpleSoft : isDark ? theme.surface : 'rgba(15,15,15,0.04)',
+                          marginRight: 12,
+                        }}
+                      >
+                        <Text style={{ fontSize: 20 }}>{list.emoji}</Text>
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: '600', color: theme.ink }}>
+                          {list.name}
+                        </Text>
+                        <Text style={{ fontSize: 12.5, color: theme.mute, marginTop: 2 }}>
+                          {list.item_count ?? 0} {list.item_count === 1 ? 'item' : 'items'}
+                        </Text>
+                      </View>
+                      {isBusy ? (
+                        <ActivityIndicator color={theme.purple} size="small" />
+                      ) : isIn ? (
+                        <Ionicons name="checkmark-circle" size={24} color={theme.purple} />
+                      ) : (
+                        <View style={{ width: 22, height: 22, margin: 1, borderRadius: 11, borderWidth: 1.5, borderColor: theme.border }} />
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+
+            <View style={{ height: HAIRLINE, backgroundColor: theme.border }} />
+
+            {creating ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 16, gap: 8 }}>
+                <TextInput
+                  value={newName}
+                  onChangeText={setNewName}
+                  placeholder="List name"
+                  placeholderTextColor={theme.mute}
+                  autoFocus
+                  maxLength={40}
+                  returnKeyType="done"
+                  onSubmitEditing={handleCreate}
+                  style={{
+                    flex: 1,
+                    fontSize: 15,
+                    fontWeight: '600',
+                    color: theme.ink,
+                    height: 40,
+                    paddingVertical: 0,
+                    paddingHorizontal: 12,
+                    borderRadius: 10,
+                    backgroundColor: isDark ? theme.surface : 'rgba(15,15,15,0.05)',
+                    borderWidth: isDark ? 1 : 0,
+                    borderColor: theme.border,
+                  }}
+                />
+                <Pressable
+                  onPress={handleCreate}
+                  disabled={newName.trim().length === 0}
+                  style={({ pressed }) => ({
+                    height: 40,
+                    paddingHorizontal: 16,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.purple,
+                    opacity: newName.trim().length === 0 ? 0.4 : pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>Add</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  tap('selection');
+                  setCreating(true);
+                }}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  backgroundColor: pressed ? theme.purpleSoft : 'transparent',
+                })}
+              >
+                <View
+                  style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 12,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: theme.purpleSoft,
+                    marginRight: 12,
+                  }}
+                >
+                  <Feather name="plus" size={20} color={theme.purple} />
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: theme.purple }}>Create new list</Text>
+              </Pressable>
+            )}
           </Pressable>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </Pressable>
     </Modal>
   );

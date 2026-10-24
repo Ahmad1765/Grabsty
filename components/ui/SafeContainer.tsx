@@ -3,11 +3,13 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   StyleSheet,
   ViewStyle,
   StyleProp,
   ScrollViewProps,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
@@ -41,8 +43,40 @@ export interface SafeContainerProps {
   scrollViewProps?: Omit<ScrollViewProps, 'style' | 'contentContainerStyle'>;
   /** Keyboard vertical offset for KeyboardAvoidingView (when mode='keyboard-avoiding') */
   keyboardVerticalOffset?: number;
-  /** KeyboardAvoidingView behavior override (defaults to 'padding' on iOS, undefined on Android) */
+  /** KeyboardAvoidingView behavior override (defaults to 'padding' on iOS and Android) */
   keyboardBehavior?: 'padding' | 'height' | 'position';
+}
+
+/**
+ * Android only: true while the soft keyboard is up. RN's KeyboardAvoidingView handles
+ * keyboardDidHide like a show event and subtracts its screenY, which under edge-to-edge
+ * is not the screen bottom, leaving ~95dp of stale padding after the keyboard closes.
+ * Pass `enabled={useAndroidKeyboardShown()}` to zero the padding while it's hidden.
+ */
+export function useAndroidKeyboardShown(active = true) {
+  // Seed from the live state: a keyboard already up at mount fires no new show event.
+  const [shown, setShown] = React.useState(() => Keyboard.isVisible());
+  React.useEffect(() => {
+    if (!active || Platform.OS !== 'android') return;
+    setShown(Keyboard.isVisible());
+    const show = Keyboard.addListener('keyboardDidShow', () => setShown(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setShown(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [active]);
+  return Platform.OS !== 'android' || shown;
+}
+
+/**
+ * Drop-in KeyboardAvoidingView that also lifts content on Android. Edge-to-edge
+ * disables adjustResize, so `behavior={ios ? 'padding' : undefined}` leaves inputs
+ * hidden under the keyboard there (especially inside `statusBarTranslucent` modals).
+ */
+export function KeyboardAvoider(props: React.ComponentProps<typeof KeyboardAvoidingView>) {
+  const shown = useAndroidKeyboardShown();
+  return <KeyboardAvoidingView behavior="padding" {...props} enabled={shown && props.enabled !== false} />;
 }
 
 /**
@@ -128,6 +162,18 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
     const { theme } = useTheme();
     const backgroundColor = bgOverride ?? theme.background;
     const webViewportStyle = useSafeContainerVisualViewport(mode === 'keyboard-avoiding');
+    const keyboardShown = useAndroidKeyboardShown(mode === 'keyboard-avoiding');
+    // Once the padding has shrunk the scroll area, bring the focused field into view;
+    // the ScrollView does not do this itself, so a field low on the form stayed hidden.
+    const kavScrollRef = React.useRef<ScrollView>(null);
+    React.useEffect(() => {
+      if (!keyboardShown || Platform.OS !== 'android' || mode !== 'keyboard-avoiding') return;
+      const t = setTimeout(() => {
+        const input = TextInput.State.currentlyFocusedInput();
+        if (input) kavScrollRef.current?.scrollResponderScrollNativeHandleToKeyboard(input as any, 56, true);
+      }, 50);
+      return () => clearTimeout(t);
+    }, [keyboardShown, mode]);
 
   const edgePadding = React.useMemo(() => {
     return {
@@ -232,8 +278,9 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
   const resolvedBehavior =
     keyboardBehavior ??
     Platform.select({
+      // Edge-to-edge (Expo 54) disables adjustResize, so Android needs padding too
       ios: 'padding' as const,
-      android: undefined,
+      android: 'padding' as const,
       default: undefined,
     });
   const resolvedOffset =
@@ -248,6 +295,7 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
     <KeyboardAvoidingView
       ref={ref as any}
       behavior={resolvedBehavior}
+      enabled={keyboardShown}
       keyboardVerticalOffset={resolvedOffset}
       className={className}
       style={[
@@ -266,6 +314,7 @@ export const SafeContainer = React.forwardRef<View, SafeContainerProps>(
         children
       ) : (
         <ScrollView
+          ref={kavScrollRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"

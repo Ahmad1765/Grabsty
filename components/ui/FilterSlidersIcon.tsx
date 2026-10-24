@@ -13,7 +13,7 @@ export interface FilterSlidersIconProps {
 }
 
 /**
- * Canonical 3-Track Horizontal Sliders Icon for Carrinex / Ceranix.
+ * Canonical 3-Track Horizontal Sliders Icon for Grabsty.
  *
  * Design Spec:
  * - 3 horizontal tracks with hollow circular slider knobs matching the quiet atelier aesthetic

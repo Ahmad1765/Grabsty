@@ -47,7 +47,7 @@ However, looking at the *entire* system logic via the "Theft Strategy":
 **How could a maliciously crafted order status cause the buyer's funds to be trapped forever?**
 
 Because there is no `pg_cron` auto-refund logic, a seller can simply *do nothing*.
-If a buyer pays, the status goes to `paid` and `pending`. The seller is supposed to ship it. If the seller deletes the app, the buyer's money sits in Ceranix's Stripe connect account permanently. The buyer cannot cancel it themselves once it is accepted by the seller, and without an auto-refund TTL, the seller has effectively performed a Denial-of-Service attack on the buyer's funds.
+If a buyer pays, the status goes to `paid` and `pending`. The seller is supposed to ship it. If the seller deletes the app, the buyer's money sits in Grabsty's Stripe connect account permanently. The buyer cannot cancel it themselves once it is accepted by the seller, and without an auto-refund TTL, the seller has effectively performed a Denial-of-Service attack on the buyer's funds.
 
 **Recommendation:**
 This is why the Escrow Abandonment TTL (D-02) was flagged as a P0 Release Blocker in the Final Audit.

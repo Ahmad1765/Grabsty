@@ -6,11 +6,11 @@ import {
   ScrollView,
   Modal,
   Platform,
-  KeyboardAvoidingView,
   StyleSheet,
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
@@ -209,8 +209,7 @@ export function AddressSheet({
       <View style={[styles.overlay, { backgroundColor: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.45)' }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close sheet" />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={[
             styles.keyboardContainer,
             {
@@ -515,7 +514,7 @@ export function AddressSheet({
               )}
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </View>
     </Modal>
   );
@@ -532,7 +531,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 480,
     maxHeight: '92%',
-    height: Platform.OS === 'web' ? 620 : undefined,
+    height: Platform.OS === 'web' ? 620 : '92%',
   } as ViewStyle,
   sheetContainer: {
     flex: 1,

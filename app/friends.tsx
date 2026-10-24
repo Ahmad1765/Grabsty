@@ -402,7 +402,8 @@ export default function FriendsScreen() {
           <TextInput
             value={searchQuery}
             onChangeText={handleSearchChange}
-            placeholder="Search by name or @username…"
+            // Short on purpose: Android wraps long placeholders even in single-line inputs
+            placeholder="Name or @username"
             placeholderTextColor={theme.muteSoft}
             autoCapitalize="none"
             autoCorrect={false}

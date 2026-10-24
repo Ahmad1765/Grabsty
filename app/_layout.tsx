@@ -33,6 +33,7 @@ import { SellSheetProvider } from '@/components/sell/SellSheet';
 import { DiscoverSheetProvider } from '@/components/discover/DiscoverSheet';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
+import { AnimatedSplash } from '@/components/AnimatedSplash';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 // FIRST, before any element is created: take Pressable out of NativeWind's
@@ -335,6 +336,10 @@ function RootLayoutNav() {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+            name="listed/[id]"
+            options={{ headerShown: false, animation: 'fade' }}
+          />
+          <Stack.Screen
             name="payment/[id]"
             options={{ headerShown: false, presentation: 'modal' }}
           />
@@ -345,6 +350,7 @@ function RootLayoutNav() {
         </Stack>
         )}
         <OfflineBanner />
+        {Platform.OS !== 'web' && <AnimatedSplash appReady={ready && hydrated} />}
         </DiscoverSheetProvider>
         </SellSheetProvider>
         </GuestGateProvider>

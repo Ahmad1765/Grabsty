@@ -7,7 +7,7 @@
 ## Goal
 
 Turn Discover's idle/browse state into an editorial discovery feed inspired by
-Grailed's Discover tab, adapted to Ceranix. All content is derived from data the
+Grailed's Discover tab, adapted to Grabsty. All content is derived from data the
 screen already fetches — no new queries, no DB migration. Search and category
 filtering keep their existing behavior; the editorial blocks render only when
 idle (`!hasQuery && !browseCat`).
@@ -26,7 +26,7 @@ idle (`!hasQuery && !browseCat`).
 1. **Header** — `Discover` title + bell. (unchanged)
 2. **Search bar** — unchanged; Home routes search here.
 3. **Welcome eyebrow** — `WELCOME @USERNAME` eyebrow + serif line. Logged-out →
-   `WELCOME TO CERANIX`.
+   `WELCOME TO GRABSTY`.
 4. **Today's Digest** — horizontal rail of wide edit cards (image + brands line +
    serif theme title). Tapping applies that filter.
 5. **Daily Picks For You** — serif heading + `SEE MORE`, `ListingCard` rail from

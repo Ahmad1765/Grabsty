@@ -4,10 +4,10 @@ import {
   View,
   Pressable,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
@@ -179,7 +179,7 @@ export function PaymentOptionsModal({
           <View style={{ width: 36 }} />
         </View>
 
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <KeyboardAvoider style={{ flex: 1 }}>
           <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20, paddingBottom: 30 }}
@@ -603,8 +603,8 @@ export function PaymentOptionsModal({
                   <Text style={{ fontSize: 15, fontWeight: '700', color: theme.ink, fontFamily: typography.family.sansBold }}>
                     Easypaisa
                   </Text>
-                  <View style={{ paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, backgroundColor: isDark ? 'rgba(0, 168, 89, 0.15)' : '#DCFCE7' }}>
-                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#16A34A', fontFamily: typography.family.sansBold }}>
+                  <View style={{ paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 4, backgroundColor: isDark ? 'rgba(255, 255, 255, 0.12)' : '#E5E7EB' }}>
+                    <Text style={{ fontSize: 10, fontWeight: '700', color: theme.ink, fontFamily: typography.family.sansBold }}>
                       Preview
                     </Text>
                   </View>
@@ -837,7 +837,7 @@ export function PaymentOptionsModal({
             </Text>
           </Pressable>
         </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </SafeAreaView>
     </Modal>
   );

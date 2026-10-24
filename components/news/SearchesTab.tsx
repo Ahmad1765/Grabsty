@@ -17,6 +17,7 @@ import { DropAlertSheet } from '@/components/DropAlertSheet';
 import { NewsSkeletonList } from './NewsRowSkeleton';
 import { radii, type as typography } from '@/lib/theme';
 import type { SavedSearch } from '@/lib/savedSearches';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 function haptic() {
   if (Platform.OS !== 'web') {
@@ -43,14 +44,14 @@ export function SearchesTab({ bottomInset = 24 }: { bottomInset?: number }) {
   const matchCounts = useMemo(() => matchesQ.data?.counts ?? {}, [matchesQ.data?.counts]);
   const deleteM = useDeleteSavedSearch(userId);
 
-  const refreshing = searchesQ.isRefetching || matchesQ.isRefetching;
-
-  const onRefresh = useCallback(async () => {
-    await Promise.all([
+  const refetchAll = useCallback(
+    () => Promise.all([
       searchesQ.refetch(),
       matchesQ.refetch(),
-    ]);
-  }, [searchesQ, matchesQ]);
+    ]),
+    [searchesQ, matchesQ],
+  );
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const handleDelete = useCallback(
     (search: SavedSearch) => {

@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase';
-import { capture } from '@/lib/analytics';
 import type { EscrowStatus, Transaction, TransactionEventLog, Order } from '@/types';
 
 export const ESCROW_TRANSITION_MAP: Record<EscrowStatus, EscrowStatus[]> = {
@@ -137,11 +136,6 @@ export const escrowService = {
     if (error) {
       throw new Error(error.message || 'Failed to update escrow transaction state');
     }
-
-    capture('escrow_state_advanced', {
-      order_id: params.orderId,
-      target_status: params.targetStatus,
-    });
 
     return data as Transaction;
   },

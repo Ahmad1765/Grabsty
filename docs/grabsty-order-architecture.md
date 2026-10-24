@@ -1,8 +1,8 @@
-# Ceranix Order Lifecycle Architecture & State Machine Specification
+# Grabsty Order Lifecycle Architecture & State Machine Specification
 
 ## 1. Executive Summary & Core Invariants
 
-This document establishes the authoritative architecture, database schema, state machine specifications, idempotency guarantees, and concurrency models for the **Ceranix Order Lifecycle and Chat Integration System**.
+This document establishes the authoritative architecture, database schema, state machine specifications, idempotency guarantees, and concurrency models for the **Grabsty Order Lifecycle and Chat Integration System**.
 
 The system establishes a deterministic bridge between conversational in-chat offers and durable order fulfillment, backed by PostgreSQL ACID guarantees, Stripe Payment-Authorization gates, and Supabase Realtime synchronization.
 

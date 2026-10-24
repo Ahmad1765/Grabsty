@@ -1,4 +1,4 @@
-// Carrinex monotone design tokens. Single source of truth.
+// Grabsty monotone design tokens. Single source of truth.
 // Dynamic light/dark monotone palettes.
 
 import { Platform, TextStyle } from 'react-native';

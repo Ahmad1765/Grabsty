@@ -39,30 +39,40 @@ async function hydrateSellers<T extends Listing>(rows: T[]): Promise<T[]> {
 // Falls back to the popular feed on RPC failure, and backfills with popular
 // when personalization excludes too much (small catalogs, power users who
 // already engaged with most items) — the rail should never look empty.
+//
+// The three requests used to run one after another (rpc → backfill → sellers),
+// and each costs a full round trip (~300–600 ms from Pakistan to the Tokyo
+// region). Now the backfill is fetched alongside the rpc, and only rpc rows —
+// which can't embed relations — get their sellers looked up, overlapping the
+// backfill. Same rows, same order; one round trip shorter at worst.
 export async function fetchRecommendations(limit = 24): Promise<RecommendedListing[]> {
-  let rows: RecommendedListing[] = [];
-  const { data, error } = await supabase.rpc('get_recommendations', { p_limit: limit });
-  if (error) {
-    console.warn('[recs] get_recommendations rpc', error.message);
-  } else {
-    rows = (data ?? []) as RecommendedListing[];
-  }
-
-  if (rows.length < limit) {
-    const seen = new Set(rows.map((r) => r.id));
-    const fallback = await fetchListings({ tab: 'for_you', limit });
-    for (const p of fallback) {
-      if (rows.length >= limit) break;
-      if (seen.has(p.id)) continue;
-      seen.add(p.id);
-      rows.push({ ...p, rec_reason: 'trending' });
+  const recsPromise = (async (): Promise<RecommendedListing[]> => {
+    const { data, error } = await supabase.rpc('get_recommendations', { p_limit: limit });
+    if (error) {
+      console.warn('[recs] get_recommendations rpc', error.message);
+      return [];
     }
+    return hydrateSellers((data ?? []) as RecommendedListing[]);
+  })();
+  // Backfill already embeds sellers (SELECT_FEED). A failure just means no backfill.
+  const fallbackPromise = fetchListings({ tab: 'for_you', limit }).catch((e) => {
+    console.warn('[recs] backfill', e);
+    return [] as Listing[];
+  });
+
+  const [recs, fallback] = await Promise.all([recsPromise, fallbackPromise]);
+  const rows: RecommendedListing[] = recs.slice(0, limit);
+  const seen = new Set(rows.map((r) => r.id));
+  for (const p of fallback) {
+    if (rows.length >= limit) break;
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    rows.push({ ...p, rec_reason: 'trending' });
   }
 
   if (rows.length === 0) return [];
-  const hydrated = await hydrateSellers(rows);
-  putCachedListings(hydrated);
-  return hydrated;
+  putCachedListings(rows);
+  return rows;
 }
 
 // Fire-and-forget view tracking. The RPC dedupes repeat views inside a

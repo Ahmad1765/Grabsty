@@ -76,7 +76,14 @@ export function ProductActionBar({
     if (allowed === false) return;
   };
 
+  // Double-tap guard only. It must release on its own: the screen stays mounted
+  // under checkout, so a latched flag left Buy greyed out and dead on return.
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  React.useEffect(() => {
+    if (!isSubmitting) return;
+    const t = setTimeout(() => setIsSubmitting(false), 800);
+    return () => clearTimeout(t);
+  }, [isSubmitting]);
 
   const handleBuy = () => {
     if (disabled || isSubmitting) return;
@@ -148,7 +155,7 @@ export function ProductActionBar({
       >
         <View style={styles.actionRow}>
           <View style={{ flex: 1, marginRight: 10, justifyContent: 'center' }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: '#10B981', fontFamily: 'Inter_700Bold' }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: theme.ink, fontFamily: 'Inter_700Bold' }}>
               You purchased this item
             </Text>
             <Text style={{ fontSize: 11.5, color: theme.mute, fontFamily: 'Inter_500Medium' }}>
