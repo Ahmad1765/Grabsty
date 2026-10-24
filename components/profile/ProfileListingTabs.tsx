@@ -178,8 +178,7 @@ export const ProfileListingTabs = memo(function ProfileListingTabs({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 12,
-            paddingTop: 10,
-            paddingBottom: 4,
+            paddingVertical: 10,
             gap: 8,
           }}
         >

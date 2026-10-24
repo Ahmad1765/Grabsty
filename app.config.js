@@ -64,7 +64,7 @@ module.exports = () => ({
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#5959ED',
       },
       package: 'com.grabsty.app',
       // FCM credentials for expo-notifications; prebuild wires the google-services Gradle plugin.
