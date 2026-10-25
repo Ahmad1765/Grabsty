@@ -53,7 +53,7 @@ import { useFeedListingsQuery } from '@/lib/queries';
 import { colors, radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
-import { PreSearchSuggestions } from '@/components/home/PreSearchSuggestions';
+import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type BrowseAction, type TopicAction } from './SearchLanding';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -433,93 +433,92 @@ function DiscoverSheetBody({
     [],
   );
 
-  // Background, rounded top, top inset and the grabber all belong to SheetShell.
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, gap: 10 }}>
-        <View
-          style={{
+  const searchBar = (
+    <View
+      style={{
+        height: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: radii.pill,
+        paddingLeft: 14,
+        paddingRight: 10,
+        borderWidth: 0,
+        backgroundColor: searchBg,
+      }}
+    >
+      <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
+      <TextInput
+        ref={searchRef}
+        value={query}
+        onChangeText={setQuery}
+        onSubmitEditing={submit}
+        placeholder={`Search ${BRAND}...`}
+        placeholderTextColor={theme.muteSoft}
+        autoCorrect={false}
+        autoCapitalize="none"
+        returnKeyType="search"
+        accessibilityLabel={`Search ${BRAND}`}
+        onFocus={() => {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+          }
+        }}
+        style={[
+          {
             flex: 1,
-            height: 44,
-            flexDirection: 'row',
-            alignItems: 'center',
+            marginLeft: 8,
+            marginRight: 6,
+            fontSize: 15,
+            fontFamily: type.family.sans,
+            color: theme.ink,
+            padding: 0,
+          },
+          Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
+        ]}
+      />
+      {query.length > 0 ? (
+        <Pressable
+          hitSlop={HIT_SLOP_8}
+          onPress={() => setQuery('')}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+          style={({ pressed }) => ({
+            width: 24,
+            height: 24,
             borderRadius: radii.pill,
-            paddingLeft: 14,
-            paddingRight: 10,
-            borderWidth: 0,
-            backgroundColor: searchBg,
-          }}
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
-          <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
-          <TextInput
-            ref={searchRef}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={submit}
-            placeholder={`Search ${BRAND}...`}
-            placeholderTextColor={theme.muteSoft}
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="search"
-            accessibilityLabel={`Search ${BRAND}`}
-            onFocus={() => {
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                window.scrollTo(0, 0);
-                document.body.scrollTop = 0;
-                document.documentElement.scrollTop = 0;
-              }
-            }}
-            style={[
-              {
-                flex: 1,
-                marginLeft: 8,
-                marginRight: 6,
-                fontSize: 15,
-                fontFamily: type.family.sans,
-                color: theme.ink,
-                padding: 0,
-              },
-              // Focus-ring removal is a DOM concern. Kept off native entirely
-              // rather than cast through `any` — RN validates style keys, and
-              // unknown ones warn on Android.
-              Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
-            ]}
-          />
-          {query.length > 0 ? (
-            <Pressable
-              hitSlop={HIT_SLOP_8}
-              onPress={() => setQuery('')}
-              accessibilityRole="button"
-              accessibilityLabel="Clear search"
-              style={({ pressed }) => ({
-                width: 24,
-                height: 24,
-                borderRadius: radii.pill,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Feather name="x" size={16} color={theme.mute} />
-            </Pressable>
-          ) : null}
-        </View>
-        {/* Explicit way out, alongside the grabber, the gap above and Android's
-            back button — the keyboard covers the other three while typing. */}
-        <Pressable hitSlop={HIT_SLOP_8} onPress={onClose} accessibilityRole="button">
-          <Text style={{ fontSize: 15, fontFamily: type.family.sansBold, color: theme.purple }}>
-            Cancel
-          </Text>
+          <Feather name="x" size={16} color={theme.mute} />
         </Pressable>
-      </View>
+      ) : null}
+    </View>
+  );
 
+  return (
+    <View style={{ flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' }}>
       {query.trim().length > 0 ? (
-        <View style={{ flex: 1, marginTop: 10 }}>
-          <PreSearchSuggestions
+        <View style={{ flex: 1 }}>
+          <View style={{ marginHorizontal: 16, marginTop: 4 }}>
+            {searchBar}
+          </View>
+          <SearchLiveResults
             query={query}
+            listings={gridQ.data ?? []}
             suggestions={suggestions}
-            onSelect={handleSelectSuggestion}
-            onPopulate={handlePopulateSuggestion}
+            onSelectListing={(item) => {
+              onClose();
+              router.push(`/product/${item.id}` as any);
+            }}
+            onSelectSeller={(username) => {
+              onClose();
+              router.push(`/user/${username}` as any);
+            }}
+            onSelectTerm={handleSelectSuggestion}
           />
         </View>
       ) : (
@@ -529,10 +528,16 @@ function DiscoverSheetBody({
           keyboardDismissMode="on-drag"
           contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
         >
+          {/* Non-sticky search bar taking all available space */}
+          <View style={{ marginHorizontal: 16, marginTop: 4 }}>
+            {searchBar}
+          </View>
+
           <SearchLanding
             covers={covers}
             onBrowse={onBrowse}
             onTopic={onTopic}
+            onSearch={handleSelectSuggestion}
             activeChipId={activeBrowseChipId}
           />
         </ScrollView>
