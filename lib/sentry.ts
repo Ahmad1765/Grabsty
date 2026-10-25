@@ -5,6 +5,7 @@
 import * as Sentry from '@sentry/react-native';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { redactData, redactUrl } from '@/lib/sentryScrub';
 
 // DSN is resolved expoConfig.extra-first (embedded at config-load time via
 // app.config.js), falling back to the bundle-inlined env — same precedence the
@@ -71,6 +72,17 @@ export function initSentry(): void {
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1,
     integrations,
+    // Fetch/navigation breadcrumbs record URLs, and ours can carry auth tokens
+    // (reset/OAuth links) or search terms (Supabase REST filters).
+    beforeBreadcrumb: (crumb) => ({
+      ...crumb,
+      message: crumb.message ? redactUrl(crumb.message) : crumb.message,
+      data: redactData(crumb.data),
+    }),
+    beforeSend: (event) => {
+      if (event.request?.url) event.request.url = redactUrl(event.request.url);
+      return event;
+    },
     // Surface the app version so dashboard issues are grouped by release.
     release: Constants.expoConfig?.version
       ? `grabsty@${Constants.expoConfig.version}`

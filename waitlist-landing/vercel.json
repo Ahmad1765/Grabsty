@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "rewrites": [
     { "source": "/((?!.*\\.(?:css|js|svg|png|jpg|ico|woff|woff2|ttf)).*)", "destination": "/index.html" }

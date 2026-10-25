@@ -10,7 +10,7 @@ import {
 } from 'react';
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { queryClient } from '@/lib/queryClient';
+import { clearQueryCache } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { identify, resetIdentity } from '@/lib/analytics';
 import { registerForPush, unregisterThisDevice } from '@/lib/notifications';
@@ -124,6 +124,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else {
         setProfile(null);
+        // A session can end without signOut(): refresh-token expiry, revocation,
+        // or sign-out in another tab. Don't leave that account's cache behind.
+        if (event === 'SIGNED_OUT') clearQueryCache();
       }
     });
 
@@ -190,7 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // `session` is already null, so every user-scoped query is disabled and only
     // the public ones refetch — which is correct, since a signed-out feed is a
     // different feed.
-    queryClient.clear();
+    clearQueryCache();
   }, []);
 
   const value = useMemo<AuthState>(

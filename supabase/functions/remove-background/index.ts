@@ -121,7 +121,10 @@ Deno.serve(async (req: Request) => {
     const { error: upErr } = await admin.storage
       .from(TMP_BUCKET)
       .upload(tmpPath, bytes, { contentType: 'image/jpeg', upsert: false });
-    if (upErr) return json({ error: `Staging failed: ${upErr.message}` }, 500);
+    if (upErr) {
+      console.error('[remove-background] staging upload failed', upErr.message);
+      return json({ error: 'staging_failed' }, 500);
+    }
 
     try {
       const { data: pub } = admin.storage.from(TMP_BUCKET).getPublicUrl(tmpPath);
@@ -177,7 +180,7 @@ Deno.serve(async (req: Request) => {
       }
     }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
-    return json({ error: msg }, 500);
+    console.error('[remove-background] exception', e instanceof Error ? e.message : String(e));
+    return json({ error: 'internal_error' }, 500);
   }
 });

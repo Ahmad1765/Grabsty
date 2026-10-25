@@ -107,7 +107,10 @@ Deno.serve(async (req: Request) => {
       .select('id, title, price, images, seller_id, is_sold')
       .eq('id', listingId)
       .maybeSingle();
-    if (lErr) return json({ error: lErr.message }, 500, origin);
+    if (lErr) {
+      console.error('[create-checkout] listing lookup failed', lErr.message);
+      return json({ error: 'Payment setup failed. Please try again.' }, 500, origin);
+    }
     if (!listing) return json({ error: 'Listing not found' }, 404, origin);
     if (listing.seller_id === buyerId) {
       return json({ error: 'You cannot buy your own listing' }, 400, origin);
@@ -148,7 +151,10 @@ Deno.serve(async (req: Request) => {
       .eq('listing_id', listingId)
       .eq('status', 'paid')
       .limit(1);
-    if (poErr) return json({ error: poErr.message }, 500, origin);
+    if (poErr) {
+      console.error('[create-checkout] paid-order check failed', poErr.message);
+      return json({ error: 'Payment setup failed. Please try again.' }, 500, origin);
+    }
     if (paidOrders?.length) {
       return json({ error: 'Listing already sold' }, 409, origin);
     }
@@ -172,7 +178,10 @@ Deno.serve(async (req: Request) => {
         .eq('conversations.buyer_id', buyerId)
         .order('updated_at', { ascending: false })
         .limit(1);
-      if (oErr) return json({ error: oErr.message }, 500, origin);
+      if (oErr) {
+        console.error('[create-checkout] offer lookup failed', oErr.message);
+        return json({ error: 'Payment setup failed. Please try again.' }, 500, origin);
+      }
       // All the money rules live in ./pricing.ts so they are unit-testable:
       // hint must match the real offer, acceptance must be recent, and the
       // charge never exceeds the current sticker price.

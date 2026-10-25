@@ -3,6 +3,7 @@ import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeContainer } from '@/components/ui/SafeContainer';
 import { router, useLocalSearchParams } from 'expo-router';
+import * as Linking from 'expo-linking';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
@@ -207,7 +208,9 @@ function LoginScreen() {
       return;
     }
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: Linking.createURL('auth/reset'),
+      });
       if (error) throw error;
       setForgotCooldown(60);
       toast.show('Password reset link sent — check your inbox', {

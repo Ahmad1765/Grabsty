@@ -41,6 +41,24 @@ const persister = createAsyncStoragePersister({
   key: 'CARRINEX_QUERY_CACHE',
 });
 
+// Never written to disk: AsyncStorage is unencrypted (localStorage on web), and
+// these hold other people's data — myOrders carries buyers' shipping addresses
+// for sellers, inbox carries message previews. They refetch on launch instead.
+const PRIVATE_QUERY_PREFIXES = new Set([
+  'myOrders',
+  'orderForListing',
+  'inbox',
+  'savedSearches',
+  'savedSearchMatches',
+  'recentlyViewed',
+]);
+
+/** Drops every cached query, in memory and on disk. Called on any sign-out. */
+export function clearQueryCache(): void {
+  queryClient.clear();
+  void persister.removeClient();
+}
+
 export const persistOptions: PersistQueryClientProviderProps['persistOptions'] = {
   persister,
   // Discard anything older than a day so we never resurrect deeply stale data.
@@ -50,7 +68,9 @@ export const persistOptions: PersistQueryClientProviderProps['persistOptions'] =
   buster: Constants.expoConfig?.version ?? '1',
   dehydrateOptions: {
     // Only persist successful queries — never cache error/loading states to disk.
-    shouldDehydrateQuery: (query) => query.state.status === 'success',
+    shouldDehydrateQuery: (query) =>
+      query.state.status === 'success' &&
+      !PRIVATE_QUERY_PREFIXES.has(String(query.queryKey[0])),
   },
 };
 

@@ -31,6 +31,10 @@ vi.mock('expo-image', () => ({
   Image: (props: any) => React.createElement('img', props),
 }));
 
+vi.mock('@/lib/upload', () => ({
+  useVerificationPhotoUrl: (value?: string | null) => value ?? null,
+}));
+
 vi.mock('expo-image-picker', () => ({
   launchImageLibraryAsync: vi.fn(),
   launchCameraAsync: vi.fn(),

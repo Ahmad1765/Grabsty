@@ -114,12 +114,14 @@ Deno.serve(async (req: Request) => {
     // Perform deletion
     const { error: delErr } = await admin.auth.admin.deleteUser(user.id);
     if (delErr) {
-      return json({ error: delErr.message }, 500);
+      console.error('[delete-account] deleteUser failed', delErr.message);
+      return json({ error: 'Could not delete the account. Please try again.' }, 500);
     }
 
     return json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
-    return json({ error: msg }, 500);
+    // Log the detail; the caller only learns that it failed.
+    console.error('[delete-account] exception', e instanceof Error ? e.message : String(e));
+    return json({ error: 'Could not delete the account. Please try again.' }, 500);
   }
 });

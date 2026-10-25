@@ -167,3 +167,26 @@ Expo: https://docs.expo.dev/guides/using-posthog/
 Alternatives: https://mixpanel.com/pricing/ · https://amplitude.com/pricing · https://aptabase.com/pricing · https://rnfirebase.io/analytics/usage
 Privacy/platform: Apple https://developer.apple.com/app-store/user-privacy-and-data-use/ · Google Play Data safety https://support.google.com/googleplay/android-developer/answer/10787469 · Pakistan https://practiceguides.chambers.com/practice-guides/data-protection-privacy-2026/pakistan · EDPB 3/2018 (snippet) https://edpb.europa.eu/sites/edpb/files/files/file1/edpb_guidelines_3_2018_territorial_scope_en.pdf
 Web: Vercel vercel.json https://vercel.com/docs/project-configuration/vercel-json
+
+---
+
+## Status update — reliability & hardening pass (2026-10-24, later)
+
+| Item | Outcome |
+|---|---|
+| M6 password reset | **Fixed.** `app/auth/reset.tsx` handles implicit (`#access_token`) and PKCE (`?code`) links, strips tokens from the URL, sets the new password. Both reset senders pass `redirectTo: createURL('auth/reset')`. Needs `grabsty://auth/reset` and `https://<web domain>/auth/reset` in Supabase Auth → URL configuration → Redirect URLs. |
+| M4 cache | **Fixed.** `lib/queryClient.ts` never persists `myOrders`, `orderForListing`, `inbox`, `savedSearches`, `savedSearchMatches`, `recentlyViewed`; `clearQueryCache()` wipes memory + disk on explicit sign-out and on any `SIGNED_OUT` event (`lib/auth.tsx`). |
+| M5 logout revocation | **Finding withdrawn.** auth-js `signOut({scope:'local'})` already calls `/logout?scope=local` (revokes the current session server-side) before clearing storage. SecureStore for native tokens deferred: needs a chunked/encrypted adapter and a migration from AsyncStorage, which must be device-tested. |
+| Phone save | **Fixed.** Saved only to private `user_metadata`; errors surface. (No `profiles.phone` column; `phone:` param needed an SMS provider and failed the whole update.) |
+| Silent pg_net failures | **Fixed.** `20261024040000`: cron `report-outbound-failures` (every 15 min) sends non-2xx/timeouts from push + analytics to Sentry. Verified with a deliberate 404. |
+| L6 error disclosure | **Fixed** in delete-account (deployed v12) and remove-background (v11); create-checkout-session fixed in repo, **not redeployed** (Stripe off; live v14 still returns PostgREST text on DB errors). |
+| L5 remove-background cost | **Not needed now:** `REPLICATE_API_TOKEN` unset (function returns 503), 0 calls in 30 days. Set a Replicate spend limit when enabling. Global cap impossible with current `rate_limit_events` (2h purge, FK to auth.users). |
+| L2 grants | **Fixed.** `20261024050000`: TRUNCATE/TRIGGER/REFERENCES revoked (+ default privileges); write grants no policy can use revoked (computed from pg_policies). Regression 9/9. |
+| L7 CI | **Fixed.** e2e workflow token read-only (merge job keeps its own write); gitleaks, expo-github-action, github-script pinned to commit SHAs. |
+| L8 waitlist | **Fixed.** `20261024060000`: length/shape checks + 120-per-10-min flood guard. Phone uniqueness skipped (1 existing duplicate). |
+| L9 waitlist files | **Fixed in repo** (`outputDirectory: public`); `supabase-schema.sql` and `vercel.json` stop being served on next waitlist deploy. |
+| L11 Sentry scrubbing | **Fixed.** `lib/sentryScrub.ts` (+5 tests): token params redacted, Supabase REST query strings dropped, via `beforeBreadcrumb` / `beforeSend`. |
+| CSP `'unsafe-inline'` (app) | **Removed** from `script-src` in root `vercel.json`. Verified: production build served under the strict CSP in Chromium, `/`, `/auth/login`, `/auth/reset`, 404 — feed loads, 0 violations, 3 runs. Waitlist keeps it (inline PostHog loader). |
+| L3 leaked-password protection | **User action** (Supabase dashboard). |
+| Expo SDK 54→58, Sentry 7→8 | **Deferred.** Multi-major upgrade with native changes; needs its own branch and device QA. |
+| Side fix | `components/settings/settings.test.ts` had been failing since the ID-photo change (VerificationSheet → lib/upload pulled native modules); now mocked. Full suite 69/69 files, 649 tests. |
