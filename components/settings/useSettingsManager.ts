@@ -30,7 +30,7 @@ import {
 } from '@/lib/notifications';
 import { confirm } from '@/lib/confirm';
 import { tap } from '@/lib/haptics';
-import { isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
+import { analyticsReady, isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
 import { APP_URL } from '@/lib/brand';
 import type {
   AddressForm,
@@ -75,6 +75,11 @@ export function useSettingsManager() {
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [shareUsage, setShareUsage] = useState(!isOptedOut());
+  useEffect(() => {
+    analyticsReady.then(() => {
+      if (mounted.current) setShareUsage(!isOptedOut());
+    });
+  }, []);
   const [resetCooldown, setResetCooldown] = useState(0);
   const mounted = useRef(true);
 

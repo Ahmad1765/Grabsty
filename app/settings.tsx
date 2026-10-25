@@ -114,6 +114,13 @@ export default function SettingsScreen() {
               />
             )}
 
+            <ChatGPTSwitchRow
+              label="Share usage data"
+              desc="Help improve Grabsty with usage stats and screen recordings. Text, photos and addresses are always hidden."
+              value={mgr.shareUsage}
+              onValueChange={mgr.setShareUsage}
+            />
+
             <ChatGPTRow
               label="System notification settings"
               desc="Open system preferences to manage notification alerts"

@@ -11,12 +11,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 const CHUNK = 1800;
+// Upper bound swept when the stored chunk count itself is unreadable (~28 KB).
+const MAX_CHUNKS = 16;
 
 // SecureStore keys allow only [A-Za-z0-9._-].
 const safe = (key: string) => key.replace(/[^A-Za-z0-9._-]/g, '_');
 
 async function removeChunks(key: string, from = 0): Promise<void> {
-  const n = Number(await SecureStore.getItemAsync(`${key}.n`)) || 0;
+  let n = MAX_CHUNKS;
+  try {
+    n = Number(await SecureStore.getItemAsync(`${key}.n`)) || 0;
+  } catch {
+    // Undecryptable count: sweep every slot so the next write starts clean.
+  }
   for (let i = from; i < n; i++) await SecureStore.deleteItemAsync(`${key}.${i}`);
   if (from === 0) await SecureStore.deleteItemAsync(`${key}.n`);
 }
@@ -31,23 +38,15 @@ async function write(key: string, value: string): Promise<void> {
 export const secureSessionStorage = {
   async getItem(rawKey: string): Promise<string | null> {
     const key = safe(rawKey);
-    const n = Number(await SecureStore.getItemAsync(`${key}.n`)) || 0;
-    if (n > 0) {
-      const parts: string[] = [];
-      for (let i = 0; i < n; i++) {
-        const part = await SecureStore.getItemAsync(`${key}.${i}`);
-        if (part == null) return null; // torn write: treat as signed out
-        parts.push(part);
-      }
-      return parts.join('');
+    try {
+      return await read(rawKey, key);
+    } catch (e) {
+      // Android can fail to decrypt after a backup restore or Keystore reset.
+      // An unreadable session is a signed-out session, not a startup crash.
+      console.warn('[secureSessionStorage] unreadable session, clearing', e);
+      await removeChunks(key).catch(() => {});
+      return null;
     }
-    // One-time migration from the old unencrypted store.
-    const legacy = await AsyncStorage.getItem(rawKey);
-    if (legacy != null) {
-      await write(key, legacy);
-      await AsyncStorage.removeItem(rawKey);
-    }
-    return legacy;
   },
   async setItem(rawKey: string, value: string): Promise<void> {
     await write(safe(rawKey), value);
@@ -57,3 +56,23 @@ export const secureSessionStorage = {
     await AsyncStorage.removeItem(rawKey);
   },
 };
+
+async function read(rawKey: string, key: string): Promise<string | null> {
+  const n = Number(await SecureStore.getItemAsync(`${key}.n`)) || 0;
+  if (n > 0) {
+    const parts: string[] = [];
+    for (let i = 0; i < n; i++) {
+      const part = await SecureStore.getItemAsync(`${key}.${i}`);
+      if (part == null) return null; // torn write: treat as signed out
+      parts.push(part);
+    }
+    return parts.join('');
+  }
+  // One-time migration from the old unencrypted store.
+  const legacy = await AsyncStorage.getItem(rawKey);
+  if (legacy != null) {
+    await write(key, legacy);
+    await AsyncStorage.removeItem(rawKey);
+  }
+  return legacy;
+}

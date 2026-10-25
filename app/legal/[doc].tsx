@@ -27,6 +27,9 @@ const PRIVACY: Doc = {
         'Your approximate location, only if you allow it, to fill in your address.',
         'A push-notification token for this device, only if you turn notifications on.',
         'Crash and error reports, so we can fix problems.',
+        'Usage data: which screens you open, searches (their length, not what you typed), and actions like listing, liking, offering and ordering, linked to your account ID.',
+        'Occasional screen recordings of app sessions, with all text, photos and inputs hidden, to find confusing or broken screens.',
+        'If you verify your identity, the ID document photo you upload. It is stored privately and only our staff can view it.',
       ],
     },
     {
@@ -44,7 +47,7 @@ const PRIVACY: Doc = {
         'Other members see your public profile, your listings and the messages you send them.',
         'Your delivery address and phone number are shared only with the courier and the other party to an order, so it can be delivered.',
         `${BRAND} staff can access account and order data to provide support and resolve disputes.`,
-        'We use trusted service providers to host data, send notifications and report crashes. They process data only on our behalf.',
+        'We use trusted service providers who process data only on our behalf: Supabase (database and file storage), PostHog (usage analytics, United States), Sentry (crash reports, Germany), Expo and Google Firebase (push notifications) and Vercel (website hosting).',
       ],
     },
     {
@@ -52,7 +55,8 @@ const PRIVACY: Doc = {
       p: [
         'You can edit your profile and delivery details in Settings at any time.',
         'You can turn notifications off in Settings or in your phone settings.',
-        `To delete your account and personal data, contact us at ${SUPPORT_EMAIL}.`,
+        'You can stop sharing usage data and screen recordings in Settings → General → Share usage data.',
+        `You can delete your account in Settings → Security → Delete account. This removes your personal data and listings, and your usage-analytics profile. You can also ask us at ${SUPPORT_EMAIL}.`,
       ],
     },
     {

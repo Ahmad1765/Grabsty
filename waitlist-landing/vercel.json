@@ -3,6 +3,8 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "rewrites": [
+    {"source": "/relay-gs/static/:path*", "destination": "https://us-assets.i.posthog.com/static/:path*"},
+    {"source": "/relay-gs/:path*", "destination": "https://us.i.posthog.com/:path*"},
     { "source": "/((?!.*\\.(?:css|js|svg|png|jpg|ico|woff|woff2|ttf)).*)", "destination": "/index.html" }
   ],
   "headers": [

@@ -29,7 +29,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { qk } from '@/lib/queries';
 import { useToast } from '@/lib/toast';
-import { capture } from '@/lib/analytics';
 import { captureError } from '@/lib/sentry';
 import { withTimeout } from '@/lib/async';
 import { maybeSoftAskForPush } from '@/lib/notifications';
@@ -775,7 +774,6 @@ export function useConversationThread(
           pinnedRef.current = true;
           setMessages((prev) => (prev.some((m) => m.id === saved.id) ? prev : [...prev, saved]));
           toast.show('Offer sent', { variant: 'success', icon: 'check' });
-          capture('offer_made', { listing_id: convListingId, amount });
           return true;
         } else {
           Alert.alert('Could not send offer', 'Please try again.');

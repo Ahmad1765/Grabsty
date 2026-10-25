@@ -21,6 +21,11 @@ function linkParams(url: string): URLSearchParams {
   return params;
 }
 
+// Read at module load: on web the router can rewrite the address (dropping the
+// #access_token fragment) before this screen's effect runs.
+const initialWebHref =
+  Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.href : null;
+
 // The tokens must not linger in the address bar or browser history.
 function stripUrl() {
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -38,7 +43,7 @@ export default function ResetPasswordScreen() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const href = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.href : url;
+    const href = Platform.OS === 'web' ? initialWebHref : url;
     if (!href) return;
     const p = linkParams(href);
     stripUrl();

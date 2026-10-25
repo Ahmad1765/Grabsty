@@ -55,6 +55,19 @@ describe('secureSessionStorage', () => {
     expect(await s.getItem(KEY)).toBeNull();
   });
 
+  it('treats an undecryptable store as signed out and can sign in again', async () => {
+    await s.setItem(KEY, 'v'.repeat(3000));
+    const real = secure.get.bind(secure);
+    secure.get = () => {
+      throw new Error('Could not decrypt');
+    };
+    expect(await s.getItem(KEY)).toBeNull();
+    secure.get = real;
+    expect(secure.size).toBe(0);
+    await s.setItem(KEY, 'fresh');
+    expect(await s.getItem(KEY)).toBe('fresh');
+  });
+
   it('treats a torn write as signed out', async () => {
     await s.setItem(KEY, 'w'.repeat(3000));
     secure.delete(`${KEY}.1`);

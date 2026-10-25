@@ -416,7 +416,6 @@ export default function ProductScreen() {
       if (saved) {
         engagement.setOfferVisible(false);
         toast.show('Offer sent', { variant: 'success', icon: 'check' });
-        capture('offer_made', { listing_id: listing.id, amount, is_bundle: isBundleActive });
         router.push(`/conversation/${conv.id}` as any);
       } else {
         Alert.alert('Could not send offer', 'Please try again.');

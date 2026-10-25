@@ -4,6 +4,7 @@
 import PostHog, { useFeatureFlag as usePostHogFeatureFlag } from 'posthog-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 import {
   shouldTrack,
   buildListingViewedProps,
@@ -23,11 +24,18 @@ const extra = (Constants.expoConfig?.extra ?? {}) as {
   posthogHost?: string;
 };
 const apiKey = (extra.posthogKey ?? process.env.EXPO_PUBLIC_POSTHOG_KEY ?? '').trim();
-const host = (
+const directHost = (
   extra.posthogHost ??
   process.env.EXPO_PUBLIC_POSTHOG_HOST ??
   'https://us.i.posthog.com'
 ).trim();
+// The production web build sends through a same-origin rewrite (vercel.json
+// /relay-gs → PostHog US), which ad-blockers don't match. Native and local web
+// dev talk to PostHog directly.
+const host =
+  Platform.OS === 'web' && !__DEV__ && typeof window !== 'undefined'
+    ? `${window.location.origin}/relay-gs`
+    : directHost;
 
 // A key is the only thing that turns analytics on. No key → every helper below
 // becomes a no-op, so local dev and PR previews stay silent unless you opt in.
@@ -35,6 +43,13 @@ export const analyticsEnabled = !!apiKey;
 
 let client: PostHog | null = null;
 let optedOut = false;
+
+// Settles once the persisted opt-out has been read, so UI showing the choice
+// (Settings → Share usage data) doesn't render the pre-load default.
+let markReady: () => void = () => {};
+export const analyticsReady = new Promise<void>((resolve) => {
+  markReady = resolve;
+});
 
 /**
  * Initialize PostHog. Safe to call unconditionally and exactly once, as early
@@ -49,6 +64,14 @@ export function initAnalytics(): void {
   if (!apiKey) {
     if (__DEV__)
       console.warn('[analytics] EXPO_PUBLIC_POSTHOG_KEY not set — analytics disabled.');
+    markReady();
+    return;
+  }
+  // Dev builds share the production key (EAS env), so they stay silent unless
+  // EXPO_PUBLIC_POSTHOG_DEBUG=1 — same switch Sentry uses — to keep test taps
+  // out of real funnels.
+  if (__DEV__ && (process.env.EXPO_PUBLIC_POSTHOG_DEBUG ?? '').trim() !== '1') {
+    markReady();
     return;
   }
   client = new PostHog(apiKey, {
@@ -81,7 +104,7 @@ export function initAnalytics(): void {
     }
   }).catch(() => {
     // Storage read failure is non-fatal; we keep the in-memory default (false).
-  });
+  }).finally(markReady);
 }
 
 /** Returns the client only when tracking is allowed. */

@@ -24,9 +24,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { updateListing, type UpdateListingInput } from '@/lib/listings';
 import { uploadListingImages, deleteListingImages, type LocalImage } from '@/lib/upload';
-import {
-  makeSlot, resolveImage, type PhotoSlot,
-} from '@/lib/photoClean/slots';
+import type { PhotoSlot } from '@/lib/photoSlots';
 import { useToast } from '@/lib/toast';
 import { putCachedListing } from '@/lib/listingCache';
 import { emitListingCreated } from '@/lib/listingEvents';
@@ -496,12 +494,9 @@ export function SellForm({
       if (!result.canceled) {
         const room = MAX_IMAGES - slots.length;
         const picked = result.assets.slice(0, room);
-        const newSlots = picked.map((a) => ({
-          ...makeSlot(
-            { uri: a.uri, base64: a.base64 ?? null },
-            (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`),
-          ),
-          status: 'done' as const,
+        const newSlots: PhotoSlot[] = picked.map((a) => ({
+          id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+          original: { uri: a.uri, base64: a.base64 ?? null },
         }));
         const updatedSlots = [...slots, ...newSlots].slice(0, MAX_IMAGES);
         setValue('slots', updatedSlots, { shouldValidate: true });
@@ -568,7 +563,7 @@ export function SellForm({
     if (isEditing && editingListing) {
       try {
         const photoSlots = formData.slots as PhotoSlot[];
-        const resolvedImages = photoSlots.map(resolveImage);
+        const resolvedImages = photoSlots.map((s) => s.original);
         const isRemoteUrl = (uri: string) => uri.startsWith('http://') || uri.startsWith('https://');
 
         const existingImageToThumb = new Map<string, string>();
@@ -704,7 +699,7 @@ export function SellForm({
     let urls: string[] = [];
     let thumbs: string[] = [];
     try {
-      const chosen = (formData.slots as PhotoSlot[]).map(resolveImage);
+      const chosen = (formData.slots as PhotoSlot[]).map((s) => s.original);
       const uploaded = await uploadListingImages(chosen, user.id);
       urls = uploaded.map((u) => u.url);
       thumbs = uploaded.map((u) => u.thumbUrl);
@@ -806,8 +801,6 @@ export function SellForm({
       putCachedListing(newListing);
       emitListingCreated(newListing);
       invalidateFresh();
-      capture('listing_created', { listing_id: newListing.id, category: newListing.category, price: newListing.price });
-
       resetForm();
       onClose();
       // The "Item listed" screen is the confirmation now; a toast on top would be noise.
@@ -1015,7 +1008,7 @@ export function SellForm({
                       }}
                     >
                       <Image
-                        source={{ uri: resolveImage(slot).uri }}
+                        source={{ uri: slot.original.uri }}
                         style={{ width: '100%', height: '100%' }}
                         contentFit="cover"
                       />

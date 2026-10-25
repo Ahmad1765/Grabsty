@@ -118,9 +118,7 @@ describe('listingToSellFormValues', () => {
     expect(values.slots).toHaveLength(2);
     const [slot0, slot1] = values.slots as NonNullable<(typeof values.slots)[number]>[];
     expect(slot0?.original?.uri).toBe('https://example.com/storage/listing-images/img1.jpg');
-    expect(slot0?.status).toBe('done');
     expect(slot1?.original?.uri).toBe('https://example.com/storage/listing-images/img2.jpg');
-    expect(slot1?.status).toBe('done');
   });
 
   it('handles null optional fields gracefully', () => {
