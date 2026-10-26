@@ -37,10 +37,15 @@ function initTilt() {
 }
 
 // ── WebGL scene ────────────────────────────────────────────────────────────
-const PURPLE = 0x6C47FF;
-const SHIELD = 0x5356EE;
-const INK = 0x0F0F0F;
-const PAPER = 0xFFFFFF;
+// Official Grabsty Brand Palette (from Brand Assets/COLOR CODES.pdf)
+const PURPLE = 0x5A59EE;    // Grabsty Purple
+const LIME = 0xCEFF1B;      // Lucky Lime
+const ORANGE = 0xFF4110;    // Finders Orange
+const LAVENDER = 0xFBD2FF;  // Lavender Mist
+const SHIELD = 0x5356EE;    // Verified Shield Stroke
+const SHIELD_BG = 0xF2F3FE; // Verified Shield Fill
+const INK = 0x231F20;       // Ink Black
+const PAPER = 0xFEFEFE;     // Fresh White
 
 function webglAvailable() {
   try {
@@ -74,26 +79,46 @@ async function initScene() {
   const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
   camera.position.set(0, 0, 14);
 
-  scene.add(new THREE.AmbientLight(PAPER, 0.75));
-  const key = new THREE.DirectionalLight(PAPER, 2.2);
+  scene.add(new THREE.AmbientLight(PAPER, 0.85));
+  const key = new THREE.DirectionalLight(PAPER, 2.4);
   key.position.set(4, 6, 8);
   scene.add(key);
-  const rim = new THREE.PointLight(PURPLE, 40, 30);
+  const rim = new THREE.PointLight(PURPLE, 45, 30);
   rim.position.set(-6, -3, 4);
   scene.add(rim);
+  const limeRim = new THREE.PointLight(LIME, 25, 20);
+  limeRim.position.set(6, 4, 3);
+  scene.add(limeRim);
 
-  // Materials: flat brand colours + hard white/purple outlines (the page's
-  // neo-brutalist look, in 3D).
+  // Brand Materials
   const mat = {
     purple: new THREE.MeshStandardMaterial({ color: PURPLE, roughness: 0.35, metalness: 0.15 }),
+    lime: new THREE.MeshStandardMaterial({ color: LIME, roughness: 0.4, metalness: 0.1 }),
+    orange: new THREE.MeshStandardMaterial({ color: ORANGE, roughness: 0.38, metalness: 0.12 }),
+    lavender: new THREE.MeshStandardMaterial({ color: LAVENDER, roughness: 0.4, metalness: 0.08 }),
     shield: new THREE.MeshStandardMaterial({ color: SHIELD, roughness: 0.3, metalness: 0.2 }),
-    ink: new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.55, metalness: 0.3 }),
+    shieldBg: new THREE.MeshStandardMaterial({ color: SHIELD_BG, roughness: 0.35, metalness: 0.05 }),
+    ink: new THREE.MeshStandardMaterial({ color: INK, roughness: 0.55, metalness: 0.3 }),
     paper: new THREE.MeshStandardMaterial({ color: PAPER, roughness: 0.4, metalness: 0.05 }),
     chrome: new THREE.MeshStandardMaterial({ color: 0xdedede, roughness: 0.18, metalness: 0.85 }),
   };
   const lineWhite = new THREE.LineBasicMaterial({ color: PAPER, transparent: true, opacity: 0.85 });
   const linePurple = new THREE.LineBasicMaterial({ color: PURPLE });
+  const lineLime = new THREE.LineBasicMaterial({ color: LIME });
   const lineInk = new THREE.LineBasicMaterial({ color: INK });
+
+  // Texture Loader for Official Brand Assets
+  const texLoader = new THREE.TextureLoader();
+  const logomarkWhiteTex = texLoader.load('brand/LOGOMARK/PNG/Logomark White.png');
+  logomarkWhiteTex.colorSpace = THREE.SRGBColorSpace;
+  const logomarkPurpleTex = texLoader.load('brand/LOGOMARK/PNG/Logomark Purple.png');
+  logomarkPurpleTex.colorSpace = THREE.SRGBColorSpace;
+  const tagStickerTex = texLoader.load('brand/STICKERS/PNG/7.png');
+  tagStickerTex.colorSpace = THREE.SRGBColorSpace;
+  const sunStickerTex = texLoader.load('brand/STICKERS/PNG/2.png');
+  sunStickerTex.colorSpace = THREE.SRGBColorSpace;
+  const thrifterStickerTex = texLoader.load('brand/STICKERS/PNG/8.png');
+  thrifterStickerTex.colorSpace = THREE.SRGBColorSpace;
 
   function mesh(geometry, material, lines) {
     const m = new THREE.Mesh(geometry, material);
@@ -114,38 +139,26 @@ async function initScene() {
 
   const bevel = (depth, size) => ({ depth, bevelEnabled: true, bevelThickness: size, bevelSize: size, bevelSegments: 3, curveSegments: 18 });
 
-  // Grabsty "G" from assets/images/logo.svg (48×48 box, absolute M/L/C/Z).
-  function gShape() {
-    const d = 'M 35.2 14.8 C 32.2 10.6 27.6 8.4 23.2 8.4 C 14.8 8.4 8.4 15.2 8.4 24 C 8.4 32.8 14.8 39.6 23.2 39.6 C 30.6 39.6 36.4 34.4 37.2 27 L 23.2 27 L 23.2 21 L 43.2 21 L 43.2 27.2 C 42.2 37.6 33.8 45.6 23.2 45.6 C 11.6 45.6 2.4 36 2.4 24 C 2.4 12 11.6 2.4 23.2 2.4 C 29.6 2.4 35.6 5.6 39.6 11.2 L 35.2 14.8 Z';
-    const tok = d.match(/[MLCZ]|-?\d*\.?\d+/g);
-    const P = (i) => [(parseFloat(tok[i]) - 24) / 24, -(parseFloat(tok[i + 1]) - 24) / 24];
-    const s = new THREE.Shape();
-    for (let i = 0; i < tok.length;) {
-      const c = tok[i++];
-      if (c === 'M') { s.moveTo(...P(i)); i += 2; }
-      else if (c === 'L') { s.lineTo(...P(i)); i += 2; }
-      else if (c === 'C') { s.bezierCurveTo(...P(i), ...P(i + 2), ...P(i + 4)); i += 6; }
-      else if (c === 'Z') { s.closePath(); }
-    }
-    return s;
-  }
-
+  // 1. Official Grabsty Logomark 3D Badge (Chunky retro G with authentic drop-shadow)
   function makeBadge() {
     const g = new THREE.Group();
-    const bodyGeo = new THREE.ExtrudeGeometry(roundedRect(2, 2, 0.5), bevel(0.32, 0.06));
-    bodyGeo.translate(0, 0, -0.16);
+    const bodyGeo = new THREE.ExtrudeGeometry(roundedRect(2.05, 2.05, 0.48), bevel(0.34, 0.07));
+    bodyGeo.translate(0, 0, -0.17);
     const body = mesh(bodyGeo, mat.purple, lineWhite);
-    const letterGeo = new THREE.ExtrudeGeometry(gShape(), bevel(0.12, 0.02));
-    const letter = mesh(letterGeo, mat.paper, null);
-    letter.scale.setScalar(0.92);
-    letter.position.z = 0.2;
-    const back = letter.clone();
-    back.rotation.y = Math.PI;
-    back.position.z = -0.2;
-    g.add(body, letter, back);
+
+    // Front & Back official Grabsty Logomark faces
+    const markMat = new THREE.MeshBasicMaterial({ map: logomarkWhiteTex, transparent: true });
+    const markFront = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 1.68), markMat);
+    markFront.position.z = 0.25;
+    const markBack = markFront.clone();
+    markBack.rotation.y = Math.PI;
+    markBack.position.z = -0.25;
+
+    g.add(body, markFront, markBack);
     return g;
   }
 
+  // 2. Verified Buyer Protection Shield (Mercari-style canonical badge)
   function makeShield() {
     const g = new THREE.Group();
     const s = new THREE.Shape();
@@ -159,10 +172,12 @@ async function initScene() {
     const geo = new THREE.ExtrudeGeometry(s, bevel(0.3, 0.06));
     geo.translate(0, 0, -0.15);
     g.add(mesh(geo, mat.shield, lineWhite));
+
+    // Shield checkmark
     const tick = new THREE.CurvePath();
     tick.add(new THREE.LineCurve3(new THREE.Vector3(-0.4, 0.02, 0), new THREE.Vector3(-0.1, -0.3, 0)));
     tick.add(new THREE.LineCurve3(new THREE.Vector3(-0.1, -0.3, 0), new THREE.Vector3(0.44, 0.34, 0)));
-    const front = new THREE.Mesh(new THREE.TubeGeometry(tick, 40, 0.085, 10), mat.paper);
+    const front = new THREE.Mesh(new THREE.TubeGeometry(tick, 40, 0.09, 10), mat.paper);
     front.position.z = 0.24;
     const back = front.clone();
     back.position.z = -0.24;
@@ -170,56 +185,71 @@ async function initScene() {
     return g;
   }
 
+  // 3. Resale Shopping Bag with official Grabsty logo
   function makeBag() {
     const g = new THREE.Group();
-    const body = mesh(new THREE.BoxGeometry(1.5, 1.6, 0.6), mat.purple, lineWhite);
+    const body = mesh(new THREE.BoxGeometry(1.5, 1.6, 0.6), mat.purple, lineLime);
     const handleGeo = new THREE.TorusGeometry(0.34, 0.055, 12, 36, Math.PI);
     [-0.2, 0.2].forEach((z) => {
       const h = new THREE.Mesh(handleGeo, mat.paper);
       h.position.set(0, 0.8, z);
       g.add(h);
     });
-    const label = mesh(new THREE.BoxGeometry(0.62, 0.62, 0.02), mat.paper, null);
-    label.position.set(0, 0.05, 0.31);
-    const mark = mesh(new THREE.ExtrudeGeometry(gShape(), bevel(0.04, 0.005)), mat.purple, null);
-    mark.scale.setScalar(0.24);
-    mark.position.set(0, 0.05, 0.32);
-    g.add(body, label, mark);
+    // Front label with official Grabsty logomark
+    const markMat = new THREE.MeshBasicMaterial({ map: logomarkWhiteTex, transparent: true });
+    const mark = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.85), markMat);
+    mark.position.set(0, 0.05, 0.31);
+    g.add(body, mark);
     return g;
   }
 
-  function priceTexture() {
-    const c = document.createElement('canvas');
-    c.width = 256; c.height = 512;
-    const x = c.getContext('2d');
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 256, 512);
-    x.translate(128, 300); x.rotate(-Math.PI / 2);
-    x.fillStyle = '#0F0F0F';
-    x.font = '800 74px Inter, "Plus Jakarta Sans", Arial, sans-serif';
-    x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('Rs 6,500', 0, 0);
-    const t = new THREE.CanvasTexture(c);
-    t.colorSpace = THREE.SRGBColorSpace;
-    return t;
-  }
-
+  // 4. Authentic Preloved Fashion Price Tag (Was Rs. 8,000 / Now Rs. 3,000 Sticker 7)
   function makeTag() {
     const g = new THREE.Group();
     const s = new THREE.Shape();
-    s.moveTo(-0.55, -1.0); s.lineTo(0.55, -1.0); s.lineTo(0.55, 0.55); s.lineTo(0, 1.05); s.lineTo(-0.55, 0.55); s.closePath();
+    s.moveTo(-0.85, -0.58);
+    s.lineTo(0.85, -0.58);
+    s.lineTo(0.85, 0.38);
+    s.lineTo(0.5, 0.72);
+    s.lineTo(-0.5, 0.72);
+    s.lineTo(-0.85, 0.38);
+    s.closePath();
     const hole = new THREE.Path();
-    hole.absarc(0, 0.62, 0.13, 0, Math.PI * 2, true);
+    hole.absarc(0, 0.52, 0.1, 0, Math.PI * 2, true);
     s.holes.push(hole);
-    const geo = new THREE.ExtrudeGeometry(s, bevel(0.1, 0.03));
-    geo.translate(0, 0, -0.05);
+
+    const geo = new THREE.ExtrudeGeometry(s, bevel(0.08, 0.025));
+    geo.translate(0, 0, -0.04);
     g.add(mesh(geo, mat.paper, lineInk));
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.4), new THREE.MeshBasicMaterial({ map: priceTexture() }));
-    face.position.set(0, -0.28, 0.085);
-    g.add(face);
-    const string = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.03, 8, 40), mat.purple);
-    string.position.set(0, 0.95, 0);
+
+    const faceMat = new THREE.MeshBasicMaterial({ map: tagStickerTex, transparent: true });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.56, 0.88), faceMat);
+    face.position.set(0, -0.1, 0.065);
+    const faceBack = face.clone();
+    faceBack.rotation.y = Math.PI;
+    faceBack.position.z = -0.065;
+    g.add(face, faceBack);
+
+    const string = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.028, 8, 36), mat.purple);
+    string.position.set(0, 0.8, 0);
     string.rotation.y = Math.PI / 2;
     g.add(string);
+    return g;
+  }
+
+  // 5. Tactile Orange Starburst Sun Sticker (Sticker 2)
+  function makeSunSticker() {
+    const g = new THREE.Group();
+    const geo = new THREE.CylinderGeometry(0.85, 0.85, 0.06, 32);
+    geo.rotateX(Math.PI / 2);
+    const body = mesh(geo, mat.orange, lineWhite);
+    const faceMat = new THREE.MeshBasicMaterial({ map: sunStickerTex, transparent: true });
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 1.68), faceMat);
+    face.position.z = 0.035;
+    const faceBack = face.clone();
+    faceBack.rotation.y = Math.PI;
+    faceBack.position.z = -0.035;
+    g.add(body, face, faceBack);
     return g;
   }
 
@@ -260,26 +290,29 @@ async function initScene() {
   }
 
   function makeFiller(i) {
-    if (i % 3 === 0) return mesh(new THREE.TorusGeometry(0.28, 0.07, 12, 32), mat.purple, null);
-    if (i % 3 === 1) return mesh(new THREE.OctahedronGeometry(0.3), mat.ink, linePurple);
-    return mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), mat.purple, lineWhite);
+    if (i % 4 === 0) return mesh(new THREE.TorusGeometry(0.28, 0.07, 12, 32), mat.lime, null);
+    if (i % 4 === 1) return mesh(new THREE.OctahedronGeometry(0.32), mat.orange, lineWhite);
+    if (i % 4 === 2) return mesh(new THREE.BoxGeometry(0.38, 0.38, 0.38), mat.purple, lineLime);
+    return mesh(new THREE.TorusGeometry(0.22, 0.05, 10, 24), mat.lavender, null);
   }
 
   // Layout: (fx, fy) are fractions of the visible half-width/height at z = 0.
   const DESKTOP = [
-    { make: makeBadge,  fx: -0.80, fy: 0.46,  z: 0.5,  s: 1.0 },
-    { make: makeShield, fx: 0.75,  fy: 0.36,  z: 0.8,  s: 1.0 },
-    { make: makeLock,   fx: 0.66,  fy: -0.08, z: -1.5, s: 0.95 },
-    { make: makeBag,    fx: 0.80,  fy: -0.55, z: 0.2,  s: 0.95 },
-    { make: makeTag,    fx: -0.80, fy: -0.42, z: 0.4,  s: 0.95 },
-    { make: makeHanger, fx: -0.70, fy: -0.06, z: -2.2, s: 0.9 },
+    { make: makeBadge,      fx: -0.80, fy: 0.46,  z: 0.5,  s: 1.0 },
+    { make: makeShield,     fx: 0.75,  fy: 0.38,  z: 0.8,  s: 1.0 },
+    { make: makeSunSticker, fx: 0.68,  fy: 0.04,  z: -1.2, s: 0.9 },
+    { make: makeLock,       fx: 0.76,  fy: -0.38, z: -1.5, s: 0.95 },
+    { make: makeBag,        fx: 0.82,  fy: -0.68, z: 0.2,  s: 0.95 },
+    { make: makeTag,        fx: -0.82, fy: -0.48, z: 0.4,  s: 0.95 },
+    { make: makeHanger,     fx: -0.72, fy: -0.06, z: -2.2, s: 0.9 },
   ];
   const MOBILE = [
     // Peek in from the screen edges so the full-width form stays clear.
-    { make: makeBadge,  fx: -1.0,  fy: 0.42,  z: 0,    s: 0.8 },
-    { make: makeShield, fx: 1.0,   fy: 0.18,  z: 0,    s: 0.7 },
-    { make: makeTag,    fx: -1.02, fy: -0.38, z: 0,    s: 0.65 },
-    { make: makeBag,    fx: 1.02,  fy: -0.62, z: 0,    s: 0.65 },
+    { make: makeBadge,      fx: -1.0,  fy: 0.42,  z: 0,    s: 0.8 },
+    { make: makeShield,     fx: 1.0,   fy: 0.22,  z: 0,    s: 0.7 },
+    { make: makeSunSticker, fx: 1.02,  fy: -0.15, z: -0.8, s: 0.6 },
+    { make: makeTag,        fx: -1.02, fy: -0.38, z: 0,    s: 0.65 },
+    { make: makeBag,        fx: 1.02,  fy: -0.62, z: 0,    s: 0.65 },
   ];
   const FILLERS_DESKTOP = 7;
   const FILLERS_MOBILE = 0;
