@@ -4,9 +4,9 @@
 //                          • Row 2 (2 items): Wide "Top closets" card (flex: 2) + Solid Ink "Explore all"
 //                            accent card with white right arrow (flex: 1)
 //                          • Row 3 (3 items): Clothing, Sneakers, Accessories
-//   2. RECOMMENDED USERS — Real catalog sellers with 2×2 listing photo collage, profile avatar,
-//                          review count, and real Supabase-backed + Follow action (Matching Image 1).
-//   3. POPULAR BRANDS    — Live catalog brand index chips with diagonal arrows (Matching Image 1).
+//   2. RECOMMENDED USERS — Real catalog sellers with 2×2 listing photo collage (own uploads only,
+//                          grey placeholder for empty slots), profile avatar,
+//                          review count, and real Supabase-backed + Follow action.
 //
 // Complies with UI_GUARDRAILS.md (Three-Hue Rule, Zero Gradients, Inter typography,
 // inline styles on Pressable, testID).
@@ -26,9 +26,9 @@ import { type CategoryId } from '@/lib/categories';
 import { colors, type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/lib/toast';
-import { useBrandIndexQuery } from '@/lib/queries/useSearchQueries';
+
 import { useFollowingMaskQuery, useToggleFollowInList } from '@/lib/queries/useProfileQueries';
-import { buildTrendingSearches } from '@/lib/discover';
+
 import type { SortKey } from '@/lib/listings';
 import type { Listing } from '@/types';
 import type { DiscoverTab } from './SearchTabs';
@@ -57,7 +57,7 @@ export type RecommendedUser = {
   avatar: string;
   rating: number;
   reviews: number;
-  photos: [string, string, string, string];
+  photos: [string | null, string | null, string | null, string | null];
 };
 
 // ── Main SearchLanding Component ────────────────────────────────────────────
@@ -151,26 +151,14 @@ export function SearchLanding({
     const addedIds = new Set<string>();
 
     for (const [sId, { seller, listings: sListings }] of sellersMap.entries()) {
-      const photos: string[] = [];
+      // Only use this seller's own listing photos — never borrow from others
+      const photos: (string | null)[] = [];
       for (const item of sListings) {
         const img = item.thumbnails?.[0] || item.images?.[0];
         if (img && !photos.includes(img)) photos.push(img);
         if (photos.length === 4) break;
       }
-
-      if (photos.length < 4) {
-        for (const other of listings) {
-          const oImg = other.thumbnails?.[0] || other.images?.[0];
-          if (oImg && !photos.includes(oImg)) {
-            photos.push(oImg);
-            if (photos.length === 4) break;
-          }
-        }
-      }
-
-      while (photos.length < 4) {
-        photos.push('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&auto=format&fit=crop&q=80');
-      }
+      while (photos.length < 4) photos.push(null);
 
       addedIds.add(sId);
       list.push({
@@ -180,7 +168,7 @@ export function SearchLanding({
         avatar: seller.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80`,
         rating: seller.rating ? Math.round(seller.rating) : 5,
         reviews: seller.total_sales || sListings.length * 2 || 14,
-        photos: photos as [string, string, string, string],
+        photos: photos as [string | null, string | null, string | null, string | null],
       });
 
       if (list.length >= 8) break;
@@ -192,17 +180,8 @@ export function SearchLanding({
         if (!profile.id || addedIds.has(profile.id) || (userId && profile.id === userId)) continue;
         addedIds.add(profile.id);
 
-        const photos: string[] = [];
-        for (const other of listings) {
-          const oImg = other.thumbnails?.[0] || other.images?.[0];
-          if (oImg && !photos.includes(oImg)) {
-            photos.push(oImg);
-            if (photos.length === 4) break;
-          }
-        }
-        while (photos.length < 4) {
-          photos.push('https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&auto=format&fit=crop&q=80');
-        }
+        // Profile-only users have no listings here — all slots are empty placeholders
+        const photos: (string | null)[] = [null, null, null, null];
 
         list.push({
           id: profile.id,
@@ -211,7 +190,7 @@ export function SearchLanding({
           avatar: profile.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80`,
           rating: profile.rating ? Math.round(profile.rating) : 5,
           reviews: profile.total_sales || profile.followers_count || 12,
-          photos: photos as [string, string, string, string],
+          photos: photos as [string | null, string | null, string | null, string | null],
         });
 
         if (list.length >= 8) break;
@@ -241,17 +220,7 @@ export function SearchLanding({
     [userId, followingSet, toggleFollowMutation, toast],
   );
 
-  // 3. DYNAMIC POPULAR BRANDS (From catalog stock & database brand index)
-  const { data: brandIndex = [] } = useBrandIndexQuery();
-  const dynamicBrands = useMemo(() => {
-    const catalogBrands = buildTrendingSearches(listings, 8);
-    const indexBrands = brandIndex
-      .map((b) => b.name)
-      .filter((b) => !catalogBrands.includes(b));
-    const combined = [...catalogBrands, ...indexBrands];
-    if (combined.length > 0) return combined.slice(0, 8);
-    return ['Zara', 'H&M', 'Nike', 'Stüssy', 'Carhartt', 'Acne Studios', 'Ganni', 'Salomon'];
-  }, [listings, brandIndex]);
+
 
   const cardBg = isDark ? '#1C1C1E' : '#F6F6F8';
 
@@ -525,63 +494,6 @@ export function SearchLanding({
           ))}
         </ScrollView>
       </View>
-
-      {/* ── POPULAR BRANDS (Matching Image 1) ─────────────────────────── */}
-      <View style={{ marginTop: 28, marginBottom: 24 }}>
-        <Text
-          style={{
-            fontSize: 16,
-            fontFamily: type.family.sansBold,
-            color: theme.ink,
-            letterSpacing: -0.3,
-            paddingHorizontal: PAD,
-            marginBottom: 12,
-          }}
-        >
-          Popular brands
-        </Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: PAD, gap: 10 }}
-        >
-          {dynamicBrands.map((brand) => (
-            <Pressable
-              key={brand}
-              onPress={() => {
-                haptic();
-                onSearch?.(brand);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`Search brand ${brand}`}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                paddingHorizontal: 14,
-                height: 36,
-                borderRadius: 8,
-                borderWidth: 1,
-                borderColor: isDark ? 'rgba(255,255,255,0.15)' : '#D1D5DB',
-                backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-                transform: [{ scale: pressed ? 0.96 : 1 }],
-              })}
-            >
-              <Text
-                style={{
-                  fontSize: 13,
-                  fontFamily: type.family.sansBold,
-                  color: theme.ink,
-                }}
-              >
-                {brand}
-              </Text>
-              <Feather name="arrow-up-right" size={15} color={theme.ink} />
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
     </View>
   );
 }
@@ -669,6 +581,44 @@ const BentoTile = memo(function BentoTile({
   );
 });
 
+// ── Collage Slot (shows image or aesthetic grey placeholder) ─────────────────
+const CollageSlot = memo(function CollageSlot({
+  uri,
+  isDark,
+}: {
+  uri: string | null;
+  isDark: boolean;
+}) {
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={{ flex: 1, height: '100%' }}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+      />
+    );
+  }
+  // Aesthetic empty placeholder — soft gradient-like grey with a subtle camera icon
+  return (
+    <View
+      style={{
+        flex: 1,
+        height: '100%',
+        backgroundColor: isDark ? '#2A2A2C' : '#ECEDF0',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Feather
+        name="camera"
+        size={16}
+        color={isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.10)'}
+      />
+    </View>
+  );
+});
+
 // ── Recommended User Card (Matching Image 1) ────────────────────────────────
 const RecommendedUserCard = memo(function RecommendedUserCard({
   user,
@@ -715,12 +665,12 @@ const RecommendedUserCard = memo(function RecommendedUserCard({
         }}
       >
         <View style={{ flex: 1, flexDirection: 'row', gap: 3, marginBottom: 3 }}>
-          <Image source={{ uri: user.photos[0] }} style={{ flex: 1, height: '100%' }} contentFit="cover" cachePolicy="memory-disk" />
-          <Image source={{ uri: user.photos[1] }} style={{ flex: 1, height: '100%' }} contentFit="cover" cachePolicy="memory-disk" />
+          <CollageSlot uri={user.photos[0]} isDark={isDark} />
+          <CollageSlot uri={user.photos[1]} isDark={isDark} />
         </View>
         <View style={{ flex: 1, flexDirection: 'row', gap: 3 }}>
-          <Image source={{ uri: user.photos[2] }} style={{ flex: 1, height: '100%' }} contentFit="cover" cachePolicy="memory-disk" />
-          <Image source={{ uri: user.photos[3] }} style={{ flex: 1, height: '100%' }} contentFit="cover" cachePolicy="memory-disk" />
+          <CollageSlot uri={user.photos[2]} isDark={isDark} />
+          <CollageSlot uri={user.photos[3]} isDark={isDark} />
         </View>
       </View>
 
