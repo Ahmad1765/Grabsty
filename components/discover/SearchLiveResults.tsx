@@ -1,5 +1,5 @@
-import { memo, useState, useMemo } from 'react';
-import { View, Pressable, ScrollView, Platform } from 'react-native';
+import { memo, useState, useMemo, useEffect, useRef } from 'react';
+import { View, Pressable, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
@@ -7,6 +7,8 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
 import { colors, type } from '@/lib/theme';
 import { IMAGE_TRANSITION } from '@/lib/images';
+import { searchListings } from '@/lib/listings';
+import { searchUsers, type FollowListRow } from '@/lib/follows';
 import type { Listing } from '@/types';
 import type { SearchSuggestion } from '@/lib/searchSuggestions';
 
@@ -35,58 +37,121 @@ export const SearchLiveResults = memo(function SearchLiveResults({
 }: SearchLiveResultsProps) {
   const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<'items' | 'profiles'>('items');
+  const [serverListings, setServerListings] = useState<Listing[]>([]);
+  const [serverSellers, setServerSellers] = useState<FollowListRow[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const q = query.trim().toLowerCase();
+  const searchSeq = useRef(0);
 
-  // Filter listings
-  const filteredListings = useMemo(() => {
-    if (!q || !listings.length) return [];
-    return listings
-      .filter((item) => {
-        const titleMatch = item.title?.toLowerCase().includes(q);
-        const brandMatch = item.brand?.toLowerCase().includes(q);
-        const catMatch = item.category?.toLowerCase().includes(q);
-        const tagMatch = item.tags?.some((t) => t.toLowerCase().includes(q));
-        return titleMatch || brandMatch || catMatch || tagMatch;
-      })
-      .slice(0, 10);
-  }, [q, listings]);
+  // Debounced server search across the full Supabase database (catalog & profiles)
+  useEffect(() => {
+    if (!q) {
+      setServerListings([]);
+      setServerSellers([]);
+      setLoading(false);
+      return;
+    }
 
-  // Extract and filter matching sellers
-  const filteredSellers = useMemo(() => {
+    const curSeq = ++searchSeq.current;
+    setLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const [listingRes, usersRes] = await Promise.all([
+          searchListings({ query: q, limit: 15 }).catch(() => ({ ok: false, rows: [] as Listing[] })),
+          searchUsers(q, 15).catch(() => [] as FollowListRow[]),
+        ]);
+
+        if (curSeq === searchSeq.current) {
+          if (listingRes.ok) {
+            setServerListings(listingRes.rows);
+          }
+          setServerSellers(usersRes);
+          setLoading(false);
+        }
+      } catch {
+        if (curSeq === searchSeq.current) {
+          setLoading(false);
+        }
+      }
+    }, 220);
+
+    return () => clearTimeout(timer);
+  }, [q]);
+
+  // Instant in-memory client refinement combined with server results
+  const displayListings = useMemo(() => {
+    if (!q) return [];
+    const clientMatches = listings.filter((item) => {
+      const titleMatch = item.title?.toLowerCase().includes(q);
+      const brandMatch = item.brand?.toLowerCase().includes(q);
+      const catMatch = item.category?.toLowerCase().includes(q);
+      const tagMatch = item.tags?.some((t) => t.toLowerCase().includes(q));
+      return titleMatch || brandMatch || catMatch || tagMatch;
+    });
+
+    const seen = new Set<string>();
+    const merged: Listing[] = [];
+
+    // Prioritize client matches for instantaneous responsiveness
+    for (const item of clientMatches) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        merged.push(item);
+      }
+    }
+
+    // Merge server results from the wider catalog
+    for (const item of serverListings) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        merged.push(item);
+      }
+    }
+
+    return merged.slice(0, 15);
+  }, [q, listings, serverListings]);
+
+  // Combined real sellers from active feed + full Supabase profile search
+  const displaySellers = useMemo(() => {
     if (!q) return [];
     const map = new Map<string, { id: string; name: string; username: string; avatar: string; items: number }>();
 
-    // Add sellers from listings
+    // 1. Check sellers from loaded listings matching query
     listings.forEach((l) => {
-      if (l.seller && !map.has(l.seller.id)) {
-        map.set(l.seller.id, {
-          id: l.seller.id,
-          name: l.seller.full_name || l.seller.username || 'Seller',
-          username: l.seller.username || '',
-          avatar: l.seller.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
-          items: l.seller.total_sales || 18,
+      if (l.seller && l.seller.id) {
+        const uName = (l.seller.username || '').toLowerCase();
+        const fName = (l.seller.full_name || '').toLowerCase();
+        if (uName.includes(q) || fName.includes(q)) {
+          map.set(l.seller.id, {
+            id: l.seller.id,
+            name: l.seller.full_name || l.seller.username || 'Seller',
+            username: l.seller.username || '',
+            avatar: l.seller.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+            items: l.seller.total_sales || 1,
+          });
+        }
+      }
+    });
+
+    // 2. Merge server profiles from Supabase profiles search
+    serverSellers.forEach((s) => {
+      if (!map.has(s.id)) {
+        map.set(s.id, {
+          id: s.id,
+          name: s.full_name || s.username || 'Member',
+          username: s.username || '',
+          avatar: s.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+          items: s.listingCount || s.followers_count || 0,
         });
       }
     });
 
-    // Also include curated popular sellers if matching
-    const curated = [
-      { id: 'c1', name: 'Clutty', username: 'clutty', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80', items: 46 },
-      { id: 'c2', name: 'W_Clothing', username: 'w_clothing', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80', items: 17 },
-      { id: 'c3', name: 'Anya Vintage', username: 'anya_vintage', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80', items: 84 },
-      { id: 'c4', name: 'Marcus Kicks', username: 'marcus_kicks', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80', items: 31 },
-    ];
-    curated.forEach((c) => {
-      if (!map.has(c.id)) map.set(c.id, c);
-    });
+    return Array.from(map.values()).slice(0, 12);
+  }, [q, listings, serverSellers]);
 
-    return Array.from(map.values())
-      .filter((s) => s.name.toLowerCase().includes(q) || s.username.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [q, listings]);
-
-  // Quick match pills from suggestions
+  // Quick match tag from suggestions
   const quickPill = useMemo(() => {
     const matched = suggestions.find((s) => s.text.toLowerCase().includes(q));
     return matched ? matched.text : query.trim();
@@ -94,7 +159,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* ── Sub-tabs (Markets/Items vs Profiles) matching Image 2 ──── */}
+      {/* ── Sub-tabs (Markets/Items vs Profiles) ────────────────────── */}
       <View
         style={{
           flexDirection: 'row',
@@ -156,9 +221,17 @@ export const SearchLiveResults = memo(function SearchLiveResults({
             Profiles
           </Text>
         </Pressable>
+
+        {loading && (
+          <ActivityIndicator
+            size="small"
+            color={colors.purple}
+            style={{ marginLeft: 'auto', marginRight: 4 }}
+          />
+        )}
       </View>
 
-      {/* ── Quick Match Tag matching Image 2 ([DFB Pokal] pill) ────────── */}
+      {/* ── Quick Match Tag ([DFB Pokal] style pill) ────────────────── */}
       {quickPill ? (
         <View style={{ paddingHorizontal: 16, paddingBottom: 10 }}>
           <Pressable
@@ -200,8 +273,8 @@ export const SearchLiveResults = memo(function SearchLiveResults({
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {activeTab === 'items' ? (
-          filteredListings.length > 0 ? (
-            filteredListings.map((item) => {
+          displayListings.length > 0 ? (
+            displayListings.map((item) => {
               const thumb = item.thumbnails?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&auto=format&fit=crop&q=80';
               return (
                 <Pressable
@@ -293,7 +366,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
               );
             })
           ) : (
-            /* Fallback to search suggestions if no direct catalog listing matches */
+            /* Fallback suggestions if catalog has no direct text match */
             <View style={{ paddingTop: 8 }}>
               {suggestions.slice(0, 6).map((s) => (
                 <Pressable
@@ -342,8 +415,8 @@ export const SearchLiveResults = memo(function SearchLiveResults({
           )
         ) : (
           /* activeTab === 'profiles' */
-          filteredSellers.length > 0 ? (
-            filteredSellers.map((seller) => (
+          displaySellers.length > 0 ? (
+            displaySellers.map((seller) => (
               <Pressable
                 key={seller.id}
                 onPress={() => {

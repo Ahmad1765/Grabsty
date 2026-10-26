@@ -56,6 +56,7 @@ import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type BrowseAction, type TopicAction } from './SearchLanding';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/lib/auth';
 
 // Every navigation out of the sheet carries a monotonic `n`. Without it,
 // picking the same chip twice produces an identical URL, expo-router hands
@@ -331,6 +332,7 @@ function DiscoverSheetBody({
 }) {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
+  const { user } = useAuth();
   const searchBg = isDark ? theme.surface : '#F0F1F5';
   const [query, setQuery] = useState('');
 
@@ -501,26 +503,26 @@ function DiscoverSheetBody({
 
   return (
     <View style={{ flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' }}>
+      {/* Search bar pinned at top of sheet, full width without remounting */}
+      <View style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8 }}>
+        {searchBar}
+      </View>
+
       {query.trim().length > 0 ? (
-        <View style={{ flex: 1 }}>
-          <View style={{ marginHorizontal: 16, marginTop: 4 }}>
-            {searchBar}
-          </View>
-          <SearchLiveResults
-            query={query}
-            listings={gridQ.data ?? []}
-            suggestions={suggestions}
-            onSelectListing={(item) => {
-              onClose();
-              router.push(`/product/${item.id}` as any);
-            }}
-            onSelectSeller={(username) => {
-              onClose();
-              router.push(`/user/${username}` as any);
-            }}
-            onSelectTerm={handleSelectSuggestion}
-          />
-        </View>
+        <SearchLiveResults
+          query={query}
+          listings={gridQ.data ?? []}
+          suggestions={suggestions}
+          onSelectListing={(item) => {
+            onClose();
+            router.push(`/product/${item.id}` as any);
+          }}
+          onSelectSeller={(username) => {
+            onClose();
+            router.push(`/user/${username}` as any);
+          }}
+          onSelectTerm={handleSelectSuggestion}
+        />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -528,16 +530,17 @@ function DiscoverSheetBody({
           keyboardDismissMode="on-drag"
           contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
         >
-          {/* Non-sticky search bar taking all available space */}
-          <View style={{ marginHorizontal: 16, marginTop: 4 }}>
-            {searchBar}
-          </View>
-
           <SearchLanding
             covers={covers}
+            listings={gridQ.data ?? []}
+            userId={user?.id ?? null}
             onBrowse={onBrowse}
             onTopic={onTopic}
             onSearch={handleSelectSuggestion}
+            onSelectSeller={(seller) => {
+              onClose();
+              router.push(`/user/${seller}` as any);
+            }}
             activeChipId={activeBrowseChipId}
           />
         </ScrollView>
