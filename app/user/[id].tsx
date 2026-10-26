@@ -67,11 +67,11 @@ export default function UserProfileScreen() {
 
   const fade = useFadeIn(0, 320);
 
-  useEffect(() => {
-    if (authUser?.id && userId && authUser.id === userId) {
-      router.replace('/(tabs)/profile' as any);
-    }
-  }, [authUser?.id, userId]);
+  const UUID_RE = useMemo(
+    () => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    [],
+  );
+  const isInputUuid = useMemo(() => UUID_RE.test(userId), [UUID_RE, userId]);
 
   const { columns, cardWidth: cardW } = useGridDimensions({
     min: 2,
@@ -81,17 +81,24 @@ export default function UserProfileScreen() {
     gap: GRID_GAP,
   });
 
-
   const listRef = useRef<FlashListRef<Listing[]>>(null);
 
   const profileQ = useProfileQuery(userId);
-  const listingsQ = useUserListingsQuery(userId);
-  const followQ = useFollowStateQuery(authUser?.id ?? null, userId);
-  const toggleFollowM = useToggleFollow(authUser?.id ?? null, userId);
-
   const profile = profileQ.data ?? null;
+  // Downstream queries need the real UUID, not a username slug
+  const profileId = profile?.id ?? (isInputUuid ? userId : '');
+  const listingsQ = useUserListingsQuery(profileId);
+  const followQ = useFollowStateQuery(authUser?.id ?? null, profileId);
+  const toggleFollowM = useToggleFollow(authUser?.id ?? null, profileId);
+
+  useEffect(() => {
+    if (authUser?.id && (authUser.id === userId || (profileId && authUser.id === profileId))) {
+      router.replace('/(tabs)/profile' as any);
+    }
+  }, [authUser?.id, userId, profileId]);
+
   const listings = listingsQ.data ?? EMPTY_LISTINGS;
-  const loading = profileQ.isLoading || listingsQ.isLoading;
+  const loading = profileQ.isLoading || (!!profileId && listingsQ.isLoading);
   const followed = followQ.data?.isFollowing ?? false;
   const followersCount = followQ.data?.followersCount ?? profile?.followers_count ?? 0;
   const followingCount = followQ.data?.followingCount ?? profile?.following_count ?? 0;
@@ -103,12 +110,12 @@ export default function UserProfileScreen() {
       router.push('/auth/login' as any);
       return;
     }
-    if (!userId || authUser.id === userId || followBusy) return;
+    if (!profileId || authUser.id === profileId || followBusy) return;
     toggleFollowM.mutate(
       { currentlyFollowing: followed },
       {
         onSuccess: (next) => {
-          if (next.isFollowing) capture('seller_followed', { seller_id: userId });
+          if (next.isFollowing) capture('seller_followed', { seller_id: profileId });
         },
         onError: (e: any) =>
           toast.show(e?.message ?? 'Could not update follow', {
@@ -137,15 +144,15 @@ export default function UserProfileScreen() {
   };
 
   const isCollectionsPublic = profile?.saved_collection_privacy === 'public';
-  const savedQ = useSavedListingsQuery(isCollectionsPublic ? userId : null);
+  const savedQ = useSavedListingsQuery(isCollectionsPublic ? profileId : null);
   const savedListings = savedQ.data ?? EMPTY_LISTINGS;
-  const saveListsQ = useSaveListsQuery(isCollectionsPublic ? userId : null);
+  const saveListsQ = useSaveListsQuery(isCollectionsPublic ? profileId : null);
   const saveLists = saveListsQ.data ?? [];
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const listItemsQ = useListingsInListQuery(activeListId);
   const listItems = listItemsQ.data ?? EMPTY_LISTINGS;
 
-  const likedQ = useLikedListingsQuery(userId);
+  const likedQ = useLikedListingsQuery(profileId);
   const likedListings = likedQ.data ?? EMPTY_LISTINGS;
 
   const visibleSavedListings = useMemo(
@@ -160,13 +167,13 @@ export default function UserProfileScreen() {
       router.push('/auth/login' as any);
       return;
     }
-    if (!userId || authUser.id === userId || messagingBusy) return;
+    if (!profileId || authUser.id === profileId || messagingBusy) return;
 
     setMessagingBusy(true);
     try {
       const conv = await getOrCreateConversation({
         buyerId: authUser.id,
-        sellerId: userId,
+        sellerId: profileId,
       });
       if (conv?.id) {
         router.push(`/conversation/${conv.id}` as any);
@@ -365,7 +372,7 @@ export default function UserProfileScreen() {
                 <Pressable
                   onPress={() =>
                     router.push(
-                      `/profile/following?user=${userId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
+                      `/profile/following?user=${profileId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
                     )
                   }
                   style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
@@ -383,7 +390,7 @@ export default function UserProfileScreen() {
                 <Pressable
                   onPress={() =>
                     router.push(
-                      `/profile/followers?user=${userId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
+                      `/profile/followers?user=${profileId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
                     )
                   }
                   style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
