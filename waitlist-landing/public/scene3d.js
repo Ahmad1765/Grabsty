@@ -146,13 +146,20 @@ async function initScene() {
     bodyGeo.translate(0, 0, -0.17);
     const body = mesh(bodyGeo, mat.purple, lineWhite);
 
-    // Front & Back official Grabsty Logomark faces
-    const markMat = new THREE.MeshBasicMaterial({ map: logomarkWhiteTex, transparent: true });
+    // Front & Back official Grabsty Logomark faces with anti-flicker depth settings
+    const markMat = new THREE.MeshBasicMaterial({
+      map: logomarkWhiteTex,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
     const markFront = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 1.68), markMat);
-    markFront.position.z = 0.25;
+    markFront.position.z = 0.28;
     const markBack = markFront.clone();
     markBack.rotation.y = Math.PI;
-    markBack.position.z = -0.25;
+    markBack.position.z = -0.28;
 
     g.add(body, markFront, markBack);
     return g;
@@ -196,14 +203,22 @@ async function initScene() {
       g.add(h);
     });
     // Front label with official Grabsty logomark
-    const markMat = new THREE.MeshBasicMaterial({ map: logomarkWhiteTex, transparent: true });
+    const markMat = new THREE.MeshBasicMaterial({
+      map: logomarkWhiteTex,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
     const mark = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 0.85), markMat);
-    mark.position.set(0, 0.05, 0.31);
+    mark.position.set(0, 0.05, 0.32);
     g.add(body, mark);
     return g;
   }
 
   // 4. Authentic Preloved Fashion Price Tag (Was Rs. 8,000 / Now Rs. 3,000 Sticker 7)
+  // Anti-flicker: safe Z offset + depthWrite: false + polygonOffset prevents coplanar Z-fighting
   function makeTag() {
     const g = new THREE.Group();
     const s = new THREE.Shape();
@@ -222,12 +237,19 @@ async function initScene() {
     geo.translate(0, 0, -0.04);
     g.add(mesh(geo, mat.paper, lineInk));
 
-    const faceMat = new THREE.MeshBasicMaterial({ map: tagStickerTex, transparent: true });
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: tagStickerTex,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -3,
+      polygonOffsetUnits: -3,
+    });
     const face = new THREE.Mesh(new THREE.PlaneGeometry(1.56, 0.88), faceMat);
-    face.position.set(0, -0.1, 0.065);
+    face.position.set(0, -0.1, 0.078);
     const faceBack = face.clone();
     faceBack.rotation.y = Math.PI;
-    faceBack.position.z = -0.065;
+    faceBack.position.z = -0.078;
     g.add(face, faceBack);
 
     const string = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.028, 8, 36), mat.purple);
@@ -243,12 +265,19 @@ async function initScene() {
     const geo = new THREE.CylinderGeometry(0.85, 0.85, 0.06, 32);
     geo.rotateX(Math.PI / 2);
     const body = mesh(geo, mat.orange, lineWhite);
-    const faceMat = new THREE.MeshBasicMaterial({ map: sunStickerTex, transparent: true });
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: sunStickerTex,
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    });
     const face = new THREE.Mesh(new THREE.PlaneGeometry(1.68, 1.68), faceMat);
-    face.position.z = 0.035;
+    face.position.z = 0.045;
     const faceBack = face.clone();
     faceBack.rotation.y = Math.PI;
-    faceBack.position.z = -0.035;
+    faceBack.position.z = -0.045;
     g.add(body, face, faceBack);
     return g;
   }
