@@ -127,7 +127,7 @@ export class ErrorBoundary extends Component<Props, State> {
             style={({ pressed }) => ({
               height: 44,
               paddingHorizontal: 22,
-              borderRadius: radii.pill,
+              borderRadius: 10,
               backgroundColor: colors.purple,
               alignItems: 'center',
               justifyContent: 'center',

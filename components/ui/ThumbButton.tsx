@@ -162,7 +162,7 @@ export function ThumbButton({
             backgroundColor: colorStyles.bg,
             borderWidth: colorStyles.borderWidth,
             borderColor: colorStyles.borderColor,
-            borderRadius: radii.pill,
+            borderRadius: colorStyles.bg === theme.purple ? 10 : radii.pill,
           },
           getVariantShadow(variant, isDark, disabled),
           style,

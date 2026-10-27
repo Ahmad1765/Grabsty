@@ -616,7 +616,7 @@ export default function FriendsScreen() {
                   onPress={handleSyncContacts}
                   style={{
                     height: 44,
-                    borderRadius: radii.pill,
+                    borderRadius: 10,
                     backgroundColor: theme.purple,
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -710,7 +710,7 @@ export default function FriendsScreen() {
                     style={{
                       flex: 1,
                       height: 42,
-                      borderRadius: radii.pill,
+                      borderRadius: 10,
                       backgroundColor: theme.purple,
                       flexDirection: 'row',
                       alignItems: 'center',

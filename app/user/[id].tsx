@@ -436,7 +436,7 @@ export default function UserProfileScreen() {
                       style={({ pressed }) => ({
                         height: 36,
                         paddingHorizontal: 26,
-                        borderRadius: 20,
+                        borderRadius: 10,
                         backgroundColor: followed ? colors.surface : colors.purple,
                         borderWidth: followed ? 1 : 0,
                         borderColor: colors.border,
@@ -465,7 +465,7 @@ export default function UserProfileScreen() {
                       style={({ pressed }) => ({
                         height: 36,
                         paddingHorizontal: 22,
-                        borderRadius: 20,
+                        borderRadius: 10,
                         backgroundColor: colors.surface,
                         alignItems: 'center',
                         justifyContent: 'center',

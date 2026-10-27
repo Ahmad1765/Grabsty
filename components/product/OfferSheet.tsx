@@ -453,7 +453,7 @@ export function OfferSheet({
                   disabled={!isValidOffer || submitting || loading}
                   style={({ pressed }) => ({
                     height: 48,
-                    borderRadius: radii.pill,
+                    borderRadius: 10,
                     backgroundColor: theme.purple,
                     alignItems: 'center',
                     justifyContent: 'center',

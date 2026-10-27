@@ -629,7 +629,7 @@ function UserRow({
           style={({ pressed }) => ({
             paddingHorizontal: 18,
             paddingVertical: 8,
-            borderRadius: radii.pill,
+            borderRadius: 10,
             backgroundColor: isFollowing ? colors.panel : colors.purple,
             transform: [{ scale: pressed ? 0.96 : 1 }],
           })}

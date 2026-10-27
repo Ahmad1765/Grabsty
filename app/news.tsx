@@ -92,7 +92,7 @@ function SignedOutNewsState() {
           backgroundColor: theme.purple,
           paddingHorizontal: 28,
           height: 48,
-          borderRadius: radii.pill,
+          borderRadius: 10,
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
