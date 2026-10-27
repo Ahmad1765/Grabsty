@@ -34,7 +34,7 @@
     "@tanstack/query-async-storage-persister": "^5.101.0",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-persist-client": "^5.101.0",
-    "babel-preset-expo": "~54.0.10",
+    "babel-preset-expo": "~58.0.11",
     "base64-arraybuffer": "^1.0.2",
     "expo": "~54.0.37",
     "expo-asset": "~12.0.13",
