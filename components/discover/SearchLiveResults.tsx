@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, type } from '@/lib/theme';
+import { type } from '@/lib/theme';
 import { IMAGE_TRANSITION } from '@/lib/images';
 import { searchListings } from '@/lib/listings';
 import { searchUsers, type FollowListRow } from '@/lib/follows';
@@ -35,6 +35,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
   onSelectSeller,
   onSelectTerm,
 }: SearchLiveResultsProps) {
+  const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<'items' | 'profiles'>('items');
   const [serverListings, setServerListings] = useState<Listing[]>([]);

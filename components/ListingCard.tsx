@@ -42,9 +42,10 @@ import { PopIcon, type PopIconHandle } from '@/components/product/PopIcon';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { SoldBadge } from '@/components/ui/SoldBadge';
 import { BRAND_PURPLE, conditionLabel } from '@/components/product/shared';
-import { colors, radii, shadow } from '@/lib/theme';
+import { radii, shadow } from '@/lib/theme';
 import type { Listing } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 interface Props {
   listing: Listing;
   // Rendered width of the card, when the caller already knows it. Every grid in
@@ -57,6 +58,7 @@ interface Props {
 }
 
 export const ListingCard = memo(function ListingCard({ listing, width }: Props) {
+  const { theme: colors } = useTheme();
   const { user } = useAuth();
   // Narrowed once, then used everywhere below instead of `user?.id`.
   //
@@ -1072,19 +1074,19 @@ export const ListingCard = memo(function ListingCard({ listing, width }: Props) 
       </View>
 
       <View className="mt-1.5 w-full">
-        <Text className="text-[13px] font-bold text-ink" numberOfLines={1}>
+        <Text className="text-[13px] font-bold" style={{ color: colors.text }} numberOfLines={1}>
           {listing.brand || listing.title}
         </Text>
         {!!meta && (
-          <Text className="text-[11px] text-ink-mute mt-0.5" numberOfLines={1}>
+          <Text className="text-[11px] mt-0.5" style={{ color: colors.text }} numberOfLines={1}>
             {meta}
           </Text>
         )}
-        <Text className="text-[11px] text-ink-soft mt-1">
+        <Text className="text-[11px] mt-1" style={{ color: colors.text }}>
           {formatPrice(itemPrice, { whole: true })}
         </Text>
         <View className="flex-row items-center mt-0.5" style={{ gap: 4 }}>
-          <Text className="text-[12px] font-bold text-ink">
+          <Text className="text-[12px] font-bold" style={{ color: colors.text }}>
             {formatPrice(totalPrice, { whole: true })} incl.
           </Text>
           <ShieldCheckIcon size={13} />

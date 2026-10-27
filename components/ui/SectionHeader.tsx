@@ -1,7 +1,7 @@
 import { View, Pressable } from 'react-native';
 import { Text } from '@/lib/rnText';
-import { colors } from '@/lib/theme';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props =
   | {
       title: string;
@@ -23,6 +23,7 @@ type Props =
     };
 
 export function SectionHeader({ title, count, action, rightText }: Props) {
+  const { theme: colors } = useTheme();
   return (
     <View
       style={{

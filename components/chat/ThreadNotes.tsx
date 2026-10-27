@@ -95,7 +95,7 @@ export function SellerIntroBubble({
     <View style={{ paddingHorizontal: 16, marginTop: 12, marginBottom: 8, alignItems: 'flex-start' }}>
       <View
         style={{
-          backgroundColor: theme.white,
+          backgroundColor: theme.paper,
           borderRadius: 12,
           borderWidth: 1,
           borderColor: theme.border,

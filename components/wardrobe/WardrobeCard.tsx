@@ -5,10 +5,12 @@ import Feather from '@expo/vector-icons/Feather';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import type { WardrobePost } from '@/lib/wardrobe';
 
+import { useTheme } from '@/context/ThemeContext';
 export function WardrobeCard({ post }: { post: WardrobePost }) {
+  const { theme } = useTheme();
   const optimizedSrc = getOptimizedImageUrl(post.image_url, { width: 600 });
   return (
-    <View style={{ flex: 1, borderRadius: 24, overflow: 'hidden', backgroundColor: '#F2F2F4' }}>
+    <View style={{ flex: 1, borderRadius: 24, overflow: 'hidden', backgroundColor: theme.surface }}>
       <Image
         source={{ uri: optimizedSrc }}
         style={{ width: '100%', height: '100%' }}

@@ -2,9 +2,9 @@ import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
-import { colors } from '@/lib/theme';
 import { getOptimizedImageUrl, thumbWidthFor, IMAGE_TRANSITION } from '@/lib/images';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props = {
   uri?: string | null;
   size?: number;
@@ -13,6 +13,7 @@ type Props = {
 };
 
 export function StoryAvatar({ uri, size = 56, ring = 'purple', initial }: Props) {
+  const { theme: colors } = useTheme();
   const innerSize = ring === 'none' ? size : size - 6;
   const optimizedUri = uri ? getOptimizedImageUrl(uri, { width: thumbWidthFor(innerSize) }) : null;
   const inner = (

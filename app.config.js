@@ -26,7 +26,9 @@ module.exports = () => ({
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'grabsty',
-    userInterfaceStyle: 'light',
+    // 'automatic' lets the OS report dark mode (needed for Settings → Appearance → System);
+    // ThemeContext pins the scheme via Appearance.setColorScheme for Light/Dark.
+    userInterfaceStyle: 'automatic',
     // Fingerprint policy derives runtimeVersion from the native module set, so an
     // OTA JS update only lands on a build whose native layer actually matches —
     // never a crash from shipping a bundle newer than the installed binary.

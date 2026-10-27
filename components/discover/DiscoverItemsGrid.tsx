@@ -12,7 +12,7 @@ import { View, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { subcategoryLabel } from '@/lib/categories';
 import { EmptyState, SectionHeader } from '@/components/ui';
 import {
@@ -35,6 +35,7 @@ import type { Category, Listing } from '@/types';
 import type { DigestCard, PromoTarget } from '@/lib/discover';
 import type { SortKey } from '@/lib/listings';
 
+import { useTheme } from '@/context/ThemeContext';
 const SHOW_DIGEST_RAIL = false;
 
 type DiscoverItemsGridProps = {
@@ -124,6 +125,7 @@ export const DiscoverItemsGrid = memo(function DiscoverItemsGrid({
   searchFilters,
   onUpdateFilter,
 }: DiscoverItemsGridProps) {
+  const { theme: colors } = useTheme();
 
   const displayResults = idle ? gridResults : results;
 
@@ -228,7 +230,7 @@ export const DiscoverItemsGrid = memo(function DiscoverItemsGrid({
               borderRadius: radii.lg,
               borderWidth: 1,
               borderColor: colors.hair,
-              backgroundColor: pressed ? colors.panel : colors.white,
+              backgroundColor: pressed ? colors.panel : colors.paper,
             })}
           >
             <Feather name="users" size={14} color={colors.purple} />

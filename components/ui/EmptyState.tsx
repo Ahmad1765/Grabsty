@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
-import { colors } from '@/lib/theme';
 import { Button } from './Button';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props = {
   emoji?: string;
   icon?: keyof typeof Feather.glyphMap;
@@ -21,6 +21,7 @@ export function EmptyState({
   cta,
   align = 'center',
 }: Props) {
+  const { theme: colors } = useTheme();
   return (
     <View
       style={{

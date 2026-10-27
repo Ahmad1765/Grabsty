@@ -149,7 +149,7 @@ export class ErrorBoundary extends Component<Props, State> {
               height: 44,
               paddingHorizontal: 22,
               borderRadius: radii.pill,
-              backgroundColor: colors.white,
+              backgroundColor: colors.paper,
               borderWidth: 1,
               borderColor: colors.hairline,
               alignItems: 'center',

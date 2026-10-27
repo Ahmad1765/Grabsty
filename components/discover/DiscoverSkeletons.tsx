@@ -10,15 +10,17 @@
 
 import { memo } from 'react';
 import { View } from 'react-native';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { ListingCard } from '@/components/ListingCard';
 import type { Listing } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 const RAIL_CARD_WIDTH = 160;
 
 export function PeopleSkeleton() {
+  const { theme: colors } = useTheme();
   return (
     <View style={{ paddingHorizontal: 16, marginTop: 14, gap: 18 }}>
       {Array.from({ length: 6 }).map((_, i) => (
@@ -36,6 +38,7 @@ export function PeopleSkeleton() {
 }
 
 export function SkeletonTile({ width }: { width: number }) {
+  const { theme: colors } = useTheme();
   return (
     <View style={{ width }}>
       <View

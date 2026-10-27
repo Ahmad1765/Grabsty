@@ -2,9 +2,9 @@ import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { colors } from '@/lib/theme';
 
 
+import { useTheme } from '@/context/ThemeContext';
 export type Credential = {
   key: string;
   icon: keyof typeof Feather.glyphMap;
@@ -19,6 +19,7 @@ export type Credential = {
  * renders fewer rows rather than empty ones.
  */
 export function CredentialList({ rows }: { rows: Credential[] }) {
+  const { theme: colors } = useTheme();
   if (rows.length === 0) return null;
 
   return (

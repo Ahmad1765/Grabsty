@@ -29,7 +29,7 @@ import { getOrCreateConversation } from '@/lib/chat';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
 import type { Listing } from '@/types';
@@ -54,6 +54,7 @@ const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 
 export default function UserProfileScreen() {
+  const { theme: colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = typeof id === 'string' ? id : '';
   const insets = useSafeAreaInsets();

@@ -22,7 +22,7 @@ import React from 'react';
 import { Text as RNText, TextInput as RNTextInput, StyleSheet, Platform } from 'react-native';
 import type { TextProps, TextInputProps } from 'react-native';
 import { cssInterop } from 'nativewind';
-import { colors } from '@/lib/theme';
+import { useOptionalTheme } from '@/context/ThemeContext';
 
 const WEIGHT_FONT: Record<string, string> = {
   '400': 'Inter_400Regular',
@@ -42,15 +42,23 @@ function withDefaultInterFont<P extends { style?: any }>(
   // call site — they're defaults, not overrides.
   extraDefaults?: Partial<P>,
 ) {
+  const isInput = displayName === 'DefaultFontTextInput';
   const Wrapped = React.forwardRef<unknown, P>((props, ref) => {
+    // Subscribe to the theme (not the static `colors` proxy): with the React
+    // Compiler on, a proxy read is treated as a constant and the default text
+    // color would never update when the user switches theme.
+    const { theme, isDark } = useOptionalTheme();
     const flat = StyleSheet.flatten(props.style as any) || ({} as any);
     const family = flat.fontFamily || (WEIGHT_FONT[String(flat.fontWeight ?? '400')] ?? 'Inter_400Regular');
-    const color = flat.color ?? colors.text;
+    const color = flat.color ?? theme.text;
+    const themedDefaults = isInput
+      ? { selectionColor: theme.primary, keyboardAppearance: isDark ? 'dark' : 'light', placeholderTextColor: theme.muteSoft }
+      : undefined;
 
     // On mobile web (iOS Safari & touch devices), enforce minimum 16px fontSize on inputs
     // to prevent iOS Safari from auto-zooming the viewport upon focusing an input.
     let mobileInputStyle: any = undefined;
-    if (Platform.OS === 'web' && displayName === 'DefaultFontTextInput') {
+    if (Platform.OS === 'web' && isInput) {
       if (typeof window !== 'undefined' && ('ontouchstart' in window || window.innerWidth <= 768)) {
         if (!flat.fontSize || flat.fontSize < 16) {
           mobileInputStyle = { fontSize: 16 };
@@ -63,7 +71,7 @@ function withDefaultInterFont<P extends { style?: any }>(
       props.style,
       mobileInputStyle,
     ];
-    return <Base ref={ref as any} {...(extraDefaults as any)} {...(props as any)} style={style} />;
+    return <Base ref={ref as any} {...(extraDefaults as any)} {...(themedDefaults as any)} {...(props as any)} style={style} />;
   });
   Wrapped.displayName = displayName;
   return Wrapped;
@@ -80,7 +88,6 @@ const BaseTextInput = withDefaultInterFont<TextInputProps>(
   'DefaultFontTextInput',
   {
     underlineColorAndroid: 'transparent',
-    selectionColor: colors.primary,
   },
 );
 

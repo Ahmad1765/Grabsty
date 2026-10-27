@@ -14,12 +14,12 @@ import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { colors } from '@/lib/theme';
 import { tap } from '@/lib/haptics';
 import { ProfileBanner } from './ProfileBanner';
 import { ProfileQrSheet } from './ProfileQrSheet';
 import type { User as Profile } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 type ProfileHeaderProps = {
   profile: Profile;
   onShare?: () => void;
@@ -29,6 +29,7 @@ export const ProfileHeader = memo(function ProfileHeader({
   profile,
   onShare,
 }: ProfileHeaderProps) {
+  const { theme: colors } = useTheme();
   const [showQrSheet, setShowQrSheet] = useState(false);
   const displayName = profile.full_name || profile.username;
   const initial = (displayName || 'U').trim().charAt(0).toUpperCase();

@@ -4,13 +4,14 @@ import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import Animated, { useAnimatedStyle, useSharedValue } from 'react-native-reanimated';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH, HIT_SLOP_8 } from '@/lib/responsive';
 import { Button } from '@/components/ui';
 import type { CropRect } from '@/lib/upload';
 import { BANNER_ASPECT } from './ProfileBanner';
 import { coverScaleFor, computeCropRect } from './bannerCrop';
 
+import { useTheme } from '@/context/ThemeContext';
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.25;
@@ -41,6 +42,7 @@ type Props = {
  * at, so what the seller frames here is exactly what appears on the profile.
  */
 export function BannerCropper({ visible, source, onCancel, onConfirm }: Props) {
+  const { theme: colors } = useTheme();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const [zoom, setZoom] = useState(MIN_ZOOM);
 
@@ -146,7 +148,7 @@ export function BannerCropper({ visible, source, onCancel, onConfirm }: Props) {
           style={{
             width: '100%',
             maxWidth: CONTENT_MAX_WIDTH,
-            backgroundColor: colors.white,
+            backgroundColor: colors.paper,
             borderRadius: radii['2xl'],
             padding: 16,
           }}
@@ -292,6 +294,7 @@ function ZoomButton({
   disabled: boolean;
   onPress: () => void;
 }) {
+  const { theme: colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -306,7 +309,7 @@ function ZoomButton({
         borderRadius: 20,
         borderWidth: 1,
         borderColor: colors.hairline,
-        backgroundColor: colors.white,
+        backgroundColor: colors.paper,
         alignItems: 'center',
         justifyContent: 'center',
         opacity: disabled ? 0.4 : pressed ? 0.7 : 1,

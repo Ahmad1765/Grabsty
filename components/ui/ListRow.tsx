@@ -1,8 +1,9 @@
 import { View, Pressable } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props = {
   icon?: keyof typeof Feather.glyphMap;
   iconBg?: string;
@@ -30,6 +31,7 @@ export function ListRow({
   chevron = true,
   destructive,
 }: Props) {
+  const { theme: colors } = useTheme();
   const titleColor = destructive ? colors.red : colors.ink2;
 
   return (
@@ -84,6 +86,7 @@ export function ListRow({
 }
 
 function Badge({ label, tone }: { label: string; tone: NonNullable<Props['badgeTone']> }) {
+  const { theme: colors } = useTheme();
   const map = {
     pink: { bg: colors.pinkSoft, fg: colors.pinkDeep },
     mute: { bg: colors.panel, fg: colors.smoke },

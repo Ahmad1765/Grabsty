@@ -121,7 +121,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
       <View style={{ paddingHorizontal: 16, marginVertical: 12 }}>
         <View
           style={{
-            backgroundColor: theme.white,
+            backgroundColor: theme.paper,
             borderRadius: 12,
             borderWidth: 1,
             borderColor: theme.border,

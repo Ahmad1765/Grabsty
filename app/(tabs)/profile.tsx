@@ -35,7 +35,6 @@ import {
   useLikedListingsQuery,
   useSavedListingsQuery,
 } from '@/lib/queries';
-import { colors } from '@/lib/theme';
 import { useTabBarClearance, useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
 import type { Listing } from '@/types';
@@ -54,11 +53,13 @@ import {
 } from '@/components/profile';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 
+import { useTheme } from '@/context/ThemeContext';
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 const EMPTY_LISTINGS: Listing[] = [];
 
 function ProfileScreenInner() {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { profile, user, refreshProfile } = useAuth();

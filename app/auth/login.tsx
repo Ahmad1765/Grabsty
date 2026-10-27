@@ -11,9 +11,9 @@ import { supabase } from '@/lib/supabase';
 import { signInWithGoogle } from '@/lib/oauth';
 import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
-import { colors } from '@/lib/theme';
 import { BRAND } from '@/lib/brand';
 
+import { useTheme } from '@/context/ThemeContext';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Mode = 'signin' | 'signup';
@@ -68,6 +68,7 @@ export default function LoginRoute() {
 }
 
 function LoginScreen() {
+  const { theme: colors, isDark } = useTheme();
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
   const { width, height } = useWindowDimensions();
@@ -276,7 +277,7 @@ function LoginScreen() {
     <SafeContainer
       mode="keyboard-avoiding"
       edges={['top', 'bottom']}
-      backgroundColor={colors.white}
+      backgroundColor={colors.paper}
       style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
       scrollViewProps={{ bounces: false }}
@@ -300,7 +301,7 @@ function LoginScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: colors.white,
+                  backgroundColor: colors.paper,
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderWidth: 1,
@@ -342,7 +343,7 @@ function LoginScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  backgroundColor: colors.white,
+                  backgroundColor: colors.paper,
                   alignItems: 'center',
                   justifyContent: 'center',
                   borderWidth: 1,
@@ -361,7 +362,9 @@ function LoginScreen() {
               marginHorizontal: 16,
               marginTop: 4,
               height: panelHeight,
-              backgroundColor: colors.primary,
+              // Hero carries white text/overlays, so it stays dark in both themes
+              // (`primary` flips to white in dark mode).
+              backgroundColor: isDark ? colors.panel : colors.primary,
               borderRadius: 32,
               padding: 28,
               justifyContent: 'space-between',
@@ -465,7 +468,7 @@ function LoginScreen() {
                     style={{
                       height: 58,
                       borderRadius: 18,
-                      backgroundColor: colors.white,
+                      backgroundColor: colors.paper,
                       borderWidth: 1.5,
                       borderColor: colors.hairline,
                       flexDirection: 'row',
@@ -501,13 +504,13 @@ function LoginScreen() {
                       paddingHorizontal: 20,
                     }}
                   >
-                    <Feather name="mail" size={18} color={colors.white} />
+                    <Feather name="mail" size={18} color={colors.background} />
                     <Text
                       style={{
                         marginLeft: 10,
                         fontSize: 16,
                         fontWeight: '800',
-                        color: colors.white,
+                        color: colors.background,
                         letterSpacing: 0.1,
                       }}
                     >
@@ -538,7 +541,7 @@ function LoginScreen() {
                     style={{
                       height: 58,
                       borderRadius: 18,
-                      backgroundColor: colors.white,
+                      backgroundColor: colors.paper,
                       borderWidth: 1.5,
                       borderColor: colors.hairline,
                       flexDirection: 'row',
@@ -729,7 +732,7 @@ function LoginScreen() {
                       style={{
                         fontSize: 16,
                         fontWeight: '800',
-                        color: colors.white,
+                        color: colors.background,
                         letterSpacing: 0.2,
                       }}
                     >
@@ -751,7 +754,7 @@ function LoginScreen() {
                         justifyContent: 'center',
                       }}
                     >
-                      <Feather name="arrow-right" size={18} color={colors.white} />
+                      <Feather name="arrow-right" size={18} color={colors.background} />
                     </View>
                   </View>
                 </PressableScale>
@@ -800,6 +803,7 @@ function ModeSwitch({
   onChange: (m: Mode) => void;
   switchAnim: Animated.Value;
 }) {
+  const { theme: colors } = useTheme();
   const [trackWidth, setTrackWidth] = useState(0);
   const PADDING = 4;
   const pillWidth = trackWidth > 0 ? (trackWidth - PADDING * 2) / 2 : 0;
@@ -811,11 +815,11 @@ function ModeSwitch({
 
   const signinColor = switchAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.white, colors.mute],
+    outputRange: [colors.background, colors.mute],
   });
   const signupColor = switchAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [colors.mute, colors.white],
+    outputRange: [colors.mute, colors.background],
   });
 
   return (
@@ -899,6 +903,7 @@ function Field({
   focused: boolean;
   error?: string;
 }) {
+  const { theme: colors } = useTheme();
   const DANGER = '#E5484D';
   const borderColor = error ? DANGER : focused ? colors.primary : colors.hairline;
   return (
@@ -923,7 +928,7 @@ function Field({
           paddingHorizontal: 16,
           height: 56,
           borderRadius: 18,
-          backgroundColor: colors.white,
+          backgroundColor: colors.paper,
           borderWidth: error || focused ? 2 : 1,
           borderColor,
         }}

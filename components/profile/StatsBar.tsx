@@ -1,9 +1,10 @@
 import { View, Pressable } from 'react-native';
 import { Text } from '@/lib/rnText';
-import { colors, radii, shadow } from '@/lib/theme';
+import { radii, shadow } from '@/lib/theme';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { formatCount } from './format';
 
+import { useTheme } from '@/context/ThemeContext';
 export type StatItem = {
   key: string;
   value: number;
@@ -29,6 +30,7 @@ export function StatsBar({
   items: StatItem[];
   variant?: 'card' | 'flat';
 }) {
+  const { theme: colors } = useTheme();
   const isFlat = variant === 'flat';
   return (
     // Clamped and centred so four columns don't stretch across a desktop
@@ -66,6 +68,7 @@ export function StatsBar({
 }
 
 function Stat({ item }: { item: StatItem }) {
+  const { theme: colors } = useTheme();
   const body = (
     <View style={{ alignItems: 'center' }}>
       <Text style={{ fontSize: 20, fontWeight: '800', color: colors.ink, letterSpacing: -0.4 }}>

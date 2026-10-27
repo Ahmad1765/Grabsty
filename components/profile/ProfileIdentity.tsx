@@ -1,9 +1,10 @@
 import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props = {
   name: string;
   username: string;
@@ -20,6 +21,7 @@ type Props = {
  * line, then the screen's actions.
  */
 export function ProfileIdentity({ name, username, subtitle, levelName, children }: Props) {
+  const { theme: colors } = useTheme();
   return (
     // Clamped so the action row doesn't stretch two buttons across a desktop
     // viewport. A no-op below the cap.

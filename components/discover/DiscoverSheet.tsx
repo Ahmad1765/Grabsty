@@ -50,7 +50,7 @@ import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react
 import { BRAND } from '@/lib/brand';
 import { buildTopicCovers } from '@/lib/discover';
 import { useFeedListingsQuery } from '@/lib/queries';
-import { colors, radii, type } from '@/lib/theme';
+import { radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
@@ -173,7 +173,6 @@ type SheetSkin = {
   radius: number;
   handleW: number;
   handleH: number;
-  handleColor: string;
   padTop: number;
   gap: number;
 };
@@ -182,7 +181,6 @@ const DEFAULT_HANDLE: SheetSkin = {
   radius: radii['3xl'],
   handleW: 38,
   handleH: 4,
-  handleColor: colors.hairline,
   padTop: 10,
   gap: 14,
 };
@@ -201,6 +199,7 @@ function SheetShell({
   skin: SheetSkin;
   children: ReactNode;
 }) {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: winHeight } = useWindowDimensions();
   const translateY = useSharedValue(0);
@@ -290,7 +289,7 @@ function SheetShell({
         style={[
           {
             flex: 1,
-            backgroundColor: colors.white,
+            backgroundColor: colors.background,
             borderTopLeftRadius: skin.radius,
             borderTopRightRadius: skin.radius,
             overflow: 'hidden',
@@ -318,7 +317,7 @@ function SheetShell({
                 width: skin.handleW,
                 height: skin.handleH,
                 borderRadius: 50,
-                backgroundColor: skin.handleColor,
+                backgroundColor: colors.hairline,
                 outlineStyle: 'none',
               } as any}
             />

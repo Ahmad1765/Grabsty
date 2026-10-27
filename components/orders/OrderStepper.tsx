@@ -176,7 +176,7 @@ export function OrderStepper({
   return (
     <View
       style={{
-        backgroundColor: theme.white,
+        backgroundColor: theme.paper,
         borderRadius: 14,
         borderWidth: 1,
         borderColor: theme.border,

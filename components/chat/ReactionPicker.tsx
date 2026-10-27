@@ -191,7 +191,7 @@ export function ReactionPicker({
                 alignItems: 'center',
                 padding: BAR_PAD,
                 borderRadius: BAR_HEIGHT / 2,
-                backgroundColor: theme.white,
+                backgroundColor: theme.paper,
                 borderWidth: 1,
                 borderColor: theme.border,
                 shadowColor: theme.ink,
@@ -216,12 +216,12 @@ export function ReactionPicker({
           </Animated.View>
 
           {actions.length > 0 && (
-            <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.white }}>
+            <SafeAreaView edges={['bottom']} style={{ backgroundColor: theme.paper }}>
               <View
                 style={{
                   borderTopLeftRadius: radii['4xl'],
                   borderTopRightRadius: radii['4xl'],
-                  backgroundColor: theme.white,
+                  backgroundColor: theme.paper,
                   borderTopWidth: 1,
                   borderColor: theme.border,
                   paddingVertical: 6,

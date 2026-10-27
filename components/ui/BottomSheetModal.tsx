@@ -301,7 +301,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sheet: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.paper,
     borderTopLeftRadius: radii['3xl'],
     borderTopRightRadius: radii['3xl'],
     zIndex: 110,
@@ -386,6 +386,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: colors.hairline,
-    backgroundColor: colors.white,
+    backgroundColor: colors.paper,
   },
 });

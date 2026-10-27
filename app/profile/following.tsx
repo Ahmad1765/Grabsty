@@ -10,7 +10,6 @@ import { useToast } from '@/lib/toast';
 import { safeBack } from '@/lib/nav';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { useTheme } from '@/context/ThemeContext';
-import { colors } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { Button, EmptyState } from '@/components/ui';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
@@ -32,6 +31,7 @@ const keyById = (r: Row) => r.id;
 const EMPTY_ROWS: Row[] = [];
 
 export default function FollowingScreen() {
+  const { theme: colors } = useTheme();
   const { theme } = useTheme();
   const { user: authUser, profile: authProfile } = useAuth();
   const params = useLocalSearchParams<{ user?: string; username?: string }>();

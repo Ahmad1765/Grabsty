@@ -17,7 +17,7 @@ import { fetchFollowingMask, toggleFollow } from '@/lib/follows';
 import { useToast } from '@/lib/toast';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii, type } from '@/lib/theme';
+import { radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import type { TagIndexEntry } from '@/lib/searchIndex';
 import type { User } from '@/types';
@@ -36,7 +36,6 @@ function titleCase(s: string): string {
 const eyebrowStyle = {
   fontSize: 11,
   fontFamily: type.family.sansBold,
-  color: colors.mute,
   letterSpacing: 1.4,
   textTransform: 'uppercase' as const,
 };
@@ -173,9 +172,10 @@ function SegmentPill({
 // The bold heading the editorial rails use (Daily picks / Recently viewed),
 // so the hub panels read as chapters of the same magazine.
 export function HubTitle({ title, eyebrow }: { title: string; eyebrow?: string }) {
+  const { theme: colors } = useTheme();
   return (
     <View style={{ paddingHorizontal: PAD, marginTop: 20, marginBottom: 12 }}>
-      {eyebrow ? <Text style={[eyebrowStyle, { marginBottom: 4 }]}>{eyebrow}</Text> : null}
+      {eyebrow ? <Text style={[eyebrowStyle, { color: colors.mute, marginBottom: 4 }]}>{eyebrow}</Text> : null}
       <Text style={{ fontFamily: DISPLAY_BOLD, fontSize: 20, color: colors.ink, letterSpacing: -0.3 }}>
         {title}
       </Text>
@@ -237,6 +237,7 @@ function TagTile({
   entry: TagIndexEntry;
   onPress: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const { tag, count } = entry;
   const label = titleCase(tag);
   const uri = entry.image ? getOptimizedImageUrl(entry.image, { width: 200 }) : null;
@@ -337,6 +338,7 @@ export function BrandsPanel({
 }
 
 function BrandCard({ brand, onPress }: { brand: BrandEntry; onPress: () => void }) {
+  const { theme: colors } = useTheme();
   const { name, count, images } = brand;
   return (
     <Pressable
@@ -560,6 +562,7 @@ function UserRow({
   isFollowing: boolean;
   onToggle: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const avatar = user.avatar_url ? getOptimizedImageUrl(user.avatar_url, { width: 120 }) : null;
   const initial = (user.full_name || user.username || 'U').trim().charAt(0).toUpperCase();
   const followers = Number(user.followers_count ?? 0);

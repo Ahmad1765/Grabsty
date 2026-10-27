@@ -57,6 +57,7 @@ export function MobileTabBar({
   className = '',
   style,
 }: MobileTabBarProps) {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
 
@@ -179,6 +180,7 @@ function TabItemButton({
   theme?: typeof colors;
   onPress: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const activeTheme = theme || colors;
   return (
     <Pressable

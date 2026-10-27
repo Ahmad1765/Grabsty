@@ -11,12 +11,9 @@ const THEME_OPTIONS: {
   desc: string;
   icon: keyof typeof Feather.glyphMap;
 }[] = [
-  {
-    id: 'light',
-    title: 'Light Monotone',
-    desc: 'Clean high-contrast white & slate palette',
-    icon: 'sun',
-  },
+  { id: 'light', title: 'Light', desc: 'Paper white with ink text', icon: 'sun' },
+  { id: 'dark', title: 'Dark', desc: 'Near-black, easier on the eyes at night', icon: 'moon' },
+  { id: 'system', title: 'System', desc: "Match your device's appearance setting", icon: 'smartphone' },
 ];
 
 export function ThemeSheet({
@@ -74,13 +71,7 @@ export function ThemeSheet({
                 <Feather
                   name={opt.icon}
                   size={20}
-                  color={
-                    selected
-                      ? theme.accent === '#FFFFFF'
-                        ? '#0F0F0F'
-                        : '#FFFFFF'
-                      : theme.text
-                  }
+                  color={selected ? theme.background : theme.text}
                 />
               </View>
 
@@ -148,8 +139,7 @@ export function ThemeSheet({
                       width: 8,
                       height: 8,
                       borderRadius: 4,
-                      backgroundColor:
-                        theme.accent === '#FFFFFF' ? '#0F0F0F' : '#FFFFFF',
+                      backgroundColor: theme.background,
                     }}
                   />
                 )}

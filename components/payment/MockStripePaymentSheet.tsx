@@ -9,11 +9,11 @@ import {
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { colors } from '@/lib/theme';
 
 import { formatPrice } from '@/lib/fees';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 
+import { useTheme } from '@/context/ThemeContext';
 interface MockStripePaymentSheetProps {
   visible: boolean;
   totalAmount: number;
@@ -31,6 +31,7 @@ export function MockStripePaymentSheet({
   onConfirm,
   loading = false,
 }: MockStripePaymentSheetProps) {
+  const { theme: colors } = useTheme();
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function MockStripePaymentSheet({
           style={{
             width: '100%',
             maxWidth: 480,
-            backgroundColor: colors.white,
+            backgroundColor: colors.paper,
             borderRadius: Platform.OS === 'web' ? 24 : 0,
             borderTopLeftRadius: 28,
             borderTopRightRadius: 28,

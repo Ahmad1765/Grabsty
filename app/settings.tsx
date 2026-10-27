@@ -47,6 +47,7 @@ import {
   PayoutSheet,
   VerificationSheet,
   PhoneSheet,
+  ThemeSheet,
   useSettingsManager,
   SUPPORT_EMAIL,
   ChatGPTRow,
@@ -76,7 +77,8 @@ const TABS: TabConfig[] = [
 
 export default function SettingsScreen() {
   const { profile, user, session } = useAuth();
-  const { theme, isDark } = useTheme();
+  const { theme, isDark, mode: themeMode } = useTheme();
+  const themeLabel = themeMode === 'system' ? 'System' : themeMode === 'dark' ? 'Dark' : 'Light';
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isLaptop = width >= bp.lg;
@@ -130,6 +132,16 @@ export default function SettingsScreen() {
                 onPress={() => {
                   tap('light');
                   mgr.openSystemSettings();
+                }}
+              />
+            </ChatGPTRow>
+
+            <ChatGPTRow label="Appearance" desc="Light, dark, or match your device">
+              <ChatGPTButton
+                label={themeLabel}
+                onPress={() => {
+                  tap('light');
+                  mgr.setShowTheme(true);
                 }}
               />
             </ChatGPTRow>
@@ -766,6 +778,8 @@ export default function SettingsScreen() {
           }}
         />
 
+        <ThemeSheet visible={mgr.showTheme} onClose={() => mgr.setShowTheme(false)} />
+
         <PhoneSheet
           visible={mgr.showPhone}
           initialPhone={mgr.phone}
@@ -975,6 +989,13 @@ export default function SettingsScreen() {
         {/* Group 2: App settings matching Video */}
         <ChatGPTGroup title="App settings">
           <ChatGPTItem
+            icon="moon"
+            label="Appearance"
+            value={themeLabel}
+            chevron
+            onPress={() => mgr.setShowTheme(true)}
+          />
+          <ChatGPTItem
             icon="shopping-bag"
             label="Purchases & Orders"
             chevron
@@ -1146,6 +1167,8 @@ export default function SettingsScreen() {
           if (ok) mgr.setShowVerify(false);
         }}
       />
+
+      <ThemeSheet visible={mgr.showTheme} onClose={() => mgr.setShowTheme(false)} />
 
       <PhoneSheet
         visible={mgr.showPhone}

@@ -16,8 +16,8 @@ import {
   type LocalImage,
 } from '@/lib/upload';
 import { useToast } from '@/lib/toast';
-import { colors } from '@/lib/theme';
 
+import { useTheme } from '@/context/ThemeContext';
 const PURPLE = '#6C47FF';
 const RED = '#EF4444';
 
@@ -50,6 +50,7 @@ function FieldShell({
   focused: boolean;
   children: React.ReactNode;
 }) {
+  const { theme: colors } = useTheme();
   const borderColor = error ? RED : focused ? PURPLE : colors.border;
 
   return (
@@ -94,6 +95,7 @@ function FieldShell({
 type UsernameStatus = 'idle' | 'checking' | 'ok' | 'taken';
 
 export default function ProfileEditScreen() {
+  const { theme: colors } = useTheme();
   const { profile, user, refreshProfile, loading } = useAuth();
   const toast = useToast();
   const params = useLocalSearchParams<{ onboarding?: string }>();
@@ -670,7 +672,7 @@ export default function ProfileEditScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 6,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                 }}
               >
                 <Text style={{ fontSize: 11, fontWeight: '700', color: colors.mute, letterSpacing: 0.5 }}>
@@ -713,7 +715,7 @@ export default function ProfileEditScreen() {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
@@ -734,7 +736,7 @@ export default function ProfileEditScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 6,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                 }}
               >
                 <Text

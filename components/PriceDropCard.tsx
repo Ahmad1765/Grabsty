@@ -14,6 +14,7 @@ import { putCachedListing } from '@/lib/listingCache';
 import type { PriceDropListing } from '@/lib/myFeed';
 import { formatPrice as formatMoney } from '@/lib/currency';
 
+import { useTheme } from '@/context/ThemeContext';
 interface Props {
   listing: PriceDropListing;
   width?: number;
@@ -25,6 +26,7 @@ function formatPrice(value: unknown): string {
 }
 
 export const PriceDropCard = memo(function PriceDropCard({ listing, width = 130 }: Props) {
+  const { theme } = useTheme();
   const src = getOptimizedImageUrl(cardImageUrl(listing, 0), { width: thumbWidthFor(width) });
   // Clamp negative pct to 0: if new_price > old_price (price went up) the
   // render guard `pct > 0` will hide the discount badge anyway, but the
@@ -54,7 +56,7 @@ export const PriceDropCard = memo(function PriceDropCard({ listing, width = 130 
         style={{
           width,
           aspectRatio: 1,
-          backgroundColor: 'rgba(15,15,15,0.04)',
+          backgroundColor: theme.surface,
           borderRadius: 12,
           overflow: 'hidden',
           position: 'relative',
@@ -85,7 +87,7 @@ export const PriceDropCard = memo(function PriceDropCard({ listing, width = 130 
       </View>
       <Text
         numberOfLines={1}
-        style={{ marginTop: 6, fontSize: 12.5, fontWeight: '600', color: '#0F0F0F' }}
+        style={{ marginTop: 6, fontSize: 12.5, fontWeight: '600', color: theme.ink }}
       >
         {listing.title}
       </Text>
@@ -93,7 +95,7 @@ export const PriceDropCard = memo(function PriceDropCard({ listing, width = 130 
         <Text
           style={{
             fontSize: 11.5,
-            color: 'rgba(15,15,15,0.55)',
+            color: theme.mute,
             textDecorationLine: 'line-through',
           }}
         >

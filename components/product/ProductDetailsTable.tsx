@@ -150,7 +150,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 }}>
         <View
           style={{
-            backgroundColor: theme.white,
+            backgroundColor: theme.paper,
             borderRadius: 18,
             borderWidth: HAIRLINE,
             borderColor: theme.border,
@@ -282,7 +282,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 paddingVertical: 16,
                 borderTopWidth: HAIRLINE,
                 borderTopColor: theme.border,
-                backgroundColor: pressed && row.onPress ? theme.panel : theme.white,
+                backgroundColor: pressed && row.onPress ? theme.panel : theme.paper,
               })}
             >
               <Text
@@ -323,7 +323,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                   router.push(`/?searchOpen=1&searchQuery=${encodeURIComponent(tag)}` as any);
                 }}
                 style={({ pressed }) => ({
-                  backgroundColor: theme.white,
+                  backgroundColor: theme.paper,
                   borderWidth: 1,
                   borderColor: theme.border,
                   borderRadius: 999,

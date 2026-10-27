@@ -1,9 +1,10 @@
 import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
-import { colors, radii, shadow } from '@/lib/theme';
+import { radii, shadow } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 
+import { useTheme } from '@/context/ThemeContext';
 type Props = {
   icon: keyof typeof Feather.glyphMap;
   title: string;
@@ -18,6 +19,7 @@ type Props = {
  * only lifts the card off it.
  */
 export function InfoCard({ icon, title, children }: Props) {
+  const { theme: colors } = useTheme();
   return (
     // Clamped like <StatsBar>, so a Details panel doesn't run the full width of
     // a desktop viewport. A no-op below the cap.

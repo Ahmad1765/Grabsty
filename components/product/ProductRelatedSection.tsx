@@ -79,7 +79,7 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
                 paddingHorizontal: 16,
                 paddingVertical: 9,
                 borderRadius: 999,
-                backgroundColor: active ? theme.selected : theme.white,
+                backgroundColor: active ? theme.selected : theme.paper,
                 borderWidth: 1,
                 borderColor: theme.border,
                 transform: [{ scale: pressed ? 0.96 : 1 }],

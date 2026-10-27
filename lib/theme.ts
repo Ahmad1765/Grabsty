@@ -23,6 +23,9 @@ export const lightTheme = {
   primarySoft: 'rgba(0, 0, 0, 0.06)',
   primarySofter: 'rgba(0, 0, 0, 0.12)',
   white: '#FFFFFF',
+  // Card / sheet surface. Use this — not `white` — for backgrounds; `white`
+  // is literal white in both palettes (text/icons on purple, photo overlays).
+  paper: '#FFFFFF',
   ink: '#111111',
   ink2: '#111111',
   hair: 'rgba(0, 0, 0, 0.08)',
@@ -73,7 +76,8 @@ export const darkTheme = {
   primaryDeep: '#E0E0E0',
   primarySoft: 'rgba(255, 255, 255, 0.10)',
   primarySofter: 'rgba(255, 255, 255, 0.18)',
-  white: '#161616', // Card and container surface in dark mode
+  white: '#FFFFFF',
+  paper: '#161616',
   ink: '#F5F5F5',
   ink2: '#F5F5F5',
   hair: 'rgba(255, 255, 255, 0.08)',

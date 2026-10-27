@@ -19,6 +19,7 @@ import {
 import { useToast } from '@/lib/toast';
 import { useTabBarClearance } from '@/lib/responsive';
 
+import { useTheme } from '@/context/ThemeContext';
 type Section = 'swipe' | 'mine' | 'liked';
 
 // Stable empty reference so a pending query doesn't hand the grid a new array
@@ -26,6 +27,7 @@ type Section = 'swipe' | 'mine' | 'liked';
 const EMPTY_POSTS: WardrobePost[] = [];
 
 function WardrobeInner() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const uid = user?.id ?? null;
   const [section, setSection] = useState<Section>('swipe');
@@ -73,7 +75,7 @@ function WardrobeInner() {
   const handleDelete = useCallback((id: string) => { deletePost.mutate(id); }, [deletePost]);
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-white">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
       <View className="flex-row items-center justify-between px-5 pt-2 pb-3">
         <Text style={{ fontSize: 26, fontWeight: '800', letterSpacing: -0.5 }}>Wardrobe</Text>
         <Pressable onPress={() => router.push('/wardrobe/new')} hitSlop={10} style={{ width: 40, height: 40, borderRadius: 999, backgroundColor: '#6C47FF', alignItems: 'center', justifyContent: 'center' }}>
@@ -98,8 +100,8 @@ function WardrobeInner() {
             <SwipeDeck posts={cards} onSwipe={onSwipe} onNeedMore={onNeedMore} />
           ) : (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              <Feather name="check-circle" size={30} color="rgba(15,15,15,0.3)" />
-              <Text style={{ marginTop: 10, color: 'rgba(15,15,15,0.5)' }}>
+              <Feather name="check-circle" size={30} color={theme.muteSoft} />
+              <Text style={{ marginTop: 10, color: theme.mute }}>
                 {deck.isLoading ? 'Loading outfits…' : "You're all caught up"}
               </Text>
             </View>

@@ -11,10 +11,10 @@
 import { memo } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
-import { colors } from '@/lib/theme';
 import { ListingCard } from '@/components/ListingCard';
 import type { Listing } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 
@@ -64,6 +64,7 @@ export const GridPlaceholder = memo(function GridPlaceholder({
   cardWidth,
   emptyText,
 }: GridPlaceholderProps) {
+  const { theme: colors } = useTheme();
   if (loading) {
     return (
       <View style={{ paddingHorizontal: HORIZONTAL_PAD, flexDirection: 'row', gap: GRID_GAP }}>
@@ -74,7 +75,7 @@ export const GridPlaceholder = memo(function GridPlaceholder({
               width: cardWidth,
               aspectRatio: 1 / 1.33, // ListingCard image ratio
               borderRadius: 12,
-              backgroundColor: 'rgba(15,15,15,0.06)',
+              backgroundColor: colors.surface,
             }}
           />
         ))}

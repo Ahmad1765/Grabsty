@@ -14,10 +14,11 @@ import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
 import Animated from 'react-native-reanimated';
 import { BellIcon } from '@/components/ui';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { DiscoverSegments, type DiscoverTab } from './SearchTabs';
 
+import { useTheme } from '@/context/ThemeContext';
 type DiscoverHeaderProps = {
   query: string;
   tab: DiscoverTab;
@@ -45,6 +46,7 @@ export const DiscoverHeader = memo(function DiscoverHeader({
   onCancelSearch,
   onChangeTab,
 }: DiscoverHeaderProps) {
+  const { theme: colors } = useTheme();
   return (
     <>
       {/* Top Title Bar */}

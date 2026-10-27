@@ -17,6 +17,7 @@ import { HIT_SLOP_8 } from '@/lib/responsive';
 import type { Listing } from '@/types';
 import type { DigestCard, Collection, PromoSlide, PromoTarget } from '@/lib/discover';
 
+import { useTheme } from '@/context/ThemeContext';
 const PAD = 16;
 const GAP = 10;
 const DISPLAY_BOLD = type.family.sansBold; // Inter_700Bold
@@ -25,7 +26,6 @@ const DISPLAY_SEMI = type.family.sansSemibold; // Inter_600SemiBold
 const eyebrowStyle = {
   fontSize: 11,
   fontFamily: type.family.sansBold,
-  color: colors.mute,
   letterSpacing: 1.4,
   textTransform: 'uppercase' as const,
 };
@@ -34,6 +34,7 @@ const eyebrowStyle = {
 // Section heading for the idle feed. The personalized "Welcome @username"
 // eyebrow was removed; this now just titles the edit.
 export function WelcomeEyebrow() {
+  const { theme: colors } = useTheme();
   return (
     <View style={{ paddingHorizontal: PAD, marginTop: 22 }}>
       <Text
@@ -66,6 +67,7 @@ export function PromoBanner({
   slides: PromoSlide[];
   onPress: (target: PromoTarget) => void;
 }) {
+  const { theme: colors } = useTheme();
   const { width: winW } = useWindowDimensions();
   const [containerW, setContainerW] = useState(0);
   const [active, setActive] = useState(0);
@@ -159,6 +161,7 @@ function PromoCard({
   width: number;
   onPress: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const src = slide.image ? getOptimizedImageUrl(slide.image, { width: 600 }) : null;
   const hasImg = !!src;
   return (
@@ -275,7 +278,7 @@ function PromoCard({
               alignItems: 'center',
               gap: 7,
               alignSelf: 'flex-start',
-              backgroundColor: colors.white,
+              backgroundColor: colors.paper,
               paddingLeft: 16,
               paddingRight: 13,
               paddingVertical: 9,
@@ -316,7 +319,7 @@ export function TrendingSearches({
   if (terms.length === 0) return null;
   return (
     <View style={{ marginTop: 24 }}>
-      <Text style={[eyebrowStyle, { paddingHorizontal: PAD }]}>Trending searches</Text>
+      <Text style={[eyebrowStyle, { color: colors.mute, paddingHorizontal: PAD }]}>Trending searches</Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -332,6 +335,7 @@ export function TrendingSearches({
 }
 
 function Chip({ label, onPress }: { label: string; onPress: () => void }) {
+  const { theme: colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -347,7 +351,7 @@ function Chip({ label, onPress }: { label: string; onPress: () => void }) {
         borderRadius: radii.pill,
         borderWidth: 1,
         borderColor: colors.hair,
-        backgroundColor: pressed ? colors.panel : colors.white,
+        backgroundColor: pressed ? colors.panel : colors.paper,
       })}
     >
       <Text
@@ -401,6 +405,7 @@ function EditCard({
   width: number;
   onPress: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const src = card.image ? getOptimizedImageUrl(card.image, { width: Math.round(width * 1.5) }) : null;
   return (
     <Pressable
@@ -451,6 +456,7 @@ export function DailyPicks({
   onSeeMore: () => void;
   testID?: string;
 }) {
+  const { theme: colors } = useTheme();
   if (listings.length === 0) return null;
   return (
     <View style={{ marginTop: 26 }}>
@@ -513,6 +519,7 @@ export function RecentlyViewedList({
   listings: Listing[];
   testID?: string;
 }) {
+  const { theme: colors } = useTheme();
   const { width: winW } = useWindowDimensions();
   const [containerW, setContainerW] = useState(0);
   const [page, setPage] = useState(0);
@@ -607,6 +614,7 @@ export function RecentlyViewedList({
 }
 
 function RecentRow({ listing }: { listing: Listing }) {
+  const { theme: colors } = useTheme();
   const img = listing ? getOptimizedImageUrl(cardImageUrl(listing, 0), { width: 160 }) : null;
   return (
     <Pressable
@@ -619,7 +627,7 @@ function RecentRow({ listing }: { listing: Listing }) {
         gap: 12,
         padding: 8,
         borderRadius: radii.md,
-        backgroundColor: pressed ? colors.panel : colors.white,
+        backgroundColor: pressed ? colors.panel : colors.paper,
         borderWidth: 1,
         borderColor: colors.hair,
       })}
@@ -674,6 +682,7 @@ export function ShopByBrandRail({
   collections: Collection[];
   onPress: (brand: string) => void;
 }) {
+  const { theme: colors } = useTheme();
   if (collections.length === 0) return null;
   return (
     <View style={{ marginTop: 26 }}>
@@ -703,6 +712,7 @@ export function ShopByBrandRail({
 }
 
 function BrandCard({ collection, onPress }: { collection: Collection; onPress: () => void }) {
+  const { theme: colors } = useTheme();
   const img = collection.images[0]
     ? getOptimizedImageUrl(collection.images[0], { width: 300 })
     : null;
@@ -732,7 +742,7 @@ function BrandCard({ collection, onPress }: { collection: Collection; onPress: (
           />
         ) : null}
       </View>
-      <Text style={[eyebrowStyle, { marginTop: 8 }]} numberOfLines={1}>
+      <Text style={[eyebrowStyle, { color: colors.mute, marginTop: 8 }]} numberOfLines={1}>
         {collection.eyebrow}
       </Text>
       <Text

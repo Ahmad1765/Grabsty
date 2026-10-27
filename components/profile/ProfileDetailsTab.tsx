@@ -12,7 +12,7 @@ import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
-import { colors, radii } from '@/lib/theme';
+import { radii } from '@/lib/theme';
 import { Card, ListRow } from '@/components/ui';
 import { InfoCard } from './InfoCard';
 import { CredentialList } from './CredentialList';
@@ -26,6 +26,7 @@ import {
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import type { User as Profile, Listing } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 type ShopItem = {
   icon: any;
   title: string;
@@ -47,6 +48,7 @@ export const ProfileDetailsTab = memo(function ProfileDetailsTab({
   shopLikes,
   onShare,
 }: ProfileDetailsTabProps) {
+  const { theme: colors } = useTheme();
   const sellingCount = selling.length;
   const rating = Number(profile.rating ?? 0);
   const totalSales = Number(profile.total_sales ?? 0);
@@ -221,6 +223,7 @@ export const ProfileDetailsTab = memo(function ProfileDetailsTab({
 });
 
 function ProgressBar({ fraction }: { fraction: number }) {
+  const { theme: colors } = useTheme();
   const pct = Math.max(0, Math.min(1, fraction)) * 100;
   return (
     <View
@@ -239,6 +242,7 @@ function ProgressBar({ fraction }: { fraction: number }) {
 }
 
 function AchievementsStrip({ badges }: { badges: Badge[] }) {
+  const { theme: colors } = useTheme();
   if (badges.length === 0) return null;
   const shown = badges.slice(0, 4);
   const extra = badges.length - shown.length;

@@ -152,7 +152,7 @@ export function FloatingHeader({
               />
               {action.badge !== undefined && action.badge !== 0 && (
                 <View style={[styles.badge, { backgroundColor: theme.primary }]}>
-                  <Text style={[styles.badgeText, { color: (theme as any).onPrimary || colors.white }]}>{action.badge}</Text>
+                  <Text style={[styles.badgeText, { color: theme.background }]}>{action.badge}</Text>
                 </View>
               )}
             </Pressable>

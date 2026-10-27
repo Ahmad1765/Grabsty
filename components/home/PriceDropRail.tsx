@@ -11,14 +11,15 @@ import { memo } from 'react';
 import { View, ScrollView } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
-import { colors } from '@/lib/theme';
 import { PriceDropCard } from '@/components/PriceDropCard';
 import type { PriceDropListing } from '@/lib/myFeed';
 
+import { useTheme } from '@/context/ThemeContext';
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 
 function RailHeader({ icon, title }: { icon: keyof typeof Feather.glyphMap; title: string }) {
+  const { theme: colors } = useTheme();
   return (
     <View
       style={{

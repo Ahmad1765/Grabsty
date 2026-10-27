@@ -1,5 +1,5 @@
 import '../global.css';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Platform } from 'react-native';
 import { disablePressableInterop } from '@/lib/pressableInterop';
 import { installAlertShim } from '@/lib/alertShim';
@@ -7,6 +7,7 @@ import { initSentry } from '@/lib/sentry';
 import { initAnalytics, screen } from '@/lib/analytics';
 import { normalizeScreenName } from '@/lib/analyticsEvents';
 import { Stack, usePathname } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
@@ -192,6 +193,13 @@ function usePreventViewportZoomOnWeb() {
 
 function RootLayoutNav() {
   const { theme, isDark, hydrated } = useTheme();
+  const navTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: { ...base.colors, background: theme.background, card: theme.background, text: theme.text, border: theme.border, primary: theme.purple },
+    };
+  }, [isDark, theme]);
   const [ready, setReady] = useState(false);
   useFocusOutOfAriaHidden();
   usePreventViewportZoomOnWeb();
@@ -282,6 +290,10 @@ function RootLayoutNav() {
         <SellSheetProvider>
         <DiscoverSheetProvider>
         {!ready || !hydrated ? null : (
+        // React Navigation paints its own theme background (#F2F2F2 by default)
+        // under every screen and tab scene; without this it flashes light grey
+        // behind transitions in dark mode.
+        <NavThemeProvider value={navTheme}>
         <Stack
           screenOptions={{
             headerShown: false,
@@ -351,6 +363,7 @@ function RootLayoutNav() {
             options={{ headerShown: false }}
           />
         </Stack>
+        </NavThemeProvider>
         )}
         <OfflineBanner />
         {Platform.OS !== 'web' && <AnimatedSplash appReady={ready && hydrated} />}

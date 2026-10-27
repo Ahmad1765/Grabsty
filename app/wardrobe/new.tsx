@@ -14,7 +14,9 @@ import { useToast } from '@/lib/toast';
 import { uploadWardrobeImage, type LocalImage } from '@/lib/upload';
 import { useCreateWardrobePost } from '@/lib/queries';
 
+import { useTheme } from '@/context/ThemeContext';
 function NewWardrobeInner() {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const toast = useToast();
   const createPost = useCreateWardrobePost(user?.id ?? null);
@@ -55,10 +57,10 @@ function NewWardrobeInner() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-white">
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
       <View className="flex-row items-center justify-between px-4 pt-3 pb-3">
         <Pressable onPress={() => router.back()} hitSlop={12}>
-          <Feather name="arrow-left" size={24} color="#0F0F0F" />
+          <Feather name="arrow-left" size={24} color={theme.ink} />
         </Pressable>
         <Text style={{ fontSize: 16, fontWeight: '800' }}>New outfit</Text>
         <View style={{ width: 24 }} />
@@ -87,21 +89,21 @@ function NewWardrobeInner() {
             value={caption}
             onChangeText={setCaption}
             placeholder="Say something about this fit… (optional)"
-            placeholderTextColor="rgba(15,15,15,0.35)"
-            style={{ marginTop: 16, borderWidth: 1, borderColor: 'rgba(15,15,15,0.12)', borderRadius: 14, padding: 14, fontSize: 15, minHeight: 60 }}
+            placeholderTextColor={theme.muteSoft}
+            style={{ marginTop: 16, borderWidth: 1, borderColor: theme.border, borderRadius: 14, padding: 14, fontSize: 15, minHeight: 60 }}
             multiline
           />
         )}
       </ScrollView>
 
-        <View className="bg-white border-t border-ink-hair" style={{ padding: 20 }}>
+        <View style={{ padding: 20, backgroundColor: theme.background, borderTopWidth: 1, borderTopColor: theme.border }}>
           <Pressable
             onPress={post}
             disabled={!preview || posting}
-            style={{ height: 54, borderRadius: 14, backgroundColor: !preview || posting ? 'rgba(15,15,15,0.12)' : '#0F0F0F', alignItems: 'center', justifyContent: 'center' }}
+            style={{ height: 54, borderRadius: 14, backgroundColor: !preview || posting ? theme.primarySofter : theme.ink, alignItems: 'center', justifyContent: 'center' }}
           >
-            {posting ? <ActivityIndicator color="#fff" /> : (
-              <Text style={{ color: !preview ? 'rgba(15,15,15,0.55)' : '#fff', fontWeight: '800', fontSize: 16 }}>Post outfit</Text>
+            {posting ? <ActivityIndicator color={theme.background} /> : (
+              <Text style={{ color: !preview ? theme.mute : theme.background, fontWeight: '800', fontSize: 16 }}>Post outfit</Text>
             )}
           </Pressable>
         </View>
