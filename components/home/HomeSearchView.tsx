@@ -1834,7 +1834,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                           color: theme.text,
                         }}
                       >
-                        See all results for "{query.trim()}"
+                        See all results for “{query.trim()}”
                       </Text>
                     </Pressable>
                   </View>
