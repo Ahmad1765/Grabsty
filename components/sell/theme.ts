@@ -1,4 +1,4 @@
-// Sell flow design tokens aligned with Carrinex monotone aesthetic.
+// Sell flow design tokens aligned with Grabsty monotone aesthetic.
 export const SELL_ACCENT = '#111111';
 export const SELL_ACCENT_DARK = '#000000';
 export const SELL_ACCENT_SOFT = 'rgba(0,0,0,0.06)';

@@ -2,6 +2,8 @@ import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
+import { secureSessionStorage } from "@/lib/secureSessionStorage";
 
 // Resolve env in this order:
 //   1) expoConfig.extra (embedded at config-load time via app.config.js)
@@ -149,7 +151,8 @@ async function boundedLock<R>(
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    // Keychain/Keystore on phones; localStorage on web (lib/secureSessionStorage).
+    storage: Platform.OS === 'web' ? AsyncStorage : secureSessionStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

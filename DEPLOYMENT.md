@@ -1,6 +1,6 @@
 # Deployment
 
-How Carrinex ships to each surface. Two independent pipelines:
+How Grabsty ships to each surface. Two independent pipelines:
 
 | Surface | Pipeline | Config |
 | --- | --- | --- |

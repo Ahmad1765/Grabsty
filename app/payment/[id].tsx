@@ -676,12 +676,6 @@ export default function PaymentScreen() {
 
       const isPaid = result.status === 'paid';
       const allTitles = allOrderItems.map((item) => item.title).filter(Boolean);
-      const orderMessageContent =
-        isBundle && allTitles.length > 1
-          ? `Thank you, your order for a ${allTitles.length}-item bundle (${allTitles.join(', ')}) has been received.`
-          : isPaid
-            ? "Thank you, we have received your payment. It's being processed."
-            : "Your order has been placed. It's being processed.";
 
       try {
         const conv = await getOrCreateConversation({
@@ -689,20 +683,12 @@ export default function PaymentScreen() {
           sellerId: listing.seller_id,
           listingId: listing.id,
         });
-        if (conv?.id) {
-          await supabase.from('messages').insert({
-            conversation_id: conv.id,
-            sender_id: effectiveBuyerId,
-            content: orderMessageContent,
-            kind: 'system',
-            metadata: {
-              paid: isPaid,
-              payment_status: isPaid ? 'paid' : result.status,
-              order_status: result.status,
-              amount: finalTotal,
-              is_bundle: isBundle,
-              bundle_item_ids: isBundle ? bundleItemIds : undefined,
-            },
+        // The notice is built server-side from the real order: clients can't
+        // insert system messages (they'd be able to forge "payment received").
+        if (conv?.id && result.orderId) {
+          await supabase.rpc('post_order_placed_message', {
+            p_order_id: result.orderId,
+            p_conversation_id: conv.id,
           });
         }
       } catch {
@@ -726,6 +712,14 @@ export default function PaymentScreen() {
         },
       } as any);
     } catch (e: any) {
+      // Seller deleted/sold the item while the buyer sat on checkout: say so
+      // plainly and leave, instead of a cut-off DB message on a dead screen.
+      if (/not found|already sold|been sold/i.test(e?.message ?? '')) {
+        queryClient.invalidateQueries({ queryKey: qk.listing(String(listing.id)) });
+        toast.show('This item is no longer available', { variant: 'default', icon: 'alert-triangle' });
+        router.back();
+        return;
+      }
       toast.show(e?.message ?? 'Could not complete payment', {
         variant: 'default',
         icon: 'alert-triangle',
@@ -1099,7 +1093,9 @@ export default function PaymentScreen() {
                 }}
               >
                 {shippingAddress.line1}
-                {shippingAddress.line2 ? `, ${shippingAddress.line2}` : ''}
+                {shippingAddress.line2 && shippingAddress.line2.trim() !== shippingAddress.line1.trim()
+                  ? `, ${shippingAddress.line2}`
+                  : ''}
               </Text>
               <Text
                 style={{
@@ -1109,7 +1105,8 @@ export default function PaymentScreen() {
                   fontFamily: typography.family.sans,
                 }}
               >
-                {shippingAddress.city}
+                {/* Legacy rows store "City, Country" in city; the country is shown below. */}
+                {shippingAddress.country ? shippingAddress.city.split(',')[0].trim() : shippingAddress.city}
                 {shippingAddress.postal_code ? `, ${shippingAddress.postal_code}` : ''}
                 {shippingAddress.country ? ` · ${shippingAddress.country}` : ''}
               </Text>
@@ -1439,11 +1436,11 @@ export default function PaymentScreen() {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               {selectedMethod === 'card' ? (
-                <Ionicons name="card" size={20} color="#2563EB" />
+                <Ionicons name="card" size={20} color={theme.ink} />
               ) : selectedMethod === 'apple_pay' ? (
                 <Ionicons name="logo-apple" size={19} color={theme.ink} />
               ) : selectedMethod === 'cod' ? (
-                <Feather name="package" size={18} color="#10B981" />
+                <Feather name="package" size={18} color={theme.ink} />
               ) : (
                 <Feather name="credit-card" size={18} color={theme.ink} />
               )}
@@ -1565,7 +1562,9 @@ export default function PaymentScreen() {
             paddingHorizontal: 16,
           }}
         >
-          Your transaction is handled securely by Stripe. Ceranix Buyer Protection holds payment in escrow until delivery is verified.
+          {selectedMethod === 'cod'
+            ? 'Pay the courier in cash when your order arrives. Grabsty Buyer Protection covers you if the item isn’t as described.'
+            : 'Your transaction is handled securely by Stripe. Grabsty Buyer Protection holds payment in escrow until delivery is verified.'}
         </Text>
       </ScrollView>
 

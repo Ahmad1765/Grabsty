@@ -53,9 +53,10 @@ import { useFeedListingsQuery } from '@/lib/queries';
 import { colors, radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
-import { PreSearchSuggestions } from '@/components/home/PreSearchSuggestions';
+import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type BrowseAction, type TopicAction } from './SearchLanding';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/lib/auth';
 
 // Every navigation out of the sheet carries a monotonic `n`. Without it,
 // picking the same chip twice produces an identical URL, expo-router hands
@@ -331,6 +332,7 @@ function DiscoverSheetBody({
 }) {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
+  const { user } = useAuth();
   const searchBg = isDark ? theme.surface : '#F0F1F5';
   const [query, setQuery] = useState('');
 
@@ -433,95 +435,94 @@ function DiscoverSheetBody({
     [],
   );
 
-  // Background, rounded top, top inset and the grabber all belong to SheetShell.
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, gap: 10 }}>
-        <View
-          style={{
+  const searchBar = (
+    <View
+      style={{
+        height: 44,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: radii.pill,
+        paddingLeft: 14,
+        paddingRight: 10,
+        borderWidth: 0,
+        backgroundColor: searchBg,
+      }}
+    >
+      <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
+      <TextInput
+        ref={searchRef}
+        value={query}
+        onChangeText={setQuery}
+        onSubmitEditing={submit}
+        placeholder={`Search ${BRAND}...`}
+        placeholderTextColor={theme.muteSoft}
+        autoCorrect={false}
+        autoCapitalize="none"
+        returnKeyType="search"
+        accessibilityLabel={`Search ${BRAND}`}
+        onFocus={() => {
+          if (Platform.OS === 'web' && typeof window !== 'undefined') {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+          }
+        }}
+        style={[
+          {
             flex: 1,
-            height: 44,
-            flexDirection: 'row',
-            alignItems: 'center',
+            marginLeft: 8,
+            marginRight: 6,
+            fontSize: 15,
+            fontFamily: type.family.sans,
+            color: theme.ink,
+            padding: 0,
+          },
+          Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
+        ]}
+      />
+      {query.length > 0 ? (
+        <Pressable
+          hitSlop={HIT_SLOP_8}
+          onPress={() => setQuery('')}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+          style={({ pressed }) => ({
+            width: 24,
+            height: 24,
             borderRadius: radii.pill,
-            paddingLeft: 14,
-            paddingRight: 10,
-            borderWidth: 0,
-            backgroundColor: searchBg,
-          }}
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
-          <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
-          <TextInput
-            ref={searchRef}
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={submit}
-            placeholder={`Search ${BRAND}...`}
-            placeholderTextColor={theme.muteSoft}
-            autoCorrect={false}
-            autoCapitalize="none"
-            returnKeyType="search"
-            accessibilityLabel={`Search ${BRAND}`}
-            onFocus={() => {
-              if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                window.scrollTo(0, 0);
-                document.body.scrollTop = 0;
-                document.documentElement.scrollTop = 0;
-              }
-            }}
-            style={[
-              {
-                flex: 1,
-                marginLeft: 8,
-                marginRight: 6,
-                fontSize: 15,
-                fontFamily: type.family.sans,
-                color: theme.ink,
-                padding: 0,
-              },
-              // Focus-ring removal is a DOM concern. Kept off native entirely
-              // rather than cast through `any` — RN validates style keys, and
-              // unknown ones warn on Android.
-              Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
-            ]}
-          />
-          {query.length > 0 ? (
-            <Pressable
-              hitSlop={HIT_SLOP_8}
-              onPress={() => setQuery('')}
-              accessibilityRole="button"
-              accessibilityLabel="Clear search"
-              style={({ pressed }) => ({
-                width: 24,
-                height: 24,
-                borderRadius: radii.pill,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Feather name="x" size={16} color={theme.mute} />
-            </Pressable>
-          ) : null}
-        </View>
-        {/* Explicit way out, alongside the grabber, the gap above and Android's
-            back button — the keyboard covers the other three while typing. */}
-        <Pressable hitSlop={HIT_SLOP_8} onPress={onClose} accessibilityRole="button">
-          <Text style={{ fontSize: 15, fontFamily: type.family.sansBold, color: theme.purple }}>
-            Cancel
-          </Text>
+          <Feather name="x" size={16} color={theme.mute} />
         </Pressable>
+      ) : null}
+    </View>
+  );
+
+  return (
+    <View style={{ flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' }}>
+      {/* Search bar pinned at top of sheet, full width without remounting */}
+      <View style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8 }}>
+        {searchBar}
       </View>
 
       {query.trim().length > 0 ? (
-        <View style={{ flex: 1, marginTop: 10 }}>
-          <PreSearchSuggestions
-            query={query}
-            suggestions={suggestions}
-            onSelect={handleSelectSuggestion}
-            onPopulate={handlePopulateSuggestion}
-          />
-        </View>
+        <SearchLiveResults
+          query={query}
+          listings={gridQ.data ?? []}
+          suggestions={suggestions}
+          onSelectListing={(item) => {
+            onClose();
+            router.push(`/product/${item.id}` as any);
+          }}
+          onSelectSeller={(username) => {
+            onClose();
+            router.push(`/user/${username}` as any);
+          }}
+          onSelectTerm={handleSelectSuggestion}
+        />
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -531,8 +532,15 @@ function DiscoverSheetBody({
         >
           <SearchLanding
             covers={covers}
+            listings={gridQ.data ?? []}
+            userId={user?.id ?? null}
             onBrowse={onBrowse}
             onTopic={onTopic}
+            onSearch={handleSelectSuggestion}
+            onSelectSeller={(seller) => {
+              onClose();
+              router.push(`/user/${seller}` as any);
+            }}
             activeChipId={activeBrowseChipId}
           />
         </ScrollView>

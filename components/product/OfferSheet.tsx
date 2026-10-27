@@ -5,9 +5,9 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
-  KeyboardAvoidingView,
   TouchableWithoutFeedback,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,17 +33,19 @@ export interface OfferSheetProps {
   onSubmit: (amount: number, note?: string) => Promise<void> | void;
   loading?: boolean;
   offersLeftToday?: number;
+  /** Extra seller items bundled with this one. Shows "+N Bundle" under Continue when > 0. */
+  bundleExtraCount?: number;
 }
 
 /**
- * Make an Offer Bottom Sheet (Reference Image 7 adapted to Ceranix Atelier UI).
+ * Make an Offer Bottom Sheet (Reference Image 7 adapted to Grabsty UI).
  * Features:
  * - Bottom sheet presentation with top pull bar
  * - Title "Select offer amount" with close button
  * - -20%, -15%, -10%, -5%, Custom discount chips
  * - "Your offer:" summary row with strikethrough original price, discounted price, and + shipping
  * - Signal Purple "Continue" CTA
- * - Reassurance text: "You won't be charged unless the seller accepts the offer. Coupons do not apply to offers."
+ * - "+N Bundle" line under Continue (product page only)
  */
 export function OfferSheet({
   visible,
@@ -55,6 +57,7 @@ export function OfferSheet({
   onSubmit,
   loading = false,
   offersLeftToday = 25,
+  bundleExtraCount,
 }: OfferSheetProps) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -108,7 +111,9 @@ export function OfferSheet({
   };
 
   const handleCustomChange = (text: string) => {
-    const clean = text.replace(/[^0-9.]/g, '');
+    // Whole rupees only, like every other price in the app ("1,500" -> 1500).
+    // Cut at a decimal point rather than stripping it: "12.5" must not become 125.
+    const clean = text.split('.')[0].replace(/[^0-9]/g, '');
     setCustomAmount(clean);
   };
 
@@ -167,8 +172,7 @@ export function OfferSheet({
             alignItems: 'center',
           }}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          <KeyboardAvoider
             style={{ width: '100%', alignItems: 'center' }}
           >
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
@@ -249,6 +253,7 @@ export function OfferSheet({
                         style={({ pressed }) => ({
                           flex: 1,
                           height: 42,
+                          paddingHorizontal: 4,
                           borderRadius: 10,
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -265,6 +270,9 @@ export function OfferSheet({
                         accessibilityLabel={tier.label}
                       >
                         <Text
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.75}
                           style={{
                             fontSize: 14.5,
                             fontFamily: type.family.sansBold,
@@ -319,7 +327,7 @@ export function OfferSheet({
                         onChangeText={handleCustomChange}
                         placeholder={`Enter amount lower than ${formatPrice(askingPrice)}`}
                         placeholderTextColor={theme.muteSoft}
-                        keyboardType="decimal-pad"
+                        keyboardType="number-pad"
                         returnKeyType="done"
                         selectTextOnFocus
                         style={
@@ -372,17 +380,21 @@ export function OfferSheet({
                       fontFamily: type.family.sansMedium,
                       color: theme.ink,
                       paddingTop: 2,
+                      flexShrink: 0,
                     }}
                   >
                     Your offer:
                   </Text>
 
-                  <View style={{ alignItems: 'flex-end' }}>
+                  {/* Shrink + wrap so large system font sizes can't push prices off-screen */}
+                  <View style={{ alignItems: 'flex-end', flexShrink: 1, marginLeft: 12 }}>
                     <View
                       style={{
                         flexDirection: 'row',
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-end',
                         alignItems: 'baseline',
-                        gap: 6,
+                        columnGap: 6,
                       }}
                     >
                       {askingPrice > 0 && (
@@ -401,7 +413,7 @@ export function OfferSheet({
                         style={{
                           fontSize: 20,
                           fontFamily: type.family.sansBold,
-                          color: isValidOffer ? '#16A34A' : theme.ink,
+                          color: isValidOffer ? theme.purple : theme.ink,
                         }}
                       >
                         {activeOfferAmount > 0
@@ -426,6 +438,7 @@ export function OfferSheet({
                           fontFamily: type.family.sans,
                           color: theme.mute,
                           marginTop: 4,
+                          textAlign: 'right',
                         }}
                       >
                         (est. {formatPrice(totalWithProtection)} with Buyer Protection)
@@ -478,32 +491,26 @@ export function OfferSheet({
                   )}
                 </Pressable>
 
-                {/* Disclaimer / Reassurance text */}
-                <View style={{ gap: 4 }}>
-                  <Text
-                    style={{
-                      fontSize: 12.5,
-                      fontFamily: type.family.sans,
-                      color: theme.mute,
-                      lineHeight: 17,
-                    }}
+                {!!bundleExtraCount && (
+                  <View
+                    testID="offer-bundle-count"
+                    style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                   >
-                    You won&apos;t be charged unless the seller accepts the offer.
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12.5,
-                      fontFamily: type.family.sans,
-                      color: theme.mute,
-                      lineHeight: 17,
-                    }}
-                  >
-                    Coupons do not apply to offers.
-                  </Text>
-                </View>
+                    <Feather name="package" size={14} color={bundleExtraCount > 0 ? theme.purple : theme.mute} />
+                    <Text
+                      style={{
+                        fontSize: 13,
+                        fontFamily: type.family.sansSemibold,
+                        color: bundleExtraCount > 0 ? theme.purple : theme.mute,
+                      }}
+                    >
+                      +{bundleExtraCount} Bundle
+                    </Text>
+                  </View>
+                )}
               </View>
             </TouchableWithoutFeedback>
-          </KeyboardAvoidingView>
+          </KeyboardAvoider>
         </View>
       </TouchableWithoutFeedback>
     </Modal>

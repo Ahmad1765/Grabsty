@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// CARRINEX ADMINISTRATION CONSOLE (OFF-PLATFORM UNIFIED OPERATIONAL HUB)
+// GRABSTY ADMINISTRATION CONSOLE (OFF-PLATFORM UNIFIED OPERATIONAL HUB)
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // 💡 Architectural Blueprint:
@@ -21,14 +21,14 @@ import {
   Pressable,
   ScrollView,
   FlatList,
-  TextInput,
   ActivityIndicator,
   Modal,
   Linking,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
-import { Text } from '@/lib/rnText';
+import { Text, TextInput } from '@/lib/rnText';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
@@ -57,11 +57,18 @@ import {
   type AdminSupportConversation,
 } from '@/lib/support';
 import type { ChatMessage } from '@/lib/chat';
+import { useVerificationPhotoUrl } from '@/lib/upload';
 
 type AdminTab = 'overview' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
 type LogisticsFilter = 'all' | 'active' | 'IN_TRANSIT' | 'DELIVERED' | 'COMPLETED_FUNDS_RELEASED';
 
 const COURIER_PRESETS = ['Internal Fleet', 'TCS', 'Leopards', 'Trax', 'PostEx', 'M&P', 'Custom'];
+
+// ID photos are in a private bucket; this resolves the stored path to a signed URL.
+function KycPhoto({ value, style }: { value: string; style: React.ComponentProps<typeof Image>['style'] }) {
+  const uri = useVerificationPhotoUrl(value);
+  return <Image source={uri ? { uri } : undefined} style={style} contentFit="cover" />;
+}
 
 function deriveRef(id: string): string {
   const hex = id.replace(/-/g, '').slice(0, 8);
@@ -133,6 +140,7 @@ export default function AdminConsoleScreen() {
   const [loadingSupportMessages, setLoadingSupportMessages] = useState(false);
   const selectedSupportConvRef = useRef<AdminSupportConversation | null>(null);
   selectedSupportConvRef.current = selectedSupportConv;
+  const supportScrollRef = useRef<ScrollView>(null);
   const loadSupportMessagesRef = useRef<((convId: string) => Promise<void>) | null>(null);
 
   // ── Load All Operational Data ─────────────────────────────────────────────
@@ -149,7 +157,18 @@ export default function AdminConsoleScreen() {
       setTransactions(txs);
       if (kycRes.data) setVerifications(kycRes.data as Verification[]);
       if (usersRes.data) setUsers(usersRes.data as User[]);
-      if (supportConvsData) setSupportConvs(supportConvsData);
+      if (supportConvsData) {
+        // A chat is a dispute when its user is party to a DISPUTED order. The old
+        // signal (the word "dispute" in the latest message) vanished on any reply.
+        const disputeUserIds = new Set<string>();
+        for (const t of txs as any[]) {
+          if (t.status !== 'DISPUTED') continue;
+          for (const id of [t.buyer_id, t.buyer?.id, t.seller_id, t.seller?.id]) if (id) disputeUserIds.add(id);
+        }
+        setSupportConvs(
+          supportConvsData.map((c) => ({ ...c, is_dispute: c.is_dispute || disputeUserIds.has(c.user_id) })),
+        );
+      }
     } catch (err: any) {
       toast.show(err?.message || 'Failed to load administrative data', {
         variant: 'default',
@@ -639,7 +658,8 @@ export default function AdminConsoleScreen() {
 
   // ── Unified Administration Console ────────────────────────────────────────
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: isDark ? '#141414' : '#F5F5F7' }}>
+    <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: isDark ? '#141414' : '#F5F5F7' }}>
+      <KeyboardAvoider style={{ flex: 1 }}>
       {/* Top Console Navigation Bar */}
       <View
         style={{
@@ -657,7 +677,7 @@ export default function AdminConsoleScreen() {
           <Text style={{ fontSize: 16, fontWeight: '800', color: theme.text, letterSpacing: -0.2 }}>
             Grabsty Admin
           </Text>
-          <View
+          {isDesktop && (<View
             style={{
               paddingHorizontal: 6,
               paddingVertical: 2,
@@ -668,7 +688,7 @@ export default function AdminConsoleScreen() {
             <Text style={{ fontSize: 10, fontWeight: '700', color: theme.textMuted, letterSpacing: 0.5 }}>
               OFF-PLATFORM
             </Text>
-          </View>
+          </View>)}
 
           {isDesktop && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 16 }}>
@@ -720,7 +740,7 @@ export default function AdminConsoleScreen() {
             })}
           >
             <Feather name="external-link" size={13} color={theme.text} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: theme.text }}>Storefront</Text>
+            {isDesktop && <Text style={{ fontSize: 12, fontWeight: '600', color: theme.text }}>Storefront</Text>}
           </Pressable>
 
           <Pressable
@@ -971,7 +991,7 @@ export default function AdminConsoleScreen() {
                 <View style={{ flex: 1, minWidth: 200, backgroundColor: theme.panel, borderRadius: 12, padding: 18, borderWidth: 1, borderColor: theme.border }}>
                   <Text style={{ fontSize: 12, fontWeight: '600', color: theme.textMuted }}>Money held</Text>
                   <Text style={{ fontSize: 26, fontWeight: '800', color: theme.text, marginTop: 8 }}>
-                    {formatPrice(metrics.totalEscrowVolume)}
+                    {formatPrice(metrics.totalEscrowVolume / 100)}
                   </Text>
                 </View>
 
@@ -1042,14 +1062,14 @@ export default function AdminConsoleScreen() {
                   ))}
                 </View>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, height: 34, width: isDesktop ? 260 : '100%' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, minHeight: 38, width: isDesktop ? 260 : '100%' }}>
                   <Feather name="search" size={14} color={theme.textMuted} />
                   <TextInput
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     placeholder="Search order, ref, buyer, seller..."
                     placeholderTextColor={theme.textMuted}
-                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text }}
+                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text, paddingVertical: 6 }}
                   />
                   {searchQuery ? (
                     <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
@@ -1089,8 +1109,8 @@ export default function AdminConsoleScreen() {
                         marginBottom: 10,
                       }}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 4, alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
                           <Text style={{ fontSize: 14, fontWeight: '800', color: theme.text, letterSpacing: -0.1 }}>
                             #{refCode}
                           </Text>
@@ -1110,7 +1130,7 @@ export default function AdminConsoleScreen() {
                       <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
                         {item.listing ? (
                           <Image
-                            source={{ uri: cardImageUrl(item.listing) }}
+                            source={{ uri: getOptimizedImageUrl(cardImageUrl(item.listing), { width: 160 }) }}
                             style={{ width: 52, height: 52, borderRadius: 8 }}
                             contentFit="cover"
                             transition={IMAGE_TRANSITION}
@@ -1126,7 +1146,7 @@ export default function AdminConsoleScreen() {
                             {item.listing?.title || 'Marketplace Item'}
                           </Text>
                           <Text style={{ fontSize: 13, fontWeight: '800', color: theme.text, marginTop: 2 }}>
-                            {formatPrice(item.order?.amount_cents || item.amount_cents || 0)}
+                            {formatPrice((item.order?.amount_cents || item.amount_cents || 0) / 100)}
                           </Text>
                           <Text style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
                             Buyer: @{item.buyer?.username || 'user'} · Seller: @{item.seller?.username || 'user'}
@@ -1289,13 +1309,13 @@ export default function AdminConsoleScreen() {
                         marginBottom: 12,
                       }}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 4, alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                           <Text style={{ fontSize: 14, fontWeight: '800', color: theme.danger }}>
                             DISPUTE #{deriveRef(item.id)}
                           </Text>
                           <Text style={{ fontSize: 14, fontWeight: '700', color: theme.text }}>
-                            {formatPrice(item.order?.amount_cents || item.amount_cents || 0)}
+                            {formatPrice((item.order?.amount_cents || item.amount_cents || 0) / 100)}
                           </Text>
                         </View>
 
@@ -1323,7 +1343,7 @@ export default function AdminConsoleScreen() {
                         </View>
                       )}
 
-                      <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'flex-end', alignItems: 'center' }}>
                         <Pressable
                           onPress={() => {
                             const buyerId = item.buyer_id || item.buyer?.id;
@@ -1496,8 +1516,8 @@ export default function AdminConsoleScreen() {
                           <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textMuted, marginBottom: 6 }}>
                             Attached CNIC / ID Photo:
                           </Text>
-                          <Image
-                            source={{ uri: (item.id_photo_url || item.notes)! }}
+                          <KycPhoto
+                            value={(item.id_photo_url || item.notes)!}
                             style={{
                               width: 200,
                               height: 120,
@@ -1506,7 +1526,6 @@ export default function AdminConsoleScreen() {
                               borderWidth: 1,
                               borderColor: theme.border,
                             }}
-                            contentFit="cover"
                           />
                         </View>
                       )}
@@ -1559,14 +1578,14 @@ export default function AdminConsoleScreen() {
           {activeTab === 'users' && (
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginBottom: 14, alignItems: isDesktop ? 'center' : 'stretch', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, height: 34, width: isDesktop ? 300 : '100%' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, minHeight: 38, width: isDesktop ? 300 : '100%' }}>
                   <Feather name="search" size={14} color={theme.textMuted} />
                   <TextInput
                     value={userSearch}
                     onChangeText={setUserSearch}
                     placeholder="Search by username, full name, ID..."
                     placeholderTextColor={theme.textMuted}
-                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text }}
+                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text, paddingVertical: 6 }}
                   />
                   {userSearch ? (
                     <Pressable onPress={() => setUserSearch('')} hitSlop={8}>
@@ -1656,8 +1675,8 @@ export default function AdminConsoleScreen() {
           {/* TAB 6: SUPPORT CHATS & INQUIRIES WORKBENCH */}
           {activeTab === 'support' && (
             <View style={{ flex: 1 }}>
-              {/* Header */}
-              <View
+              {/* Header (hidden on phones while a chat is open, so the thread gets the screen) */}
+              {(isDesktop || !selectedSupportConv) && (<View
                 style={{
                   flexDirection: isDesktop ? 'row' : 'column',
                   gap: 12,
@@ -1757,7 +1776,7 @@ export default function AdminConsoleScreen() {
                     );
                   })}
                 </View>
-              </View>
+              </View>)}
 
               {/* Main Support Area: 2 Columns on Desktop, List/Detail on Mobile */}
               <View style={{ flex: 1, flexDirection: isDesktop ? 'row' : 'column', gap: 16 }}>
@@ -1785,7 +1804,7 @@ export default function AdminConsoleScreen() {
                     >
                       <View
                         style={{
-                          height: 36,
+                          minHeight: 38,
                           borderRadius: 8,
                           backgroundColor: theme.surface,
                           borderWidth: 1,
@@ -1802,7 +1821,7 @@ export default function AdminConsoleScreen() {
                           onChangeText={setSupportSearch}
                           placeholder="Search user or message..."
                           placeholderTextColor={theme.textMuted}
-                          style={{ flex: 1, fontSize: 13, color: theme.text, height: '100%' }}
+                          style={{ flex: 1, fontSize: 13, color: theme.text, paddingVertical: 6 }}
                         />
                         {supportSearch.length > 0 && (
                           <Pressable onPress={() => setSupportSearch('')} hitSlop={6}>
@@ -1879,7 +1898,7 @@ export default function AdminConsoleScreen() {
                                 )}
                               </View>
 
-                              <View style={{ flex: 1 }}>
+                              <View style={{ flex: 1, minWidth: 0 }}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                                   <Text
                                     style={{
@@ -1897,7 +1916,7 @@ export default function AdminConsoleScreen() {
                                 </View>
 
                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                                  <Text style={{ fontSize: 11, color: theme.textMuted }}>
+                                  <Text numberOfLines={1} style={{ fontSize: 11, color: theme.textMuted, flexShrink: 1 }}>
                                     @{item.username}
                                   </Text>
                                   {item.is_dispute && (
@@ -1927,7 +1946,7 @@ export default function AdminConsoleScreen() {
                               }}
                               numberOfLines={2}
                             >
-                              {item.last_message || 'Inquiry initiated'}
+                              {(item.last_message || 'Inquiry initiated').replace(/\*\*/g, '')}
                             </Text>
                           </Pressable>
                         );
@@ -2075,6 +2094,9 @@ export default function AdminConsoleScreen() {
                           </View>
                         ) : (
                           <ScrollView
+                            // Open at the newest message, and follow new ones as they arrive.
+                            onContentSizeChange={(_, h) => supportScrollRef.current?.scrollTo({ y: h, animated: false })}
+                            ref={supportScrollRef}
                             style={{ flex: 1, padding: 16 }}
                             contentContainerStyle={{ gap: 12, paddingBottom: 20 }}
                             showsVerticalScrollIndicator={true}
@@ -2404,7 +2426,7 @@ export default function AdminConsoleScreen() {
               Resolve Escrow Dispute
             </Text>
             <Text style={{ fontSize: 12, color: theme.textMuted, marginBottom: 16 }}>
-              Order #{selectedTx ? deriveRef(selectedTx.id) : ''} · {formatPrice(selectedTx?.order?.amount_cents || selectedTx?.amount_cents || 0)}
+              Order #{selectedTx ? deriveRef(selectedTx.id) : ''} · {formatPrice((selectedTx?.order?.amount_cents || selectedTx?.amount_cents || 0) / 100)}
             </Text>
 
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>
@@ -2490,6 +2512,7 @@ export default function AdminConsoleScreen() {
           </View>
         </View>
       </Modal>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

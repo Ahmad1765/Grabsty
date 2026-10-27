@@ -4,7 +4,7 @@
 //
 // 💡 EDUCATIONAL PATTERN: Role-Based Conditional UI in Presentational Components
 // Depending on whether the viewer owns the listing or is a prospective buyer,
-// this card displays owner management tools (mark as sold, delete) or buyer
+// this card displays owner management tools (edit, delete) or buyer
 // interaction tools (follow, direct message, overflow sheet).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -25,12 +25,9 @@ type ProductSellerProfileCardProps = {
   seller: Listing['seller'];
   createdAt?: string | null;
   isOwnListing: boolean;
-  isSold: boolean;
   ownerBusy: boolean;
-  soldBusy: boolean;
   deleteBusy: boolean;
   followed: boolean;
-  onToggleSold: () => void;
   onDelete: () => void;
   onEdit?: () => void;
   onFollowPress: () => void;
@@ -42,12 +39,9 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
   seller,
   createdAt,
   isOwnListing,
-  isSold,
   ownerBusy,
-  soldBusy,
   deleteBusy,
   followed,
-  onToggleSold,
   onDelete,
   onEdit,
   onFollowPress,
@@ -174,33 +168,6 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
                 <Feather name="edit-2" size={16} color={theme.ink} />
               </Pressable>
             )}
-
-            <Pressable
-              onPress={onToggleSold}
-              disabled={ownerBusy}
-              testID="owner-toggle-sold"
-              style={({ pressed }) => ({
-                paddingHorizontal: 13,
-                paddingVertical: 5.5,
-                borderRadius: 999,
-                backgroundColor: isSold ? theme.white : theme.ink,
-                borderWidth: 1,
-                borderColor: isSold ? theme.border : theme.ink,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: soldBusy ? 0.5 : pressed ? 0.85 : 1,
-              })}
-            >
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: '600',
-                  color: isSold ? theme.ink : theme.background,
-                }}
-              >
-                {isSold ? 'Available' : 'Mark sold'}
-              </Text>
-            </Pressable>
 
             <Pressable
               onPress={onDelete}

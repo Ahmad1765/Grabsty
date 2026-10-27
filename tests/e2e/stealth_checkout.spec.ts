@@ -44,7 +44,7 @@ test.describe('Adversarial UI Kinetics', () => {
       await welcomeBtn.click();
     }
     await page.getByTestId('email-input').waitFor({ state: 'visible', timeout: 15000 });
-    await page.getByTestId('email-input').fill('test_buyer@ceranix.internal');
+    await page.getByTestId('email-input').fill('test_buyer@grabsty.internal');
     await page.getByTestId('password-input').fill('password123');
     await page.getByTestId('login-button').click();
     await page.waitForURL(url => !url.pathname.includes('/auth/login'), { timeout: 12000 }).catch(() => {});

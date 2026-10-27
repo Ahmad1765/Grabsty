@@ -5,11 +5,12 @@
 // Setup required on the Supabase side (dashboard → Auth → Providers → Google):
 //   1. Enable Google, paste the Google OAuth client id/secret.
 //   2. Add this app's redirect URL (Linking.createURL('auth-callback'),
-//      e.g. carrinex://auth-callback and the Expo Go proxy URL) to the
+//      e.g. grabsty://auth-callback and the Expo Go proxy URL) to the
 //      provider's allowed redirect URLs.
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '@/lib/supabase';
+import { capture } from '@/lib/analytics';
 
 // Dismisses any lingering auth popup (web) and completes the session handshake.
 WebBrowser.maybeCompleteAuthSession();
@@ -35,6 +36,7 @@ export async function signInWithGoogle(): Promise<OAuthResult> {
     if (typeof code === 'string' && code) {
       const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);
       if (exErr) return { ok: false, error: exErr.message };
+      capture('signed_in', { method: 'google' });
       return { ok: true };
     }
 
@@ -47,6 +49,7 @@ export async function signInWithGoogle(): Promise<OAuthResult> {
       if (access_token && refresh_token) {
         const { error: sErr } = await supabase.auth.setSession({ access_token, refresh_token });
         if (sErr) return { ok: false, error: sErr.message };
+        capture('signed_in', { method: 'google' });
         return { ok: true };
       }
     }

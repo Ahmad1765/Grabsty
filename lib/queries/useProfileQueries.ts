@@ -37,21 +37,46 @@ import { qk } from './keys';
 
 export type FollowRow = Awaited<ReturnType<typeof fetchFollowers>>[number];
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
- * Fetch a single user profile by ID.
+ * Fetch a single user profile by ID or username.
  */
 export function useProfileQuery(userId: string) {
+  const decoded = userId ? decodeURIComponent(userId).trim() : '';
+  const clean = decoded.startsWith('@') ? decoded.slice(1) : decoded;
+  const isUuid = UUID_RE.test(clean);
+
   return useQuery({
-    queryKey: qk.profile(userId),
-    enabled: !!userId,
+    queryKey: qk.profile(clean || userId),
+    enabled: !!clean,
     queryFn: async (): Promise<Profile | null> => {
-      const { data, error } = await supabase
+      if (isUuid) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', clean)
+          .maybeSingle();
+        if (error) throw new Error(error.message);
+        return (data as Profile | null) ?? null;
+      }
+
+      // 1. Try exact username first
+      const { data: exact, error: exactErr } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('username', clean)
         .maybeSingle();
-      if (error) throw new Error(error.message);
-      return (data as Profile | null) ?? null;
+      if (!exactErr && exact) return exact as Profile;
+
+      // 2. Fallback to case-insensitive username match
+      const { data: ilike, error: ilikeErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .ilike('username', clean)
+        .maybeSingle();
+      if (ilikeErr && !exactErr) throw new Error(ilikeErr.message);
+      return (ilike as Profile | null) ?? null;
     },
   });
 }

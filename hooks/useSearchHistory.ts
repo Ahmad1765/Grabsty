@@ -9,11 +9,7 @@ export type SearchHistoryItem = {
   tab: SearchTabType;
 };
 
-export const DEFAULT_PREVIOUS_SEARCHES: SearchHistoryItem[] = [
-  { term: 'Vintage', tab: 'listings' },
-  { term: 'Sneakers', tab: 'listings' },
-  { term: 'Jackets', tab: 'listings' },
-];
+export const DEFAULT_PREVIOUS_SEARCHES: SearchHistoryItem[] = [];
 
 function normalizeHistory(raw: any): SearchHistoryItem[] {
   if (!Array.isArray(raw)) return [...DEFAULT_PREVIOUS_SEARCHES];

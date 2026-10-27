@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-07-24T00:00:00.000Z",
-  "title": "Design System: Carrinex",
+  "title": "Design System: Grabsty",
   "extensions": {
     "colorMeta": {
       "primary": {
@@ -87,7 +87,7 @@
       "kind": "input",
       "refersTo": "input-search",
       "description": "Recessed search field; no visible stroke, ink-panel fill only.",
-      "html": "<div class=\"ds-input-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(15,15,15,0.55)\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg><span class=\"ds-input-search-placeholder\">Search Carrinex...</span></div>",
+      "html": "<div class=\"ds-input-search\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"rgba(15,15,15,0.55)\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/></svg><span class=\"ds-input-search-placeholder\">Search Grabsty...</span></div>",
       "css": ".ds-input-search { display: flex; align-items: center; gap: 8px; background: rgba(15,15,15,0.04); border-radius: 16px; padding: 10px 12px; } .ds-input-search-placeholder { font-family: 'Inter', sans-serif; font-size: 15px; color: rgba(15,15,15,0.55); }"
     },
     {
@@ -101,7 +101,7 @@
   ],
   "narrative": {
     "northStar": "The Quiet Atelier",
-    "overview": "Carrinex is a peer-to-peer fashion resale marketplace where strangers exchange real money for secondhand clothing sight-unseen. The visual system's entire job is to make that transaction feel safe without ever performing safety, the way a well-run atelier communicates quality through restraint rather than signage. Three hues do all the work: a single confident purple, paper white, and ink black used at varying opacity for every level of hierarchy. There is no fourth color hiding anywhere in the app, and that constraint is deliberate, not a limitation waiting to be lifted.\n\nThe system explicitly rejects the visual language of cluttered resale apps: no Poshmark/Depop-style badges, ribbons, or banners stacked on every listing card, no gradients, no emoji-as-decoration, no sticker overlays competing with the product photography for attention. The product photography and the seller's own words are the content; the interface is the frame, not a second act.\n\nWhere the system does allow itself life is in motion: pill-shaped controls with springy, slightly overshooting press feedback, and a floating tab bar with genuine physics (drag-to-preview, liquid indicator stretch). Restraint in color and decoration is paired with confidence in interaction, not stiffness. A quiet atelier is calm, not cold.",
+    "overview": "Grabsty is a peer-to-peer fashion resale marketplace where strangers exchange real money for secondhand clothing sight-unseen. The visual system's entire job is to make that transaction feel safe without ever performing safety, the way a well-run atelier communicates quality through restraint rather than signage. Three hues do all the work: a single confident purple, paper white, and ink black used at varying opacity for every level of hierarchy. There is no fourth color hiding anywhere in the app, and that constraint is deliberate, not a limitation waiting to be lifted.\n\nThe system explicitly rejects the visual language of cluttered resale apps: no Poshmark/Depop-style badges, ribbons, or banners stacked on every listing card, no gradients, no emoji-as-decoration, no sticker overlays competing with the product photography for attention. The product photography and the seller's own words are the content; the interface is the frame, not a second act.\n\nWhere the system does allow itself life is in motion: pill-shaped controls with springy, slightly overshooting press feedback, and a floating tab bar with genuine physics (drag-to-preview, liquid indicator stretch). Restraint in color and decoration is paired with confidence in interaction, not stiffness. A quiet atelier is calm, not cold.",
     "keyCharacteristics": [
       "Strict three-hue palette: purple, white, ink-at-opacity — nothing else",
       "Inter only, one typeface for the entire app — no serif, ever",

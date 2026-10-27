@@ -19,8 +19,20 @@ vi.mock('react-native', () => ({
   Alert: { alert: vi.fn() },
 }));
 
+vi.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
+vi.mock('@/components/ui/SafeContainer', () => ({
+  KeyboardAvoider: (props: any) => React.createElement('div', props, props.children),
+}));
+
 vi.mock('expo-image', () => ({
   Image: (props: any) => React.createElement('img', props),
+}));
+
+vi.mock('@/lib/upload', () => ({
+  useVerificationPhotoUrl: (value?: string | null) => value ?? null,
 }));
 
 vi.mock('expo-image-picker', () => ({

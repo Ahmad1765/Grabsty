@@ -1,4 +1,4 @@
-# Carrinex CI/CD
+# Grabsty CI/CD
 
 Operational runbook for everything under `.github/`. If you're wiring CI for the first time, work top-to-bottom.
 

@@ -4,14 +4,13 @@ import {
   View,
   Pressable,
   ScrollView,
-  TextInput,
   ActivityIndicator,
   Platform,
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeContainer } from '@/components/ui/SafeContainer';
-import { Text } from '@/lib/rnText';
+import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { tap } from '@/lib/haptics';
 import { useTheme } from '@/context/ThemeContext';
@@ -75,6 +74,12 @@ export function SellerPickupModal({
     }
     if (!phone.trim()) {
       setValidationError('Contact phone is required for courier rider');
+      return;
+    }
+    // Same rule as the buyer's checkout address: the rider has to reach this number.
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    if (!/^\+?\d{10,15}$/.test(cleanPhone)) {
+      setValidationError('Enter a valid phone number (10 to 15 digits)');
       return;
     }
     if (!line1.trim()) {

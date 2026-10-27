@@ -99,7 +99,7 @@ export function ConversationListingHeader({
       </View>
 
       {!isSeller && status === 'active' ? (
-        <View style={{ width: 90 }}>
+        <View style={{ flexShrink: 0 }}>
           <ThumbButton
             label="Buy Now"
             variant="primary"

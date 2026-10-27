@@ -11,8 +11,9 @@ import {
 import { capture } from '@/lib/analytics';
 import {
   View, Pressable, ScrollView, Alert, ActivityIndicator,
-  KeyboardAvoidingView, Platform, useWindowDimensions,
+  Platform, useWindowDimensions,
 } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -23,14 +24,14 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { updateListing, type UpdateListingInput } from '@/lib/listings';
 import { uploadListingImages, deleteListingImages, type LocalImage } from '@/lib/upload';
-import {
-  makeSlot, resolveImage, type PhotoSlot,
-} from '@/lib/photoClean/slots';
+import type { PhotoSlot } from '@/lib/photoSlots';
 import { useToast } from '@/lib/toast';
 import { putCachedListing } from '@/lib/listingCache';
 import { emitListingCreated } from '@/lib/listingEvents';
 import { invalidateFresh } from '@/lib/freshness';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
+import { confirm } from '@/lib/confirm';
 import type { Category, Condition, Gender, Listing } from '@/types';
 import { categoryLabel, hasSubcategories, subcategoryLabel } from '@/lib/categories';
 import { formatPrice, CURRENCY_SYMBOL } from '@/lib/currency';
@@ -300,7 +301,7 @@ function RowField({
         </Text>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, marginLeft: 12 }}>
+      <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 6, marginLeft: 12 }}>
         {hasValue ? (
           <View
             style={{
@@ -311,6 +312,7 @@ function RowField({
               borderWidth: 1,
               borderColor: theme.border,
               maxWidth: 180,
+              flexShrink: 1,
             }}
           >
             <Text
@@ -355,6 +357,7 @@ export function SellForm({
   const toast = useToast();
   const { width } = useWindowDimensions();
   const [publishing, setPublishing] = useState(false);
+  const navigation = useNavigation();
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const isNavigatingSheetRef = useRef(Platform.OS === 'web');
 
@@ -410,6 +413,22 @@ export function SellForm({
     reset(initialValues);
   }, [initialValues, reset]);
 
+  // Leaving with unsaved input (Back, swipe, or X) asks first instead of
+  // silently dropping it. Compared by value: photos go in via setValue, which
+  // react-hook-form's isDirty doesn't track.
+  const hasUnsaved = JSON.stringify(watch()) !== JSON.stringify(initialValues);
+  usePreventRemove(hasUnsaved && !publishing, ({ data }) => {
+    confirm({
+      title: isEditing ? 'Discard changes?' : 'Discard this listing?',
+      message: 'What you entered will be lost.',
+      confirmLabel: 'Discard',
+      cancelLabel: 'Keep editing',
+      destructive: true,
+    }).then((ok) => {
+      if (ok) navigation.dispatch(data.action);
+    });
+  });
+
   const slots = watch('slots');
   const title = watch('title');
   const description = watch('description');
@@ -457,7 +476,7 @@ export function SellForm({
 
   const tile = useMemo(() => {
     const pagePad = 16 * 2;
-    const cardPad = 14 * 2;
+    const cardPad = 14 * 2 + 2; // + 1px border each side
     const gaps = 10 * 2;
     const usable = Math.min(width, CONTENT_MAX_WIDTH) - pagePad - cardPad;
     return Math.floor((usable - gaps) / 3);
@@ -466,7 +485,7 @@ export function SellForm({
   const pickImages = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsMultipleSelection: true,
         quality: 0.8,
         selectionLimit: MAX_IMAGES,
@@ -475,12 +494,9 @@ export function SellForm({
       if (!result.canceled) {
         const room = MAX_IMAGES - slots.length;
         const picked = result.assets.slice(0, room);
-        const newSlots = picked.map((a) => ({
-          ...makeSlot(
-            { uri: a.uri, base64: a.base64 ?? null },
-            (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`),
-          ),
-          status: 'done' as const,
+        const newSlots: PhotoSlot[] = picked.map((a) => ({
+          id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+          original: { uri: a.uri, base64: a.base64 ?? null },
         }));
         const updatedSlots = [...slots, ...newSlots].slice(0, MAX_IMAGES);
         setValue('slots', updatedSlots, { shouldValidate: true });
@@ -515,6 +531,22 @@ export function SellForm({
     Boolean(condition) &&
     Boolean(gender) &&
     isAuthenticityValid;
+  // First thing still blocking publish, so a tap on the greyed button says why.
+  const missingField = !slots.length
+    ? 'Add at least one photo'
+    : !title?.trim()
+      ? 'Add a title'
+      : !category || (hasSubcategories(category as Category) && !subcategory)
+        ? 'Choose a category'
+        : !condition
+          ? 'Choose the condition'
+          : !gender
+            ? 'Choose a gender'
+            : !isAuthenticityValid
+              ? 'Confirm authenticity for this brand'
+              : !(parseFloat(price || '0') > 0)
+                ? 'Set a price'
+                : null;
 
   const onValidSubmit = async (formData: SellFormValues) => {
     if (!user) {
@@ -531,7 +563,7 @@ export function SellForm({
     if (isEditing && editingListing) {
       try {
         const photoSlots = formData.slots as PhotoSlot[];
-        const resolvedImages = photoSlots.map(resolveImage);
+        const resolvedImages = photoSlots.map((s) => s.original);
         const isRemoteUrl = (uri: string) => uri.startsWith('http://') || uri.startsWith('https://');
 
         const existingImageToThumb = new Map<string, string>();
@@ -667,7 +699,7 @@ export function SellForm({
     let urls: string[] = [];
     let thumbs: string[] = [];
     try {
-      const chosen = (formData.slots as PhotoSlot[]).map(resolveImage);
+      const chosen = (formData.slots as PhotoSlot[]).map((s) => s.original);
       const uploaded = await uploadListingImages(chosen, user.id);
       urls = uploaded.map((u) => u.url);
       thumbs = uploaded.map((u) => u.thumbUrl);
@@ -769,12 +801,10 @@ export function SellForm({
       putCachedListing(newListing);
       emitListingCreated(newListing);
       invalidateFresh();
-      capture('listing_created', { listing_id: newListing.id, category: newListing.category, price: newListing.price });
-
       resetForm();
-      toast.show('Listing is live', { variant: 'success', icon: 'check' });
       onClose();
-      router.push(`/product/${newId}`);
+      // The "Item listed" screen is the confirmation now; a toast on top would be noise.
+      router.push(`/listed/${newId}` as any);
     } catch (e: any) {
       Alert.alert('Could not publish', e?.message ?? 'Unknown error');
     } finally {
@@ -790,7 +820,7 @@ export function SellForm({
     } else if (errors.authenticity) {
       toast.show(errors.authenticity.message ?? 'Please declare item authenticity', { variant: 'default', icon: 'shield' });
     } else if (errors.price) {
-      toast.show(errors.price.message ?? 'Please enter a valid price', { variant: 'default', icon: 'dollar-sign' });
+      toast.show(errors.price.message ?? 'Please enter a valid price', { variant: 'default', icon: 'tag' });
     } else if (errors.title) {
       toast.show(errors.title.message ?? 'Please enter a title', { variant: 'default', icon: 'edit-2' });
     }
@@ -857,7 +887,7 @@ export function SellForm({
         <View style={{ width: 36 }} />
       </View>
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoider style={{ flex: 1 }}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -978,7 +1008,7 @@ export function SellForm({
                       }}
                     >
                       <Image
-                        source={{ uri: resolveImage(slot).uri }}
+                        source={{ uri: slot.original.uri }}
                         style={{ width: '100%', height: '100%' }}
                         contentFit="cover"
                       />
@@ -1175,7 +1205,7 @@ export function SellForm({
                       value={value}
                       onChangeText={(t) => onChange(t.slice(0, TITLE_MAX))}
                       onBlur={onBlur}
-                      placeholder="e.g. Vintage Oversized Denim Jacket"
+                      placeholder="e.g. Vintage denim jacket"
                       placeholderTextColor={theme.muteSoft ?? theme.mute}
                       maxLength={TITLE_MAX}
                       style={
@@ -1216,6 +1246,7 @@ export function SellForm({
                       </Text>
                       <ScrollView
                         horizontal
+                        keyboardShouldPersistTaps="handled"
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ gap: 8 }}
                       >
@@ -1273,6 +1304,7 @@ export function SellForm({
                       </Text>
                       <ScrollView
                         horizontal
+                        keyboardShouldPersistTaps="handled"
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ gap: 8 }}
                       >
@@ -1646,7 +1678,7 @@ export function SellForm({
           ) : null}
 
           {/* Pricing & Shipping Card */}
-          <SectionHeaderTitle title="Pricing & Shipping" icon="dollar-sign" />
+          <SectionHeaderTitle title="Pricing & Shipping" icon="tag" />
 
           <View
             style={{
@@ -1658,7 +1690,7 @@ export function SellForm({
             }}
           >
             <RowField
-              icon="dollar-sign"
+              icon="tag"
               label="Price"
               value={price && Number.isFinite(parseFloat(price)) ? formatPrice(parseFloat(price), { whole: true }) : ''}
               placeholder={`Set price (${CURRENCY_SYMBOL})`}
@@ -1700,12 +1732,16 @@ export function SellForm({
           {/* Submit CTA */}
           <Pressable
             onPress={() => {
+              if (!canPublish) {
+                if (missingField) toast.show(missingField, { variant: 'default', icon: 'alert-circle' });
+                return;
+              }
               if (Platform.OS !== 'web') {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               }
               handleSubmit(onValidSubmit, onInvalidSubmit)();
             }}
-            disabled={publishing || !canPublish}
+            disabled={publishing}
             accessibilityRole="button"
             accessibilityLabel={
               publishing
@@ -1740,7 +1776,7 @@ export function SellForm({
             )}
           </Pressable>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
 
       {/* Sheets */}
       <CategorySheet

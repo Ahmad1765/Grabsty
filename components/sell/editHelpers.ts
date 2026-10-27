@@ -1,5 +1,5 @@
 import type { Category, Condition, Gender, Listing } from '@/types';
-import type { PhotoSlot } from '@/lib/photoClean/slots';
+import type { PhotoSlot } from '@/lib/photoSlots';
 import type { SellFormValues, ParcelSize } from '@/lib/schemas/sell';
 import { queryClient } from '@/lib/queryClient';
 import {
@@ -32,10 +32,6 @@ export function listingToSellFormValues(listing: Listing | null | undefined): Se
   const initialSlots: PhotoSlot[] = (listing.images ?? []).filter(Boolean).map((url, i) => ({
     id: `existing-${i}-${url}`,
     original: { uri: url, base64: null },
-    cleaned: null,
-    useCleaned: false,
-    status: 'done' as const,
-    faceCount: 0,
   }));
 
   return {

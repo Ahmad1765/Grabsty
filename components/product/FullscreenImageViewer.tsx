@@ -97,7 +97,7 @@ export function FullscreenImageViewer({
       statusBarTranslucent
     >
       <StatusBar style="light" animated />
-      <View style={[styles.backdrop, { width, height }]}>
+      <View style={[styles.backdrop, { flex: 1, width }]}>
         {/* Top Bar with Counter and Close Button */}
         <View style={styles.topBar}>
           <View style={styles.counterBadge}>

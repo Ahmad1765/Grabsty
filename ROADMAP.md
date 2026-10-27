@@ -1,4 +1,4 @@
-# Carrinex Production Roadmap
+# Grabsty Production Roadmap
 
 Target: support **2,000–3,000 peak concurrent users**, take the platform from prototype (mock data) to production-ready marketplace.
 

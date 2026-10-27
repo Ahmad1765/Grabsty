@@ -9,8 +9,6 @@ export { DiscoverHeader } from './DiscoverHeader';
 export { DiscoverItemsGrid } from './DiscoverItemsGrid';
 export {
   PeopleSkeleton,
-  BrandsSkeleton,
-  AestheticsSkeleton,
   RailSkeleton,
   GridSkeleton,
   DiscoverGridRow,

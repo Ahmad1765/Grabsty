@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "705177039533",
+    "project_id": "grabsty",
+    "storage_bucket": "grabsty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:705177039533:android:ea8714b464922aa1320c24",
+        "android_client_info": {
+          "package_name": "com.grabsty.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVPPOydUfkeoGYBK62PKXAuPANlPfCgzM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -72,7 +72,7 @@ export const GridPlaceholder = memo(function GridPlaceholder({
             key={i}
             style={{
               width: cardWidth,
-              aspectRatio: 1,
+              aspectRatio: 1 / 1.33, // ListingCard image ratio
               borderRadius: 12,
               backgroundColor: 'rgba(15,15,15,0.06)',
             }}

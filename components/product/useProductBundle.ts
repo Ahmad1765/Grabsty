@@ -27,7 +27,7 @@ type UseProductBundleProps = {
   sellerItems: Listing[];
   user: AuthUser | null;
   guestGate: ReturnType<typeof useGuestGate>;
-  /** When false the bundle tab is hidden and relatedTab defaults to 'similar'. */
+  /** When false the bundle progress banner is hidden. */
   bundlesEnabled?: boolean;
   sellerItemsLoading?: boolean;
   onOpenOfferSheet?: () => void;
@@ -51,13 +51,14 @@ export function useProductBundle({
 }: UseProductBundleProps) {
   const toast = useToast();
   const [selectedBundleIds, setSelectedBundleIds] = useState<Set<string>>(new Set());
-  const [relatedTab, setRelatedTab] = useState<'members' | 'similar'>(
-    sellerItems.length > 0 ? 'members' : 'similar',
-  );
+  // Always open on the seller's items. Deciding from sellerItems.length here was
+  // wrong: they load async, so it was 0 on first render and 'similar' always won.
+  const [relatedTab, setRelatedTab] = useState<'members' | 'similar'>('members');
 
-  // Reset bundle selection whenever the viewed listing changes
+  // Reset bundle selection and tab whenever the viewed listing changes
   useEffect(() => {
     setSelectedBundleIds(new Set());
+    setRelatedTab('members');
   }, [listing?.id]);
 
   // If any item in the bundle is bought by another buyer, automatically remove it and cancel bundle if only 1 item remains

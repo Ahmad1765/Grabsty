@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { capture } from '@/lib/analytics';
 import { BUYER_PROTECTION_FEE } from '@/lib/fees';
 import {
   ShippingAddressSchema,
@@ -128,13 +127,6 @@ export class CodPaymentProvider implements PaymentProvider {
       });
 
       if (!error && data) {
-        capture('checkout_completed', {
-          listing_id: request.listingId,
-          payment_method: 'cod',
-          order_id: data.id,
-          amount_cents: data.amount_cents,
-        });
-
         return {
           success: true,
           orderId: data.id,
@@ -180,14 +172,6 @@ export class CodPaymentProvider implements PaymentProvider {
       delivery_notes: request.deliveryNotes ?? validatedAddress.deliveryInstructions ?? null,
       created_at: new Date().toISOString(),
     };
-
-    capture('checkout_completed', {
-      listing_id: request.listingId,
-      payment_method: 'cod',
-      order_id: mockOrderId,
-      amount_cents: amountCents,
-      demo_mode: true,
-    });
 
     return {
       success: true,
@@ -265,14 +249,6 @@ export class StripePaymentProvider implements PaymentProvider {
       delivery_notes: request.deliveryNotes ?? null,
       created_at: new Date().toISOString(),
     };
-
-    capture('checkout_completed', {
-      listing_id: request.listingId,
-      payment_method: 'card',
-      order_id: mockOrderId,
-      amount_cents: amountCents,
-      demo_mode: true,
-    });
 
     return {
       success: true,
@@ -364,7 +340,6 @@ export class PaymentService {
       });
 
       if (!error && data) {
-        capture('order_cancelled', { order_id: orderId, reason });
         notifyOrderUpdated(listingId ?? (data as Order)?.listing_id);
         return data as Order;
       }
@@ -379,7 +354,6 @@ export class PaymentService {
       throw rpcError || new Error('Failed to cancel order');
     }
 
-    capture('order_cancelled', { order_id: orderId, reason, demo_mode: true });
     return {
       id: orderId,
       listing_id: listingId,
@@ -412,7 +386,6 @@ export class PaymentService {
       });
 
       if (!error && data) {
-        capture('order_shipped', { order_id: orderId, courier, tracking_number: trackingNumber });
         return data as Order;
       }
       if (error) {
@@ -448,7 +421,6 @@ export class PaymentService {
       });
 
       if (!error && data) {
-        capture('order_completed_by_buyer', { order_id: orderId });
         notifyOrderUpdated((data as Order)?.listing_id);
         return data as Order;
       }
@@ -491,7 +463,6 @@ export class PaymentService {
     if (error) {
       if (!isDemoMode()) throw new Error(error.message);
       // Fallback for mock demo mode only when RPC is unavailable
-      capture('cod_order_completed', { order_id: orderId, role, demo_mode: true });
       const nowIso = new Date().toISOString();
       return {
         id: orderId,
@@ -513,7 +484,6 @@ export class PaymentService {
     }
 
     if (data) {
-      capture('cod_order_confirmed', { order_id: orderId, role, status: (data as Order)?.status });
       notifyOrderUpdated((data as Order)?.listing_id);
       return data as Order;
     }
@@ -570,7 +540,6 @@ export class PaymentService {
         });
 
         if (!retryErr && retryData) {
-          capture('fulfillment_advanced', { order_id: orderId, target_status: 'picked', fallback: 'packing' });
           notifyOrderUpdated((retryData as Order)?.listing_id);
           return {
             ...(retryData as Order),
@@ -582,7 +551,6 @@ export class PaymentService {
 
       if (!isDemoMode() || !orderId.startsWith('demo')) throw new Error(error.message || 'Network error');
       // Demo fallback
-      capture('fulfillment_advanced_demo', { order_id: orderId, target_status: targetStatus });
       return {
         id: orderId,
         status: targetStatus === 'completed' ? 'completed' : 'paid',
@@ -598,7 +566,6 @@ export class PaymentService {
       } as Order;
     }
 
-    capture('fulfillment_advanced', { order_id: orderId, target_status: targetStatus });
     notifyOrderUpdated((data as Order)?.listing_id);
     return {
       ...(data as Order),
@@ -626,7 +593,6 @@ export class PaymentService {
 
     if (error) {
       if (!isDemoMode()) throw new Error(error.message);
-      capture('order_disputed_demo', { order_id: orderId, reason });
       return {
         id: orderId,
         status: 'disputed',
@@ -640,7 +606,6 @@ export class PaymentService {
       } as Order;
     }
 
-    capture('order_disputed', { order_id: orderId, reason });
     const finalOrder = (data as Order);
     notifyOrderUpdated(finalOrder?.listing_id);
 

@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the static Carrinex iPhone mockup at `app/(tabs)/feed.tsx` with a personalized buyer-side feed showing price drops on liked items, new listings from followed sellers, and a "Picked for you" grid based on what the user has liked.
+**Goal:** Replace the static Grabsty iPhone mockup at `app/(tabs)/feed.tsx` with a personalized buyer-side feed showing price drops on liked items, new listings from followed sellers, and a "Picked for you" grid based on what the user has liked.
 
 **Architecture:** Three independent data loaders in `lib/myFeed.ts`, composed by a single rewritten screen. Each section loads in parallel, renders its own skeleton, and hides itself on empty (no whole-screen empty state). A new `listing_price_history` table + trigger captures price changes server-side. The screen reuses existing `ListingCard`, `SectionHeader`, `useGridDimensions`, and `listingCache`.
 
@@ -44,7 +44,7 @@
 Write `supabase/listing_price_history.sql`:
 
 ```sql
--- Carrinex — listing price history.
+-- Grabsty — listing price history.
 -- Captures every price change on `listings` so we can surface
 -- "items you liked got cheaper" on the My Feed tab.
 -- Idempotent: safe to re-run.

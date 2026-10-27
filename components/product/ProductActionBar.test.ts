@@ -34,6 +34,7 @@ vi.mock('@/context/ThemeContext', () => ({
 describe('ProductActionBar Invariant & Styling Protection', () => {
   beforeEach(() => {
     vi.spyOn(React, 'useState').mockImplementation(((initial: any) => [initial, vi.fn()]) as any);
+    vi.spyOn(React, 'useEffect').mockImplementation(() => {});
   });
 
   it('strictly enforces 10px corner radius and monochrome colors for Offer and Buy buttons', () => {

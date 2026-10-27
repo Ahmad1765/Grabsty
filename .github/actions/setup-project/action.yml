@@ -1,6 +1,6 @@
 name: Setup project
 description: >-
-  Shared setup for all Carrinex CI jobs. Installs Node 22
+  Shared setup for all Grabsty CI jobs. Installs Node 22
   with npm cache, and runs `npm ci`. Centralised here so a Node-version bump
   only happens in one place. Callers must check out the repo first.
 

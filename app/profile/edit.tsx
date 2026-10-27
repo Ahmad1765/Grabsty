@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, BackHandler } from 'react-native';
+import { View, Pressable, ScrollView, Platform, ActivityIndicator, Alert, BackHandler } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -437,8 +438,7 @@ export default function ProfileEditScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <KeyboardAvoider
         style={{ flex: 1 }}
       >
         {/* Header */}
@@ -773,13 +773,9 @@ export default function ProfileEditScreen() {
             >
               {saving ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Feather
-                  name={isOnboarding ? 'arrow-right' : 'check'}
-                  size={16}
-                  color="#FFFFFF"
-                />
-              )}
+              ) : isOnboarding ? (
+                <Feather name="arrow-right" size={16} color="#FFFFFF" />
+              ) : null}
               <Text
                 style={{
                   fontSize: 15,
@@ -793,7 +789,7 @@ export default function ProfileEditScreen() {
             </Pressable>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

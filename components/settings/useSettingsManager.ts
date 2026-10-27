@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, Linking } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { createURL } from 'expo-linking';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { supabase } from '@/lib/supabase';
@@ -29,7 +30,7 @@ import {
 } from '@/lib/notifications';
 import { confirm } from '@/lib/confirm';
 import { tap } from '@/lib/haptics';
-import { isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
+import { analyticsReady, isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
 import { APP_URL } from '@/lib/brand';
 import type {
   AddressForm,
@@ -39,8 +40,8 @@ import type {
 import type { PayoutMethod, ShippingAddress, Verification } from '@/types';
 
 export const SUPPORT_EMAIL = 'support@grabsty.com';
-export const TERMS_URL = `${APP_URL}/terms`;
-export const PRIVACY_URL = `${APP_URL}/privacy`;
+export const TERMS_URL = `${APP_URL}/legal/terms`;
+export const PRIVACY_URL = `${APP_URL}/legal/privacy`;
 
 export type Section =
   | 'general'
@@ -74,6 +75,11 @@ export function useSettingsManager() {
   const [pushOn, setPushOn] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [shareUsage, setShareUsage] = useState(!isOptedOut());
+  useEffect(() => {
+    analyticsReady.then(() => {
+      if (mounted.current) setShareUsage(!isOptedOut());
+    });
+  }, []);
   const [resetCooldown, setResetCooldown] = useState(0);
   const mounted = useRef(true);
 
@@ -148,7 +154,7 @@ export function useSettingsManager() {
         vRec.id_photo_url = vRec.notes;
       }
       setVerification(vRec);
-      setPhone(profile?.phone || user?.phone || (user?.user_metadata as any)?.phone || null);
+      setPhone(user?.phone || (user?.user_metadata as any)?.phone || null);
     } catch (e) {
       console.warn('[settings] loadExtras failed', e);
     } finally {
@@ -401,7 +407,9 @@ export function useSettingsManager() {
     if (!ok) return;
     setBusy('password');
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email!);
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email!, {
+        redirectTo: createURL('auth/reset'),
+      });
       if (error) throw error;
       setResetCooldown(60);
       toast.show('Reset email sent — check your inbox', { variant: 'success', icon: 'mail' });
@@ -609,8 +617,13 @@ export function useSettingsManager() {
         try {
           photoUrl = await uploadVerificationDocument(form.local_image, user.id);
         } catch (uploadErr) {
-          console.warn('[settings] verification photo upload failed; using fallback', uploadErr);
-          photoUrl = form.local_image.uri;
+          // Never store the device-local URI: an admin can't open it.
+          console.warn('[settings] verification photo upload failed', uploadErr);
+          toast.show('Could not upload your ID photo. Please try again.', {
+            variant: 'default',
+            icon: 'alert-triangle',
+          });
+          return false;
         }
       }
 
@@ -651,17 +664,11 @@ export function useSettingsManager() {
       if (!user?.id) return false;
       const clean = phoneNum.trim();
       try {
-        await supabase
-          .from('profiles')
-          .update({ phone: clean })
-          .eq('id', user.id);
-
-        await supabase.auth.updateUser({
-          phone: clean.startsWith('+') ? clean : undefined,
-          data: { phone: clean },
-        }).catch(() => {});
-
-        await refreshProfile().catch(() => {});
+        // Private account metadata only: profiles is world-readable (and has no
+        // phone column), and passing `phone:` here starts an SMS verification,
+        // which fails the whole update because no SMS provider is configured.
+        const { error } = await supabase.auth.updateUser({ data: { phone: clean } });
+        if (error) throw error;
         if (mounted.current) setPhone(clean);
         toast.show('Phone number saved', { variant: 'success', icon: 'check' });
         return true;
@@ -673,15 +680,14 @@ export function useSettingsManager() {
         return false;
       }
     },
-    [user?.id, refreshProfile, toast],
+    [user?.id, toast],
   );
 
   const removePhone = useCallback(async () => {
     if (!user?.id) return;
     try {
-      await supabase.from('profiles').update({ phone: null }).eq('id', user.id);
-      await supabase.auth.updateUser({ data: { phone: null } }).catch(() => {});
-      await refreshProfile().catch(() => {});
+      const { error } = await supabase.auth.updateUser({ data: { phone: null } });
+      if (error) throw error;
       if (mounted.current) setPhone(null);
       toast.show('Phone number removed', { variant: 'default', icon: 'trash-2' });
     } catch (e: any) {
@@ -690,7 +696,7 @@ export function useSettingsManager() {
         icon: 'alert-triangle',
       });
     }
-  }, [user?.id, refreshProfile, toast]);
+  }, [user?.id, toast]);
 
   return {
     open: openSection,

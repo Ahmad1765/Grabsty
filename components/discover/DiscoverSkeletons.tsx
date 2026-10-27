@@ -4,12 +4,12 @@
 //
 // 💡 EDUCATIONAL PATTERN: Preserving Visual Weight During Async Transitions
 // Skeleton placeholders replicate the exact physical dimensions and padding of the
-// loaded content cards (avatar discs, 4:5 cards, aesthetics tags) to eliminate
+// loaded content cards (listing cards, rails) to eliminate
 // Cumulative Layout Shift (CLS) during network fetches.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { memo } from 'react';
-import { View, useWindowDimensions } from 'react-native';
+import { View } from 'react-native';
 import { colors, radii } from '@/lib/theme';
 import { ListingCard } from '@/components/ListingCard';
 import type { Listing } from '@/types';
@@ -35,35 +35,13 @@ export function PeopleSkeleton() {
   );
 }
 
-export function BrandsSkeleton() {
-  return (
-    <View style={{ paddingHorizontal: 16, gap: 14, marginTop: 10 }}>
-      {[0, 1, 2].map((i) => (
-        <View key={i} style={{ height: 250, borderRadius: radii['3xl'], backgroundColor: colors.divider }} />
-      ))}
-    </View>
-  );
-}
-
-export function AestheticsSkeleton() {
-  const { width: winWidth } = useWindowDimensions();
-  const tileWidth = (winWidth - 16 * 2 - 10) / 2;
-  return (
-    <View style={{ paddingHorizontal: 16, flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <View key={i} style={{ width: tileWidth, height: 95, borderRadius: radii.xl, backgroundColor: colors.divider }} />
-      ))}
-    </View>
-  );
-}
-
 export function SkeletonTile({ width }: { width: number }) {
   return (
     <View style={{ width }}>
       <View
         style={{
           width: '100%',
-          aspectRatio: 1,
+          aspectRatio: 1 / 1.33, // ListingCard image ratio
           borderRadius: radii.md,
           backgroundColor: colors.divider,
         }}
@@ -74,7 +52,8 @@ export function SkeletonTile({ width }: { width: number }) {
 
 export function RailSkeleton() {
   return (
-    <View style={{ flexDirection: 'row', gap: GRID_GAP, paddingHorizontal: HORIZONTAL_PAD }}>
+    // Same padding/gap as the DailyPicks rail it stands in for.
+    <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16 }}>
       {Array.from({ length: 3 }).map((_, i) => (
         <SkeletonTile key={i} width={RAIL_CARD_WIDTH} />
       ))}

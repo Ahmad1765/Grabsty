@@ -409,6 +409,9 @@ export async function fetchSellerOtherListings(
   limit = 6,
 ): Promise<Listing[]> {
   let rows: Listing[] = [];
+  // The seller is known up front, so fetch their profile alongside the RPC
+  // instead of after it: one round trip (~300 ms from Pakistan) shorter.
+  const sellerPromise = supabase.from('profiles').select('*').eq('id', sellerId).maybeSingle();
   const { data, error } = await supabase.rpc('find_seller_other_listings', {
     p_seller_id: sellerId,
     p_exclude_id: excludeId,
@@ -444,12 +447,8 @@ export async function fetchSellerOtherListings(
     rows = (fallbackData ?? []) as Listing[];
   }
   if (rows.length === 0) return [];
-  // Hydrate the seller profile in one round-trip (the RPC returns bare rows).
-  const { data: sellerData, error: sellerErr } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', sellerId)
-    .maybeSingle();
+  // Hydrate the seller profile (the RPC returns bare rows); already in flight.
+  const { data: sellerData, error: sellerErr } = await sellerPromise;
   if (sellerErr) {
     console.warn('[listings] fetchSellerOtherListings hydrate', sellerErr.message);
   }
@@ -461,9 +460,13 @@ export async function fetchSellerOtherListings(
 // brand/gender/size/condition exact matches, price proximity, title trigram
 // similarity, likes, and freshness into a single weighted score. The seller
 // embed is hydrated per row so the existing card components render normally.
+//
+// `category` is optional: the product page already has the listing loaded, so
+// passing it lets the fallback skip looking it up (one round trip shorter).
 export async function fetchSimilarListings(
   listingId: string,
   limit = 6,
+  category?: string | null,
 ): Promise<Listing[]> {
   let rows: Listing[] = [];
   const { data, error } = await supabase.rpc('find_similar_listings', {
@@ -479,19 +482,24 @@ export async function fetchSimilarListings(
   // listing's category to drive a plain table read so the Similar tab still
   // shows something — same-category, not-sold, not-itself, newest first.
   if (rows.length === 0) {
-    const { data: srcRow, error: srcErr } = await supabase
-      .from('listings')
-      .select('category, seller_id')
-      .eq('id', listingId)
-      .maybeSingle();
-    if (srcErr || !srcRow) {
-      if (srcErr) console.warn('[listings] fetchSimilarListings src', srcErr.message);
-      return [];
+    let fallbackCategory = category ?? null;
+    if (!fallbackCategory) {
+      const { data: srcRow, error: srcErr } = await supabase
+        .from('listings')
+        .select('category, seller_id')
+        .eq('id', listingId)
+        .maybeSingle();
+      if (srcErr || !srcRow) {
+        if (srcErr) console.warn('[listings] fetchSimilarListings src', srcErr.message);
+        return [];
+      }
+      fallbackCategory = (srcRow as { category: string }).category;
     }
+    // Sellers embedded here, so these rows need no separate hydrate below.
     const { data: fallbackData, error: fallbackErr } = await supabase
       .from('listings')
-      .select('*')
-      .eq('category', (srcRow as { category: string }).category)
+      .select(SELECT_WITH_SELLER)
+      .eq('category', fallbackCategory)
       .eq('is_sold', false)
       .neq('id', listingId)
       .order('likes', { ascending: false, nullsFirst: false })
@@ -501,7 +509,7 @@ export async function fetchSimilarListings(
       console.warn('[listings] fetchSimilarListings fallback', fallbackErr.message);
       return [];
     }
-    rows = (fallbackData ?? []) as Listing[];
+    return (fallbackData ?? []) as unknown as Listing[];
   }
   if (rows.length === 0) return [];
   const sellerIds = Array.from(new Set(rows.map((r) => r.seller_id).filter(Boolean)));
@@ -542,24 +550,6 @@ export async function fetchLikedListings(userId: string): Promise<Listing[]> {
 export async function isLiked(listingId: string, userId: string): Promise<boolean> {
   const ids = await getLikedIds(userId);
   return ids.has(listingId);
-}
-
-// Owner action: flip `is_sold`. Caller is the seller; RLS enforces that.
-// Returns the new value on success, the previous value on failure (so the
-// UI's optimistic flip can roll back).
-export async function setListingSold(
-  listingId: string,
-  nextSold: boolean,
-): Promise<boolean> {
-  const { error } = await supabase
-    .from('listings')
-    .update({ is_sold: nextSold })
-    .eq('id', listingId);
-  if (error) {
-    console.warn('[listings] setListingSold', error.message);
-    return !nextSold;
-  }
-  return nextSold;
 }
 
 // Owner action: hard-delete the row. RLS only lets the seller delete their

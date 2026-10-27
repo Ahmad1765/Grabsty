@@ -45,3 +45,13 @@
 # to EXPO_PUBLIC_SUPABASE_ANON_KEY. The static page needs it to insert waitlist
 # rows; RLS allows anon INSERT only (no reads since 2026-10-15).
 54d7235786b705487e3facb3b9355e10acd3b6c4:waitlist-landing/public/script.js:jwt:344
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Firebase Android API key in google-services.json (Oct 2026)
+# ─────────────────────────────────────────────────────────────────────────────
+# `current_key` identifies the Firebase project to the Android SDK (FCM push).
+# Google documents Firebase API keys as not secret: the file is compiled into
+# every APK, so anyone with the app has it. Protection comes from restricting
+# the key in Google Cloud Console (Android app com.grabsty.app + signing SHA-1,
+# Firebase APIs only), not from hiding it.
+0d8da29f6802980a767ca468c3a90369884a2135:google-services.json:gcp-api-key:18

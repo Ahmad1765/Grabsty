@@ -4,9 +4,7 @@ import {
   View,
   Pressable,
   RefreshControl,
-  Share,
   ActivityIndicator,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
@@ -34,8 +32,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { colors, radii } from '@/lib/theme';
 import { useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
-import { APP_URL, BRAND } from '@/lib/brand';
-import * as Clipboard from 'expo-clipboard';
 import type { Listing } from '@/types';
 import { EmptyState } from '@/components/ui';
 import { BottomSheetModal } from '@/components/ui/BottomSheetModal';
@@ -46,7 +42,10 @@ import {
   formatCount,
 } from '@/components/profile';
 import { ListingCard } from '@/components/ListingCard';
+import { ProfileQrSheet } from '@/components/profile/ProfileQrSheet';
+import { StatusFilterChips } from '@/components/profile/StatusFilterChips';
 import { useUserSafetyActions } from '@/hooks/useUserSafetyActions';
+import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 type SellerTab = 'shop' | 'liked' | 'collections';
 
@@ -68,11 +67,11 @@ export default function UserProfileScreen() {
 
   const fade = useFadeIn(0, 320);
 
-  useEffect(() => {
-    if (authUser?.id && userId && authUser.id === userId) {
-      router.replace('/(tabs)/profile' as any);
-    }
-  }, [authUser?.id, userId]);
+  const UUID_RE = useMemo(
+    () => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    [],
+  );
+  const isInputUuid = useMemo(() => UUID_RE.test(userId), [UUID_RE, userId]);
 
   const { columns, cardWidth: cardW } = useGridDimensions({
     min: 2,
@@ -82,18 +81,24 @@ export default function UserProfileScreen() {
     gap: GRID_GAP,
   });
 
-
   const listRef = useRef<FlashListRef<Listing[]>>(null);
 
   const profileQ = useProfileQuery(userId);
-  const listingsQ = useUserListingsQuery(userId);
-  const followQ = useFollowStateQuery(authUser?.id ?? null, userId);
-  const toggleFollowM = useToggleFollow(authUser?.id ?? null, userId);
-
   const profile = profileQ.data ?? null;
+  // Downstream queries need the real UUID, not a username slug
+  const profileId = profile?.id ?? (isInputUuid ? userId : '');
+  const listingsQ = useUserListingsQuery(profileId);
+  const followQ = useFollowStateQuery(authUser?.id ?? null, profileId);
+  const toggleFollowM = useToggleFollow(authUser?.id ?? null, profileId);
+
+  useEffect(() => {
+    if (authUser?.id && (authUser.id === userId || (profileId && authUser.id === profileId))) {
+      router.replace('/(tabs)/profile' as any);
+    }
+  }, [authUser?.id, userId, profileId]);
+
   const listings = listingsQ.data ?? EMPTY_LISTINGS;
-  const loading = profileQ.isLoading || listingsQ.isLoading;
-  const refreshing = profileQ.isRefetching || listingsQ.isRefetching;
+  const loading = profileQ.isLoading || (!!profileId && listingsQ.isLoading);
   const followed = followQ.data?.isFollowing ?? false;
   const followersCount = followQ.data?.followersCount ?? profile?.followers_count ?? 0;
   const followingCount = followQ.data?.followingCount ?? profile?.following_count ?? 0;
@@ -105,12 +110,12 @@ export default function UserProfileScreen() {
       router.push('/auth/login' as any);
       return;
     }
-    if (!userId || authUser.id === userId || followBusy) return;
+    if (!profileId || authUser.id === profileId || followBusy) return;
     toggleFollowM.mutate(
       { currentlyFollowing: followed },
       {
         onSuccess: (next) => {
-          if (next.isFollowing) capture('seller_followed', { seller_id: userId });
+          if (next.isFollowing) capture('seller_followed', { seller_id: profileId });
         },
         onError: (e: any) =>
           toast.show(e?.message ?? 'Could not update follow', {
@@ -121,20 +126,9 @@ export default function UserProfileScreen() {
     );
   };
 
-  const handleShare = async () => {
-    if (!profile) return;
-    const url = `${APP_URL}/user/${profile.id}`;
-    if (Platform.OS === 'web') {
-      try {
-        await Clipboard.setStringAsync(url);
-        toast.show('Profile link copied to clipboard', { variant: 'success', icon: 'link' });
-      } catch {}
-    }
-    try {
-      await Share.share({ message: `Check out @${profile.username} on ${BRAND}\n${url}`, url });
-    } catch {
-      // user dismissed the sheet
-    }
+  // Sharing someone's profile opens the same QR sheet as your own (share + copy live inside it).
+  const handleShare = () => {
+    if (profile) setShowQrSheet(true);
   };
 
   const safety = useUserSafetyActions({
@@ -144,20 +138,21 @@ export default function UserProfileScreen() {
   });
 
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
+  const [showQrSheet, setShowQrSheet] = useState(false);
   const handleMore = () => {
     setMoreOptionsOpen(true);
   };
 
   const isCollectionsPublic = profile?.saved_collection_privacy === 'public';
-  const savedQ = useSavedListingsQuery(isCollectionsPublic ? userId : null);
+  const savedQ = useSavedListingsQuery(isCollectionsPublic ? profileId : null);
   const savedListings = savedQ.data ?? EMPTY_LISTINGS;
-  const saveListsQ = useSaveListsQuery(isCollectionsPublic ? userId : null);
+  const saveListsQ = useSaveListsQuery(isCollectionsPublic ? profileId : null);
   const saveLists = saveListsQ.data ?? [];
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const listItemsQ = useListingsInListQuery(activeListId);
   const listItems = listItemsQ.data ?? EMPTY_LISTINGS;
 
-  const likedQ = useLikedListingsQuery(userId);
+  const likedQ = useLikedListingsQuery(profileId);
   const likedListings = likedQ.data ?? EMPTY_LISTINGS;
 
   const visibleSavedListings = useMemo(
@@ -172,13 +167,13 @@ export default function UserProfileScreen() {
       router.push('/auth/login' as any);
       return;
     }
-    if (!userId || authUser.id === userId || messagingBusy) return;
+    if (!profileId || authUser.id === profileId || messagingBusy) return;
 
     setMessagingBusy(true);
     try {
       const conv = await getOrCreateConversation({
         buyerId: authUser.id,
-        sellerId: userId,
+        sellerId: profileId,
       });
       if (conv?.id) {
         router.push(`/conversation/${conv.id}` as any);
@@ -192,17 +187,17 @@ export default function UserProfileScreen() {
     }
   };
 
-  const onRefresh = () => {
+  const refetchAll = async () => {
     if (!userId) return;
-    profileQ.refetch();
-    listingsQ.refetch();
-    likedQ.refetch();
-    if (isCollectionsPublic) {
-      savedQ.refetch();
-      saveListsQ.refetch();
-    }
-    if (authUser?.id) followQ.refetch();
+    await Promise.all([
+      profileQ.refetch(),
+      listingsQ.refetch(),
+      likedQ.refetch(),
+      ...(isCollectionsPublic ? [savedQ.refetch(), saveListsQ.refetch()] : []),
+      ...(authUser?.id ? [followQ.refetch()] : []),
+    ]);
   };
+  const { refreshing, onRefresh } = usePullRefresh(refetchAll);
 
   const visibleListings = useMemo(
     () =>
@@ -377,7 +372,7 @@ export default function UserProfileScreen() {
                 <Pressable
                   onPress={() =>
                     router.push(
-                      `/profile/following?user=${userId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
+                      `/profile/following?user=${profileId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
                     )
                   }
                   style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
@@ -395,7 +390,7 @@ export default function UserProfileScreen() {
                 <Pressable
                   onPress={() =>
                     router.push(
-                      `/profile/followers?user=${userId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
+                      `/profile/followers?user=${profileId}&username=${encodeURIComponent(profile?.username ?? '')}` as any,
                     )
                   }
                   style={({ pressed }) => ({ alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
@@ -796,15 +791,46 @@ export default function UserProfileScreen() {
               </ScrollView>
             )}
 
-            {!(activeTab === 'collections' && isCollectionsPublic) && <View style={{ height: 12 }} />}
+            {/* Collection + Liked keep All/Available/Sold, even at zero counts */}
+            {activeTab === 'shop' ? (
+              <StatusFilterChips
+                value={shopFilter}
+                onChange={setShopFilter}
+                total={listings.length}
+                available={availableCount}
+                sold={soldCount}
+              />
+            ) : activeTab === 'liked' ? (
+              <StatusFilterChips
+                value={likedFilter}
+                onChange={setLikedFilter}
+                total={likedListings.length}
+                available={likedAvailableCount}
+                sold={likedSoldCount}
+              />
+            ) : !isCollectionsPublic ? (
+              <View style={{ height: 12 }} />
+            ) : null}
 
             {/* Empty States */}
             {activeTab === 'shop' && gridRows.length === 0 && (
               <View style={{ paddingVertical: 40, alignItems: 'center' }}>
                 <EmptyState
                   icon="shopping-bag"
-                  title="No items right now"
-                  description={`${displayName} has no active items right now.`}
+                  title={
+                    shopFilter === 'sold' && listings.length > 0
+                      ? 'Nothing sold yet'
+                      : shopFilter === 'available' && listings.length > 0
+                        ? 'No available items'
+                        : 'No items right now'
+                  }
+                  description={
+                    shopFilter === 'sold' && listings.length > 0
+                      ? 'Sold items will show up here.'
+                      : shopFilter === 'available' && listings.length > 0
+                        ? `${displayName} has no available items right now.`
+                        : `${displayName} has no active items right now.`
+                  }
                 />
               </View>
             )}
@@ -813,8 +839,20 @@ export default function UserProfileScreen() {
               <View style={{ paddingVertical: 40, alignItems: 'center' }}>
                 <EmptyState
                   icon="heart"
-                  title="No liked items"
-                  description={`${displayName} hasn't liked any items yet.`}
+                  title={
+                    likedFilter === 'sold' && likedListings.length > 0
+                      ? 'Nothing sold yet'
+                      : likedFilter === 'available' && likedListings.length > 0
+                        ? 'No available items'
+                        : 'No liked items'
+                  }
+                  description={
+                    likedFilter === 'sold' && likedListings.length > 0
+                      ? 'Sold items will show up here.'
+                      : likedFilter === 'available' && likedListings.length > 0
+                        ? 'All liked items have been sold.'
+                        : `${displayName} hasn't liked any items yet.`
+                  }
                 />
               </View>
             )}
@@ -878,6 +916,13 @@ export default function UserProfileScreen() {
         }
       />
 
+      <ProfileQrSheet
+        visible={showQrSheet}
+        onClose={() => setShowQrSheet(false)}
+        username={profile.username}
+        fullName={displayName}
+      />
+
       <BottomSheetModal
         visible={moreOptionsOpen}
         onClose={() => setMoreOptionsOpen(false)}
@@ -890,7 +935,8 @@ export default function UserProfileScreen() {
           <Pressable
             onPress={() => {
               setMoreOptionsOpen(false);
-              handleShare();
+              // Let the options sheet finish closing; stacked modals drop the second one.
+              setTimeout(handleShare, 320);
             }}
             style={({ pressed }) => ({
               flexDirection: 'row',

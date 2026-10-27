@@ -1,4 +1,4 @@
-# UI Guardrails & AI Safety Protocol (Carrinex / Ceranix)
+# UI Guardrails & AI Safety Protocol (Grabsty)
 
 > **CRITICAL DIRECTIVE FOR ALL AI AGENTS:**
 > Before proposing, planning, or executing **ANY** UI, styling, navigation, or component changes in this codebase, you **MUST** read this document first.
@@ -120,7 +120,7 @@ These rules protect the runtime from silent crashes, style collapse, and mobile/
 ### Rule 2.6: Cross-Platform Keyboard Docking & Mobile Safari Viewport (`components/ui/SafeContainer.tsx`)
 - **The Invariant:** Across iOS, Android, and mobile web, virtual keyboard appearances and composer docking must remain fluid, flush, and platform-aware without layout jitter, double-padding, or message list detachment.
   1. **iOS Native Docking & Smooth Animation:** Always use `<SafeContainer mode="keyboard-avoiding">` with `behavior="padding"` and platform-appropriate `keyboardVerticalOffset`. The bottom composer dock must animate bottom padding smoothly via `Animated.Value` (`keyboardAnim`) synced with `keyboardWillShow` and `keyboardWillHide` event durations (`e.duration`) and native bezier curves (`Easing.bezier(0.17, 0.59, 0.4, 0.77)`). Never toggle dock padding using discrete binary states (`paddingBottom: keyboardUp ? 6 : insets.bottom`), as this causes severe ~28px visual jumping and snapping before or after the keyboard animates.
-  2. **Android Native Resizing:** In Android, `windowSoftInputMode="adjustResize"` automatically shrinks the window. `KeyboardAvoidingView` behavior must remain `undefined` on Android to prevent double-offsetting bugs (which push inputs to the middle of the screen). Dock padding transitions smoothly (150ms) to sit flush above the keyboard.
+  2. **Android Native Resizing:** The app is edge-to-edge (`edgeToEdgeEnabled=true`, enforced by Expo 54), which makes Android ignore `windowSoftInputMode="adjustResize"`. `SafeContainer` therefore uses `behavior="padding"` on Android too, and passes `enabled={useAndroidKeyboardShown()}`: RN's KeyboardAvoidingView treats `keyboardDidHide` like a show event and leaves ~95dp of stale padding unless it is disabled while the keyboard is hidden. Raw `KeyboardAvoidingView`s must do the same (see `app/conversation/new.tsx`). Verified on a physical Android 10 device.
   3. **Message List Anchor & Insets:** In chat message lists (`FlatList`), always use `onLayout` to keep the list anchored to the bottom when the viewport contracts, and depend on stable `scrollToBottom` callbacks instead of entire `thread` object references in effects. Avoid unconditional `justifyContent: 'flex-end'` on `contentContainerStyle` for long threads (`>= 8` messages) to prevent breaking native scroll virtualization.
   4. **Mobile Safari Viewport Sync:** On mobile web (iOS Safari), virtual keyboard appearances trigger WebKit's two-viewport model (`visualViewport.offsetTop` and `visualViewport.height`). Pinned full-screen or bottom-docked containers must sync with `visualViewport.offsetTop` and must never use uncompensated `position: fixed; top: 0` without offset tracking. When in full-screen pinned modes (like chat), lock `html` and `body` `overflow: hidden; height: 100%` on web to prevent iOS Safari from rubber-banding or scrolling the root canvas.
 - **The Risk:** Binary padding toggles cause jarring layout jumps; un-shimmed Android KeyboardAvoidingView doubles keyboard height; naive FlatList `flex-end` corrupts scroll boundaries and hides recent messages; naive `position: fixed` pushes headers off-screen on Safari.
@@ -212,7 +212,7 @@ These rules protect the runtime from silent crashes, style collapse, and mobile/
 
 ## 3. Strict Design Language Invariants ("The Quiet Atelier" - `DESIGN.md`)
 
-Carrinex is a disciplined, quiet-luxury resale marketplace. Restraint communicates trust.
+Grabsty is a disciplined, quiet-luxury resale marketplace. Restraint communicates trust.
 
 | Invariant | Forbidden (AI Must Reject) | Enforced Standard |
 | :--- | :--- | :--- |

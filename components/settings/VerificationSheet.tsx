@@ -6,9 +6,11 @@ import {
   ScrollView,
   Platform,
   Alert,
-  KeyboardAvoidingView,
-} from 'react-native';
+  } from 'react-native';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/lib/rnText';
+import { useVerificationPhotoUrl } from '@/lib/upload';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import Feather from '@expo/vector-icons/Feather';
@@ -46,6 +48,7 @@ export function VerificationSheet({
   onSave: (form: VerifyForm) => Promise<void>;
 }) {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [form, setForm] = useState<VerifyForm>({
     legal_name: '',
     document_kind: 'national_id',
@@ -55,6 +58,7 @@ export function VerificationSheet({
   const [previewUri, setPreviewUri] = useState<string | null>(null);
   const [localImage, setLocalImage] = useState<{ uri: string; base64?: string | null } | null>(null);
   const [saving, setSaving] = useState(false);
+  const previewDisplayUri = useVerificationPhotoUrl(previewUri);
 
   useEffect(() => {
     if (visible) {
@@ -173,8 +177,7 @@ export function VerificationSheet({
           accessibilityLabel="Close"
         />
 
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        <KeyboardAvoider
           style={{ width: '100%', maxWidth: 520, maxHeight: '92%' }}
         >
           <View
@@ -256,7 +259,7 @@ export function VerificationSheet({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingHorizontal: 20,
-                paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+                paddingBottom: Platform.OS === 'ios' ? 36 : Math.max(insets.bottom + 8, 24),
               }}
             >
               {initial?.status === 'approved' ? (
@@ -339,7 +342,7 @@ export function VerificationSheet({
                     {previewUri ? (
                       <View style={{ width: '100%', alignItems: 'center' }}>
                         <Image
-                          source={{ uri: previewUri }}
+                          source={previewDisplayUri ? { uri: previewDisplayUri } : undefined}
                           style={{
                             width: '100%',
                             height: 180,
@@ -359,7 +362,7 @@ export function VerificationSheet({
                           }}
                         >
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Feather name="check-circle" size={15} color="#10B981" />
+                            <Feather name="check-circle" size={15} color={theme.purple} />
                             <Text style={{ fontSize: 13, fontWeight: '700', color: theme.text }}>
                               CNIC / ID photo attached
                             </Text>
@@ -504,7 +507,7 @@ export function VerificationSheet({
               )}
             </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </KeyboardAvoider>
       </View>
     </Modal>
   );

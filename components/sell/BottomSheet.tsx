@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Pressable, Modal, ScrollView, Platform, BackHandler } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
@@ -117,6 +118,7 @@ export function FullPagePicker({
           backgroundColor: theme.background,
         }}
       >
+        <KeyboardAvoider style={{ flex: 1 }}>
         {/* Full Page Navigation Header */}
         <View
           style={{
@@ -219,6 +221,7 @@ export function FullPagePicker({
             {footer}
           </View>
         ) : null}
+        </KeyboardAvoider>
       </SafeAreaView>
     </Modal>
   );

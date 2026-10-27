@@ -1,6 +1,6 @@
 // Single source of truth for the listing colour attribute. Stored on
 // listings.color as the slug id; validated in-app (no DB enum) so the palette
-// can evolve without a migration. Replaces the old hard-coded "Carrinex purple"
+// can evolve without a migration. Replaces the old hard-coded "Grabsty purple"
 // placeholder that showed on every product regardless of the real item.
 
 export interface ItemColor {

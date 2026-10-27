@@ -41,7 +41,6 @@ import {
   useListingLikersQuery,
   useListingQuery,
   useSellerOtherListingsQuery,
-  useSetListingSold,
   useSimilarListingsQuery,
   useToggleFollow,
 } from '@/lib/queries';
@@ -52,7 +51,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { captureError } from '@/lib/sentry';
 import { fetchOrderForListing, type Order } from '@/lib/payments';
-import { getOrCreateConversation, sendOffer, cancelBundleOffersForSoldItem } from '@/lib/chat';
+import { getOrCreateConversation, sendOffer } from '@/lib/chat';
 import { cardImageUrl, prefetchImages, getImagePlaceholder } from '@/lib/images';
 import { SaveListSheet } from '@/components/SaveListSheet';
 import { FullscreenImageViewer } from '@/components/product/FullscreenImageViewer';
@@ -131,7 +130,7 @@ export default function ProductScreen() {
     listing?.seller_id ?? null,
     listing?.id ?? null,
   );
-  const similarItemsQ = useSimilarListingsQuery(productIdParam ?? null);
+  const similarItemsQ = useSimilarListingsQuery(productIdParam ?? null, 6, listing?.category ?? null);
   const likersQ = useListingLikersQuery(productIdParam ?? null);
   const likers = likersQ.data ?? [];
   const sellerItems = (sellerItemsQ.data ?? EMPTY_LISTINGS).filter((s) => !s.is_sold);
@@ -217,12 +216,12 @@ export default function ProductScreen() {
   const toggleFollowM = useToggleFollow(user?.id ?? null, sellerId);
   const followBusy = toggleFollowM.isPending;
 
-  // ── Owner Actions (Mark as Sold & Delete) ────────────────────────────────
-  const setSoldM = useSetListingSold(listing?.id ?? null);
+  // ── Owner Actions (Delete) ───────────────────────────────────────────────
+  // Sold state is driven by orders now (checkout marks sold, refund/cancel relists),
+  // so there is no manual Mark sold / Available toggle.
   const deleteM = useDeleteListing(listing?.seller_id ?? null);
-  const soldBusy = setSoldM.isPending;
   const deleteBusy = deleteM.isPending;
-  const ownerBusy = soldBusy || deleteBusy;
+  const ownerBusy = deleteBusy;
 
   // ── Analytics & Recommender Logging ──────────────────────────────────────
   useEffect(() => {
@@ -290,30 +289,6 @@ export default function ProductScreen() {
   });
 
   // ── Action Callbacks ─────────────────────────────────────────────────────
-  const handleToggleSold = useCallback(async () => {
-    if (!listing || ownerBusy) return;
-    const next = !listing.is_sold;
-    const successMessage = next ? 'Marked as sold' : 'Marked as available';
-
-    let committed: boolean | null = null;
-    try {
-      committed = await setSoldM.mutateAsync(next);
-    } catch {
-      committed = null;
-    }
-
-    if (committed === next) {
-      if (next && listing.id) {
-        cancelBundleOffersForSoldItem(listing.id).catch(() => {});
-      }
-    } else {
-      toast.show("Couldn't update the listing", {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
-    }
-  }, [listing, ownerBusy, setSoldM, toast]);
-
   const handleDelete = useCallback(async () => {
     if (!listing || ownerBusy) return;
     const ok = await confirm({
@@ -441,7 +416,6 @@ export default function ProductScreen() {
       if (saved) {
         engagement.setOfferVisible(false);
         toast.show('Offer sent', { variant: 'success', icon: 'check' });
-        capture('offer_made', { listing_id: listing.id, amount, is_bundle: isBundleActive });
         router.push(`/conversation/${conv.id}` as any);
       } else {
         Alert.alert('Could not send offer', 'Please try again.');
@@ -507,7 +481,7 @@ export default function ProductScreen() {
   if (notFound) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: insets.top }}>
-        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }}>
+        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }} accessibilityRole="button" accessibilityLabel="Go back">
           <Feather name="arrow-left" size={22} color={theme.ink} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
@@ -526,7 +500,7 @@ export default function ProductScreen() {
   if (listingQ.isError && !listing) {
     return (
       <View style={{ flex: 1, backgroundColor: theme.background, paddingTop: insets.top }}>
-        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }}>
+        <Pressable onPress={() => safeBack()} hitSlop={10} style={{ padding: 16 }} accessibilityRole="button" accessibilityLabel="Go back">
           <Feather name="arrow-left" size={22} color={theme.ink} />
         </Pressable>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 }}>
@@ -634,12 +608,9 @@ export default function ProductScreen() {
           seller={listing.seller}
           createdAt={listing.created_at}
           isOwnListing={isOwnListing}
-          isSold={listing.is_sold}
           ownerBusy={ownerBusy}
-          soldBusy={soldBusy}
           deleteBusy={deleteBusy}
           followed={followed}
-          onToggleSold={handleToggleSold}
           onDelete={handleDelete}
           onEdit={() => openSellSheet(listing)}
           onFollowPress={handleFollowPress}
@@ -759,6 +730,7 @@ export default function ProductScreen() {
         title={isBundleActive ? `Bundle (${bundleCount} items)` : listing?.title}
         imageUrl={listing?.images?.[0] ?? (listing as any)?.image_url ?? null}
         loading={offerLoading}
+        bundleExtraCount={bundle.selectedBundleIds.size}
         onClose={() => engagement.setOfferVisible(false)}
         onSubmit={submitOffer}
       />

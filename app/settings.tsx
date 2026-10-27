@@ -48,8 +48,6 @@ import {
   VerificationSheet,
   PhoneSheet,
   useSettingsManager,
-  TERMS_URL,
-  PRIVACY_URL,
   SUPPORT_EMAIL,
   ChatGPTRow,
   ChatGPTButton,
@@ -115,6 +113,13 @@ export default function SettingsScreen() {
                 disabled={!session}
               />
             )}
+
+            <ChatGPTSwitchRow
+              label="Share usage data"
+              desc="Help improve Grabsty with usage stats and screen recordings. Text, photos and addresses are always hidden."
+              value={mgr.shareUsage}
+              onValueChange={mgr.setShareUsage}
+            />
 
             <ChatGPTRow
               label="System notification settings"
@@ -484,7 +489,7 @@ export default function SettingsScreen() {
               <ChatGPTButton
                 label="View terms"
                 icon="external-link"
-                onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+                onPress={() => router.push('/legal/terms' as any)}
               />
             </ChatGPTRow>
 
@@ -495,7 +500,7 @@ export default function SettingsScreen() {
               <ChatGPTButton
                 label="View policy"
                 icon="external-link"
-                onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
+                onPress={() => router.push('/legal/privacy' as any)}
               />
             </ChatGPTRow>
 
@@ -1056,13 +1061,13 @@ export default function SettingsScreen() {
             icon="shield"
             label="Privacy policy"
             chevron
-            onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
+            onPress={() => router.push('/legal/privacy' as any)}
           />
           <ChatGPTItem
             icon="file-text"
             label="Terms of service"
             chevron
-            onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+            onPress={() => router.push('/legal/terms' as any)}
           />
           <ChatGPTItem
             icon="info"

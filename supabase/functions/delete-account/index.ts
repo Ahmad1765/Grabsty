@@ -33,6 +33,29 @@ function getCorsHeaders(req: Request): Record<string, string> | null {
   };
 }
 
+// Usage analytics are keyed by the user id, so deleting the account must
+// delete that PostHog person (and its events/recordings) too. Best effort and
+// skipped until POSTHOG_PERSONAL_API_KEY (scope person:write) and
+// POSTHOG_PROJECT_ID are set; the account deletion never waits on PostHog.
+async function deletePostHogPerson(distinctId: string): Promise<void> {
+  const key = Deno.env.get('POSTHOG_PERSONAL_API_KEY');
+  const project = Deno.env.get('POSTHOG_PROJECT_ID');
+  if (!key || !project) return;
+  const host = Deno.env.get('POSTHOG_APP_HOST') ?? 'https://us.posthog.com';
+  try {
+    const res = await fetch(`${host}/api/projects/${project}/persons/bulk_delete/`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ distinct_ids: [distinctId], delete_events: true, delete_recordings: true }),
+    });
+    if (!res.ok) {
+      console.error('[delete-account] posthog delete failed', res.status, (await res.text()).slice(0, 200));
+    }
+  } catch (e) {
+    console.error('[delete-account] posthog delete failed', e instanceof Error ? e.message : String(e));
+  }
+}
+
 Deno.serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
   if (corsHeaders === null) {
@@ -114,12 +137,15 @@ Deno.serve(async (req: Request) => {
     // Perform deletion
     const { error: delErr } = await admin.auth.admin.deleteUser(user.id);
     if (delErr) {
-      return json({ error: delErr.message }, 500);
+      console.error('[delete-account] deleteUser failed', delErr.message);
+      return json({ error: 'Could not delete the account. Please try again.' }, 500);
     }
 
+    await deletePostHogPerson(user.id);
     return json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
-    return json({ error: msg }, 500);
+    // Log the detail; the caller only learns that it failed.
+    console.error('[delete-account] exception', e instanceof Error ? e.message : String(e));
+    return json({ error: 'Could not delete the account. Please try again.' }, 500);
   }
 });
