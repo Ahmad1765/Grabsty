@@ -92,7 +92,7 @@
     "metro": "0.83.3",
     "metro-config": "0.83.3",
     "serve": "^14.2.4",
-    "tailwindcss": "3.4.17",
+    "tailwindcss": "4.3.3",
     "typescript": "^5.9.3",
     "vitest": "^4.1.9",
     "wawoff2": "^2.0.1",
