@@ -404,6 +404,7 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const touchInNestedScroller = useRef(false);
 
   // ── Entrance / Exit Motion ──
   const animProgress = useSharedValue(0);
@@ -765,11 +766,22 @@ export const HomeSearchView = memo(function HomeSearchView({
   const handleTouchStart = useCallback((e: any) => {
     touchStartX.current = e.nativeEvent?.pageX ?? e.nativeEvent?.clientX ?? 0;
     touchStartY.current = e.nativeEvent?.pageY ?? e.nativeEvent?.clientY ?? 0;
+    // A swipe that starts inside a nested horizontal scroller (e.g. the
+    // suggestion chip row) is scrolling that row, not switching tabs.
+    touchInNestedScroller.current = false;
+    const pager = (pagerRef.current as any)?.getScrollableNode?.();
+    for (let el = e.target as HTMLElement | null; el && el !== pager; el = el.parentElement) {
+      const ox = typeof window !== 'undefined' ? window.getComputedStyle(el).overflowX : '';
+      if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth) {
+        touchInNestedScroller.current = true;
+        break;
+      }
+    }
   }, []);
 
   const handleTouchEnd = useCallback(
     (e: any) => {
-      if (hasSubmitted) return;
+      if (hasSubmitted || touchInNestedScroller.current) return;
       const currentX = e.nativeEvent?.pageX ?? e.nativeEvent?.clientX ?? 0;
       const currentY = e.nativeEvent?.pageY ?? e.nativeEvent?.clientY ?? 0;
       const deltaX = currentX - touchStartX.current;
@@ -1660,6 +1672,9 @@ export const HomeSearchView = memo(function HomeSearchView({
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
+                    // Web: don't chain overscroll at the row's ends into the
+                    // Items/Members pager, which would snap it to Members.
+                    style={Platform.OS === 'web' ? ({ overscrollBehaviorX: 'contain' } as any) : undefined}
                     contentContainerStyle={{
                       paddingHorizontal: 16,
                       paddingTop: 2,

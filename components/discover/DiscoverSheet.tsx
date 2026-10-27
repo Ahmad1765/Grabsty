@@ -45,7 +45,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
-import { router, useGlobalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BRAND } from '@/lib/brand';
 import { buildTopicCovers } from '@/lib/discover';
@@ -54,7 +54,7 @@ import { colors, radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
-import { SearchLanding, type BrowseAction, type TopicAction } from './SearchLanding';
+import { SearchLanding, type TopicAction } from './SearchLanding';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 
@@ -272,12 +272,18 @@ function SheetShell({
         style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.28)' }, scrimStyle]}
       />
 
-      {/* The gap itself — tapping outside a sheet closes it. */}
+      {/* The gap itself — tapping outside a sheet closes it.
+          Web: RN-web's Modal focus trap focuses the first focusable child on
+          open, which was this strip — and global.css's :focus-visible ring
+          drew a purple line across the top of the sheet. The strip and the
+          grabber are pointer affordances (Escape / back close the sheet), so
+          both stay out of the tab order and never draw a ring. */}
       <Pressable
         onPress={onClose}
         accessibilityRole="button"
         accessibilityLabel="Dismiss search"
-        style={{ height: topGap }}
+        tabIndex={-1}
+        style={{ height: topGap, outlineStyle: 'none' } as any}
       />
 
       <Animated.View
@@ -307,12 +313,14 @@ function SheetShell({
               accessibilityRole="button"
               accessibilityLabel="Close search"
               hitSlop={{ top: 12, bottom: 12, left: 60, right: 60 }}
+              tabIndex={-1}
               style={{
                 width: skin.handleW,
                 height: skin.handleH,
                 borderRadius: 50,
                 backgroundColor: skin.handleColor,
-              }}
+                outlineStyle: 'none',
+              } as any}
             />
           </View>
         </GestureDetector>
@@ -345,17 +353,6 @@ function DiscoverSheetBody({
   // photos cross-fade in after. Usually a cache hit anyway — Discover's idle
   // grid uses this exact key — so the wait is invisible.
   const [settled, setSettled] = useState(false);
-  const params = useGlobalSearchParams();
-  const activeBrowseChipId = useMemo(() => {
-    if (params.sort === 'newest') return 'new';
-    if (params.sort === 'popular') return 'trending';
-    if (params.sort === 'price_asc') return 'cheapest';
-    if (params.tab === 'aesthetics') return 'aesthetics';
-    if (params.tab === 'brands') return 'brands';
-    if (params.tab === 'users') return 'sellers';
-    return null;
-  }, [params.sort, params.tab]);
-
   useEffect(() => {
     // Backstop timer alongside the interaction handle: if any animation handle
     // leaks, runAfterInteractions never fires and the Topics tiles would sit
@@ -371,14 +368,6 @@ function DiscoverSheetBody({
   const gridQ = useFeedListingsQuery({ tab: 'popular', limit: 60, enabled: settled });
   const covers = useMemo(() => buildTopicCovers(gridQ.data ?? []), [gridQ.data]);
 
-  const go = useCallback(
-    (path: string) => {
-      onClose();
-      router.push(withNonce(path) as any);
-    },
-    [onClose],
-  );
-
   const submit = useCallback(() => {
     const q = query.trim();
     if (!q) return;
@@ -386,23 +375,6 @@ function DiscoverSheetBody({
     onClose();
     router.push(withNonce(`/?searchOpen=1&searchQuery=${encodeURIComponent(q)}`) as any);
   }, [query, onClose]);
-
-  const onBrowse = useCallback(
-    (action: BrowseAction, chip?: { label: string; icon: keyof typeof Feather.glyphMap }) => {
-      if (action.kind === 'saved') {
-        go(`/?tab=saved&chipLabel=${encodeURIComponent('Saved')}&chipIcon=bookmark`);
-        return;
-      }
-      const label = chip?.label ?? (action.kind === 'sort' ? action.sort : action.tab);
-      const icon = chip?.icon ?? 'filter';
-      if (action.kind === 'tab') {
-        go(`/?tab=${action.tab}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`);
-        return;
-      }
-      go(`/?sort=${action.sort}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`);
-    },
-    [go],
-  );
 
   const onTopic = useCallback(
     (action: TopicAction) => {
@@ -534,14 +506,12 @@ function DiscoverSheetBody({
             covers={covers}
             listings={gridQ.data ?? []}
             userId={user?.id ?? null}
-            onBrowse={onBrowse}
             onTopic={onTopic}
             onSearch={handleSelectSuggestion}
             onSelectSeller={(seller) => {
               onClose();
               router.push(`/user/${seller}` as any);
             }}
-            activeChipId={activeBrowseChipId}
           />
         </ScrollView>
       )}

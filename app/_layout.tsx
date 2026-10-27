@@ -28,6 +28,7 @@ import { onOrderUpdated } from '@/lib/paymentService';
 import { LISTING_QUERY_PREFIXES } from '@/lib/queries/keys';
 import { AuthProvider } from '@/lib/auth';
 import { ToastProvider } from '@/lib/toast';
+import { installKeyboardFocusRing } from '@/lib/keyboardFocusRing';
 import { GuestGateProvider } from '@/components/GuestGate';
 import { SellSheetProvider } from '@/components/sell/SellSheet';
 import { DiscoverSheetProvider } from '@/components/discover/DiscoverSheet';
@@ -209,6 +210,8 @@ function RootLayoutNav() {
   useEffect(() => {
     return initOfflineSync();
   }, []);
+
+  useEffect(() => (Platform.OS === 'web' ? installKeyboardFocusRing() : undefined), []);
 
   useEffect(() => {
     // Gate first paint on the icon fonts. Note this is a best-effort gate, not
