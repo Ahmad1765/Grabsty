@@ -9,6 +9,7 @@
 //      provider's allowed redirect URLs.
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { capture } from '@/lib/analytics';
 
@@ -19,6 +20,20 @@ export type OAuthResult = { ok: true } | { ok: false; error?: string; cancelled?
 
 export async function signInWithGoogle(): Promise<OAuthResult> {
   try {
+    // Web: full-page redirect, finished by app/auth-callback.tsx. The popup flow
+    // stranded users on a 404 inside the popup — the code that posts the result
+    // back to the opener only loads with the login screen, and Google's
+    // cross-origin-opener policy can sever window.opener anyway.
+    if (Platform.OS === 'web') {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}/auth-callback` },
+      });
+      if (error) return { ok: false, error: error.message };
+      return { ok: false, cancelled: true }; // the page is navigating to Google
+    }
+
+
     const redirectTo = Linking.createURL('auth-callback');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -31,7 +46,7 @@ export async function signInWithGoogle(): Promise<OAuthResult> {
     if (res.type === 'cancel' || res.type === 'dismiss') return { ok: false, cancelled: true };
     if (res.type !== 'success' || !res.url) return { ok: false, error: 'Sign-in was not completed' };
 
-    // PKCE (the client's default flow): exchange the returned ?code for a session.
+    // PKCE (only if the client is switched to flowType 'pkce'): exchange ?code.
     const code = Linking.parse(res.url).queryParams?.code;
     if (typeof code === 'string' && code) {
       const { error: exErr } = await supabase.auth.exchangeCodeForSession(code);

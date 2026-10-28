@@ -10,6 +10,7 @@ import {
 } from 'react';
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { signOutDevice } from '@/lib/signOutDevice';
 import { clearQueryCache } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { identify, resetIdentity } from '@/lib/analytics';
@@ -173,12 +174,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setProfile(null);
     }
-    // scope: 'local' wipes the AsyncStorage/localStorage session without
-    // a network round-trip. Race with a short timeout as a final safety
-    // net so the caller's await never blocks the UI.
+    // scope: 'local' revokes only this device's session; signOutDevice drops
+    // the stored copy even when that request fails. Race with a short timeout
+    // as a final safety net so the caller's await never blocks the UI.
     try {
       await Promise.race([
-        supabase.auth.signOut({ scope: 'local' }),
+        signOutDevice(supabase),
         new Promise<void>((resolve) => setTimeout(resolve, 1500)),
       ]);
     } catch (e) {
