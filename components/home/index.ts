@@ -11,3 +11,5 @@ export {
   SAVED,
 } from './useHomeFeedFilters';
 
+export { DesktopSectionTitle, DesktopFooter } from './DesktopHomeSections';
+export { DesktopFilterRail, FILTER_RAIL_WIDTH } from './DesktopFilterRail';

@@ -2,14 +2,17 @@ import { Tabs } from 'expo-router';
 import { AnimatedTabBar } from '../../components/AnimatedTabBar';
 import { useSellSheet } from '@/components/sell/SellSheet';
 import { useDiscoverSheet } from '@/components/discover/DiscoverSheet';
+import { useIsDesktop } from '@/lib/responsive';
 
 export default function TabsLayout() {
   const { open: openSellSheet } = useSellSheet();
   const { open: openDiscoverSheet } = useDiscoverSheet();
+  // Desktop web navigates from DesktopTopNav (mounted in app/_layout.tsx).
+  const isDesktop = useIsDesktop();
 
   return (
     <Tabs
-      tabBar={(props) => <AnimatedTabBar {...props} />}
+      tabBar={(props) => (isDesktop ? null : <AnimatedTabBar {...props} />)}
       screenOptions={{
         headerShown: false,
         freezeOnBlur: true,

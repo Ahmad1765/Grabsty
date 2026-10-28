@@ -53,16 +53,16 @@ const CATEGORIES: { id: Category; label: string; icon: keyof typeof Feather.glyp
   { id: 'other', label: 'Other', icon: 'grid' },
 ];
 
-const SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
+export const FEED_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', 'One Size'];
 
-const CONDITIONS: { id: Condition; label: string }[] = [
+export const FEED_CONDITIONS: { id: Condition; label: string }[] = [
   { id: 'new_with_tags', label: 'New with tags' },
   { id: 'like_new', label: 'Like new' },
   { id: 'good', label: 'Good' },
   { id: 'fair', label: 'Fair' },
 ];
 
-const SORTS: { id: FeedSort; label: string; icon: keyof typeof Feather.glyphMap }[] = [
+export const FEED_SORTS: { id: FeedSort; label: string; icon: keyof typeof Feather.glyphMap }[] = [
   { id: 'relevance', label: 'Recommended', icon: 'star' },
   { id: 'newest', label: 'Newest', icon: 'clock' },
   { id: 'price_asc', label: 'Price: Low to High', icon: 'trending-up' },
@@ -70,12 +70,15 @@ const SORTS: { id: FeedSort; label: string; icon: keyof typeof Feather.glyphMap 
   { id: 'popular', label: 'Most Liked', icon: 'heart' },
 ];
 
-const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
+// Listing prices are whole rupees (Rs 2,000-5,000 is typical), so the bands
+// are too. These were Rs 25 / 50 / 100, left over from a USD build, and
+// "Under Rs 25" matched nothing.
+export const FEED_PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
   { label: 'All', min: null, max: null },
-  { label: `Under ${CURRENCY_SYMBOL}25`, min: null, max: 25 },
-  { label: `${CURRENCY_SYMBOL}25 - ${CURRENCY_SYMBOL}50`, min: 25, max: 50 },
-  { label: `${CURRENCY_SYMBOL}50 - ${CURRENCY_SYMBOL}100`, min: 50, max: 100 },
-  { label: `${CURRENCY_SYMBOL}100+`, min: 100, max: null },
+  { label: `Under ${CURRENCY_SYMBOL} 2,000`, min: null, max: 2000 },
+  { label: `${CURRENCY_SYMBOL} 2,000 - 5,000`, min: 2000, max: 5000 },
+  { label: `${CURRENCY_SYMBOL} 5,000 - 10,000`, min: 5000, max: 10000 },
+  { label: `${CURRENCY_SYMBOL} 10,000+`, min: 10000, max: null },
 ];
 
 export interface FeedFilterSheetProps {
@@ -239,7 +242,7 @@ export function FeedFilterSheet({
 
   // Summaries for list row right side
   const sortSummary = useMemo(() => {
-    const s = SORTS.find((item) => item.id === filters.sort);
+    const s = FEED_SORTS.find((item) => item.id === filters.sort);
     return s ? s.label : 'Recommended';
   }, [filters.sort]);
 
@@ -267,7 +270,7 @@ export function FeedFilterSheet({
   const conditionSummary = useMemo(() => {
     if (filters.conditions.length === 0) return 'Any';
     if (filters.conditions.length === 1) {
-      const c = CONDITIONS.find((item) => item.id === filters.conditions[0]);
+      const c = FEED_CONDITIONS.find((item) => item.id === filters.conditions[0]);
       return c ? c.label : '1 selected';
     }
     return `${filters.conditions.length} selected`;
@@ -371,7 +374,7 @@ export function FeedFilterSheet({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollRow}
               >
-                {SORTS.map((sortOption) => {
+                {FEED_SORTS.map((sortOption) => {
                   const active = filters.sort === sortOption.id;
                   return (
                     <Pressable
@@ -448,7 +451,7 @@ export function FeedFilterSheet({
           {expandedSections.size && (
             <View style={styles.drawerContent}>
               <View style={styles.wrapGrid}>
-                {SIZES.map((size) => {
+                {FEED_SIZES.map((size) => {
                   const active = filters.sizes.includes(size);
                   return (
                     <Pressable
@@ -523,7 +526,7 @@ export function FeedFilterSheet({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollRow}
               >
-                {PRICE_PRESETS.map((preset, index) => {
+                {FEED_PRICE_PRESETS.map((preset, index) => {
                   const isMatch =
                     filters.priceMin === preset.min &&
                     filters.priceMax === preset.max;
@@ -678,7 +681,7 @@ export function FeedFilterSheet({
           {expandedSections.condition && (
             <View style={styles.drawerContent}>
               <View style={styles.wrapGrid}>
-                {CONDITIONS.map((cond) => {
+                {FEED_CONDITIONS.map((cond) => {
                   const active = filters.conditions.includes(cond.id);
                   return (
                     <Pressable

@@ -14,7 +14,7 @@
 //    UI presentation is split between `HomeHeader`, `PriceDropRail`, and `GridRow`.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,7 +37,11 @@ import {
 import {
   useGridDimensions,
   useTabBarClearance,
+  useIsDesktop,
+  useDesktopGutter,
+  useContentWidth,
   GRID_DRAW_DISTANCE,
+  DESKTOP_FEED_MAX,
 } from '@/lib/responsive';
 import type { Listing } from '@/types';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
@@ -48,10 +52,16 @@ import {
   HomeHeader,
   HomeSearchView,
   useHomeFeedFilters,
+  DesktopSectionTitle,
+  DesktopFooter,
+  DesktopFilterRail,
+  FILTER_RAIL_WIDTH,
 } from '@/components/home';
+import { focusDesktopSearch } from '@/components/navigation/DesktopSearch';
 
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
+const RAIL_GAP = 28;
 const EMPTY_LISTINGS: Listing[] = [];
 const EMPTY_SAVED_SEARCHES: SavedSearch[] = [];
 
@@ -70,9 +80,11 @@ export default function HomeScreen() {
     searchOpen?: string;
     searchCategory?: string;
     searchQuery?: string;
+    searchTab?: string;
     category?: string;
     q?: string;
   }>();
+  const isDesktop = useIsDesktop();
 
   const navigation = useNavigation();
 
@@ -86,24 +98,43 @@ export default function HomeScreen() {
     const cat = params.searchCategory || (params.searchOpen === '1' ? params.category : undefined);
     const query = params.searchQuery || (params.searchOpen === '1' ? params.q : undefined);
 
+    // Desktop types in the header field (DesktopSearch), so a bare
+    // ?searchOpen=1 focuses that rather than opening a second field here, and
+    // each header search fully replaces the previous one's query + category.
+    if (isDesktop && params.searchOpen === '1' && !cat && !query) {
+      focusDesktopSearch();
+      router.setParams({ searchOpen: undefined });
+      return;
+    }
     if (params.searchOpen === '1' || cat || query) {
-      if (cat !== undefined) setInitialSearchCategory(cat);
-      if (query !== undefined) setInitialSearchQuery(query);
+      if (isDesktop) {
+        setInitialSearchCategory(cat ?? null);
+        setInitialSearchQuery(query ?? '');
+      } else {
+        if (cat !== undefined) setInitialSearchCategory(cat);
+        if (query !== undefined) setInitialSearchQuery(query);
+      }
       setSearchModeOpen(true);
     }
-  }, [params.searchOpen, params.searchCategory, params.searchQuery, params.category, params.q]);
+  }, [params.searchOpen, params.searchCategory, params.searchQuery, params.category, params.q, isDesktop]);
 
   const listRef = useRef<FlashListRef<Listing[]>>(null);
   const scrollToTop = useCallback(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);
 
+  // Desktop: a centred frame (DESKTOP_FEED_MAX) holding the filter rail and
+  // the feed beside it. The grid sizes from what is left after the rail.
+  const gutter = useDesktopGutter(DESKTOP_FEED_MAX);
+  const contentWidth = useContentWidth();
+  const railSpace = isDesktop ? FILTER_RAIL_WIDTH + RAIL_GAP : 0;
   const { columns, cardWidth } = useGridDimensions({
     min: 2,
     max: 4,
-    thresholds: [560, 900, 1200],
+    thresholds: isDesktop ? [560, 800] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? Math.min(contentWidth, DESKTOP_FEED_MAX) - railSpace : undefined,
   });
   const tabClear = useTabBarClearance();
 
@@ -199,7 +230,7 @@ export default function HomeScreen() {
   const rowKey = useCallback((row: Listing[]) => row[0]?.id ?? 'empty', []);
 
   // ── Composed Header Element ──────────────────────────────────────────────
-  const listHeader = (
+  const homeHeader = (
     <HomeHeader
       searchProps={{
         value: feedFilter.query,
@@ -236,6 +267,31 @@ export default function HomeScreen() {
       }}
     />
   );
+  // Desktop: a section heading over the feed and a footer under it.
+  const count = feedFilter.filteredListings.length;
+  const listHeader = isDesktop ? (
+    <>
+      <DesktopSectionTitle
+        title={feedFilter.showingSaved ? 'Saved' : feedFilter.showingTrending ? 'Trending now' : 'Picked for you'}
+        meta={gridLoading ? undefined : `${count} ${count === 1 ? 'item' : 'items'}`}
+      />
+      {homeHeader}
+    </>
+  ) : (
+    homeHeader
+  );
+
+  // Rail counts reflect the active tab (For you / Trending / Saved).
+  const railBase = feedFilter.showingSaved
+    ? savedListings
+    : feedFilter.showingTrending
+      ? trendingListings
+      : listings;
+  const categoryCounts = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const l of railBase) out[l.category] = (out[l.category] ?? 0) + 1;
+    return out;
+  }, [railBase]);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
@@ -247,6 +303,7 @@ export default function HomeScreen() {
         keyExtractor={rowKey}
         drawDistance={GRID_DRAW_DISTANCE}
         ListHeaderComponent={listHeader}
+        ListFooterComponent={isDesktop ? <DesktopFooter /> : null}
         ListEmptyComponent={
           <GridPlaceholder
             loading={gridLoading}
@@ -265,21 +322,40 @@ export default function HomeScreen() {
             tintColor={theme.purple}
           />
         }
-        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 12) + tabClear + 16 }}
+        contentContainerStyle={{
+          paddingBottom: Math.max(insets.bottom, 12) + tabClear + 16,
+          paddingLeft: gutter + railSpace,
+          paddingRight: gutter,
+        }}
       />
 
+      {isDesktop && (
+        <View style={{ position: 'absolute', top: 0, bottom: 0, left: gutter + HORIZONTAL_PAD, width: FILTER_RAIL_WIDTH }}>
+          <DesktopFilterRail
+            filters={feedFilter.filters}
+            onChange={feedFilter.setFilters}
+            categoryCounts={categoryCounts}
+            total={railBase.length}
+          />
+        </View>
+      )}
+
       {searchModeOpen && (
-        <View style={[StyleSheet.absoluteFillObject, { top: insets.top, zIndex: 100, elevation: 10 }]}>
+        <View style={[StyleSheet.absoluteFillObject, { top: insets.top, left: gutter, right: gutter, zIndex: 100, elevation: 10 }]}>
           <HomeSearchView
+            // Desktop: a new header search remounts results with fresh state.
+            key={isDesktop ? `${initialSearchCategory ?? ''}|${initialSearchQuery}|${params.searchTab ?? ''}` : undefined}
+            initialTab={params.searchTab === 'seller' ? 'seller' : 'listings'}
             onClose={() => {
               setSearchModeOpen(false);
               setInitialSearchCategory(null);
               setInitialSearchQuery('');
-              if (params.searchOpen || params.searchCategory || params.searchQuery || params.category || params.q) {
+              if (params.searchOpen || params.searchCategory || params.searchQuery || params.searchTab || params.category || params.q) {
                 router.setParams({
                   searchOpen: undefined,
                   searchCategory: undefined,
                   searchQuery: undefined,
+                  searchTab: undefined,
                   category: undefined,
                   q: undefined,
                 });

@@ -9,6 +9,7 @@
 
 import { memo, useRef, useMemo } from 'react';
 import { View, Pressable, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { useIsDesktop } from '@/lib/responsive';
 import { Text, TextInput } from '@/lib/rnText';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
@@ -465,9 +466,11 @@ export const HomeHeader = memo(function HomeHeader({
   searchProps,
   chipProps,
 }: HomeHeaderProps) {
+  // Desktop search and notifications live in DesktopTopNav.
+  const isDesktop = useIsDesktop();
   return (
     <>
-      <FeedSearch {...searchProps} />
+      {isDesktop ? <View style={{ height: 8 }} /> : <FeedSearch {...searchProps} />}
       <ChipRow {...chipProps} />
     </>
   );

@@ -2,7 +2,6 @@ import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import {
   View,
   ScrollView,
-  useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   StyleSheet,
@@ -14,7 +13,7 @@ import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
 import { getOptimizedImageUrl, thumbWidthFor, IMAGE_TRANSITION, prefetchImages } from '@/lib/images';
-import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
+import { useProductDimensions } from '@/components/product/shared';
 
 export interface ImageCarouselProps {
   images: string[];
@@ -24,6 +23,9 @@ export interface ImageCarouselProps {
   style?: ViewStyle;
   placeholderImage?: string;
   listingId?: string;
+  /** Desktop thumbnails drive the carousel through this pair. */
+  index?: number;
+  onIndexChange?: (index: number) => void;
 }
 
 /**
@@ -39,11 +41,14 @@ export function ImageCarousel({
   style,
   placeholderImage,
   listingId,
+  index: requestedIndex,
+  onIndexChange,
 }: ImageCarouselProps) {
   const { theme } = useTheme();
-  const { width: windowWidth } = useWindowDimensions();
+  // Phone: the window up to CONTENT_MAX_WIDTH. Desktop: the gallery column.
+  const { contentWidth, desktop } = useProductDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [carouselWidth, setCarouselWidth] = useState(Math.min(windowWidth, CONTENT_MAX_WIDTH));
+  const [carouselWidth, setCarouselWidth] = useState(contentWidth);
   const scrollRef = useRef<ScrollView>(null);
 
   const validImages = useMemo(() => (images || []).filter(Boolean), [images]);
@@ -61,8 +66,8 @@ export function ImageCarousel({
 
   const prevWidthRef = useRef(carouselWidth);
   useEffect(() => {
-    setCarouselWidth(Math.min(windowWidth, CONTENT_MAX_WIDTH));
-  }, [windowWidth]);
+    setCarouselWidth(contentWidth);
+  }, [contentWidth]);
 
   // Only realign when carouselWidth actually changes (e.g. device rotation), never during swipes
   useEffect(() => {
@@ -78,6 +83,58 @@ export function ImageCarousel({
 
   // Height based on aspect ratio
   const carouselHeight = aspectRatio === '1:1' ? carouselWidth : carouselWidth * 1.25;
+
+  // Smooth scroll to a slide. On web, snap is suspended for the scroll so the
+  // browser doesn't fight the animation.
+  const scrollToIndex = useCallback(
+    (target: number) => {
+      const node: any = scrollRef.current;
+      const scrollNode: HTMLElement | null =
+        typeof node?.getScrollableNode === 'function'
+          ? node.getScrollableNode()
+          : node instanceof HTMLElement
+          ? node
+          : null;
+      const targetX = target * carouselWidth;
+      if (scrollNode) {
+        scrollNode.style.scrollSnapType = 'none';
+        scrollNode.style.scrollBehavior = 'smooth';
+        try {
+          (scrollNode as any).scrollTo?.({ x: targetX, y: 0, animated: true });
+          (Element.prototype.scrollTo as any).call(scrollNode, { left: targetX, behavior: 'smooth' });
+        } catch {
+          scrollNode.scrollLeft = targetX;
+        }
+        setTimeout(() => {
+          if (scrollNode) {
+            scrollNode.style.scrollSnapType = 'x mandatory';
+          }
+        }, 350);
+      } else {
+        scrollRef.current?.scrollTo({ x: targetX, y: 0, animated: true });
+      }
+    },
+    [carouselWidth],
+  );
+
+  const goTo = useCallback(
+    (target: number) => {
+      const clamped = Math.max(0, Math.min(validImages.length - 1, target));
+      setActiveIndex(clamped);
+      scrollToIndex(clamped);
+    },
+    [validImages.length, scrollToIndex],
+  );
+
+  // Desktop thumbnails ask for a slide; the carousel reports where it is.
+  useEffect(() => {
+    if (requestedIndex != null && requestedIndex !== activeIndex) goTo(requestedIndex);
+    // Only a new request should move the carousel, not its own index updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedIndex]);
+  useEffect(() => {
+    onIndexChange?.(activeIndex);
+  }, [activeIndex, onIndexChange]);
 
   const touchStartPos = useRef({ x: 0, y: 0, time: 0 });
   const isSwiping = useRef(false);
@@ -128,31 +185,7 @@ export function ImageCarousel({
         }
 
         setActiveIndex(target);
-        const node: any = scrollRef.current;
-        const scrollNode: HTMLElement | null =
-          typeof node?.getScrollableNode === 'function'
-            ? node.getScrollableNode()
-            : node instanceof HTMLElement
-            ? node
-            : null;
-        const targetX = target * carouselWidth;
-        if (scrollNode) {
-          scrollNode.style.scrollSnapType = 'none';
-          scrollNode.style.scrollBehavior = 'smooth';
-          try {
-            (scrollNode as any).scrollTo?.({ x: targetX, y: 0, animated: true });
-            (Element.prototype.scrollTo as any).call(scrollNode, { left: targetX, behavior: 'smooth' });
-          } catch {
-            scrollNode.scrollLeft = targetX;
-          }
-          setTimeout(() => {
-            if (scrollNode) {
-              scrollNode.style.scrollSnapType = 'x mandatory';
-            }
-          }, 350);
-        } else {
-          scrollRef.current?.scrollTo({ x: targetX, y: 0, animated: true });
-        }
+        scrollToIndex(target);
         setTimeout(() => {
           isSwiping.current = false;
         }, 350);
@@ -160,7 +193,7 @@ export function ImageCarousel({
         isSwiping.current = false;
       }
     },
-    [activeIndex, carouselWidth, validImages.length],
+    [activeIndex, carouselWidth, validImages.length, scrollToIndex],
   );
 
   const handleScroll = useCallback(
@@ -240,6 +273,18 @@ export function ImageCarousel({
         ))}
       </ScrollView>
 
+      {/* Desktop: a mouse can't swipe, so give it previous / next. */}
+      {desktop && validImages.length > 1 && (
+        <>
+          {activeIndex > 0 && (
+            <ArrowButton side="left" onPress={() => goTo(activeIndex - 1)} />
+          )}
+          {activeIndex < validImages.length - 1 && (
+            <ArrowButton side="right" onPress={() => goTo(activeIndex + 1)} />
+          )}
+        </>
+      )}
+
       {/* Bar-style page indicators (bottom center) */}
       {validImages.length > 1 && (
         <View style={styles.indicatorWrapper} pointerEvents="none">
@@ -257,6 +302,23 @@ export function ImageCarousel({
         </View>
       )}
     </View>
+  );
+}
+
+function ArrowButton({ side, onPress }: { side: 'left' | 'right'; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={side === 'left' ? 'Previous photo' : 'Next photo'}
+      style={(state) => [
+        styles.arrow,
+        side === 'left' ? { left: 14 } : { right: 14 },
+        { opacity: (state as { hovered?: boolean }).hovered ? 1 : 0.88 },
+      ]}
+    >
+      <Feather name={side === 'left' ? 'chevron-left' : 'chevron-right'} size={20} color="#111111" />
+    </Pressable>
   );
 }
 
@@ -364,6 +426,20 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+  },
+  arrow: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    zIndex: 12,
   },
   indicatorWrapper: {
     position: 'absolute',

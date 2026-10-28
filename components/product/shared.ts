@@ -5,7 +5,7 @@
 import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { cardImageUrl } from '@/lib/images';
-import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
+import { CONTENT_MAX_WIDTH, isDesktopWidth } from '@/lib/responsive';
 import type { Listing } from '@/types';
 
 export const IS_IOS = Platform.OS === 'ios';
@@ -34,17 +34,54 @@ export function getProductDimensions(windowWidth: number) {
   };
 }
 
+// Desktop web: gallery on the left, a fixed-width details column on the
+// right, related items in a wide grid underneath. `contentWidth` is then the
+// gallery width (the carousel and skeleton size from it) and `cardWidth` is
+// sized for 4–5 columns across the whole frame.
+export const DESKTOP_DETAILS_WIDTH = 400;
+export const DESKTOP_COLUMN_GAP = 48;
+const DESKTOP_PAGE_PAD = 32;
+const DESKTOP_GALLERY_MAX = 680;
+
+// Space above and below the photo on desktop: header (108), breadcrumbs and
+// page padding (~92). The photo is sized so all of it fits on screen at once.
+const DESKTOP_CHROME_HEIGHT = 200;
+const DESKTOP_GALLERY_MIN = 420;
+
+export function getDesktopProductDimensions(areaWidth: number, areaHeight: number) {
+  const available = areaWidth - DESKTOP_PAGE_PAD * 2;
+  const fitsHeight = Math.floor((areaHeight - DESKTOP_CHROME_HEIGHT) / 1.25);
+  const contentWidth = Math.max(
+    DESKTOP_GALLERY_MIN,
+    Math.min(DESKTOP_GALLERY_MAX, fitsHeight, available - DESKTOP_DETAILS_WIDTH - DESKTOP_COLUMN_GAP),
+  );
+  const frameWidth = contentWidth + DESKTOP_COLUMN_GAP + DESKTOP_DETAILS_WIDTH;
+  const columns = frameWidth >= 1000 ? 5 : 4;
+  const cardWidth = Math.floor((frameWidth - CARD_OUTER_PAD * 2 - CARD_GAP * (columns - 1)) / columns);
+  return {
+    contentWidth,
+    imageHeight: Math.round(contentWidth * 1.25),
+    cardWidth,
+    cardImageHeight: Math.round(cardWidth * 1.25),
+    frameWidth,
+  };
+}
+
 /**
  * Hook returning dynamic dimensions for product screens and cards.
  * Automatically recalculates on screen rotation or window resize (tablet/web).
  */
 export function useProductDimensions() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const dims = getProductDimensions(windowWidth);
+  const desktop = isDesktopWidth(windowWidth);
+  const dims = desktop
+    ? getDesktopProductDimensions(windowWidth, windowHeight)
+    : { ...getProductDimensions(windowWidth), frameWidth: 0 };
 
   return {
     windowWidth,
     windowHeight,
+    desktop,
     ...dims,
   };
 }

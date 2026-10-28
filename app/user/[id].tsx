@@ -30,7 +30,13 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useTheme } from '@/context/ThemeContext';
 import { radii } from '@/lib/theme';
-import { useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
+import {
+  useGridDimensions,
+  useDesktopGutter,
+  useIsDesktop,
+  GRID_DRAW_DISTANCE,
+  DESKTOP_PROFILE_MAX,
+} from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
 import type { Listing } from '@/types';
 import { EmptyState } from '@/components/ui';
@@ -74,12 +80,15 @@ export default function UserProfileScreen() {
   );
   const isInputUuid = useMemo(() => UUID_RE.test(userId), [UUID_RE, userId]);
 
+  const isDesktop = useIsDesktop();
+  const gutter = useDesktopGutter(DESKTOP_PROFILE_MAX);
   const { columns, cardWidth: cardW } = useGridDimensions({
     min: 2,
     max: 4,
-    thresholds: [560, 900, 1200],
+    thresholds: isDesktop ? [560, 760, 960] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? DESKTOP_PROFILE_MAX : undefined,
   });
 
   const listRef = useRef<FlashListRef<Listing[]>>(null);
@@ -308,6 +317,7 @@ export default function UserProfileScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.purple} />}
         contentContainerStyle={{
           paddingBottom: Math.max(insets.bottom, 12) + 60,
+          paddingHorizontal: gutter,
         }}
         ListHeaderComponent={
           <>

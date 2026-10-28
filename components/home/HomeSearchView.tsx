@@ -48,7 +48,8 @@ import {
   countActiveSearchFilters,
 } from '@/lib/searchFilters';
 import { ListingCard } from '@/components/ListingCard';
-import { useGridDimensions } from '@/lib/responsive';
+import { useGridDimensions, useIsDesktop, DESKTOP_FEED_MAX } from '@/lib/responsive';
+import { categoryLabel } from '@/lib/categories';
 import { radii, type as typography } from '@/lib/theme';
 import type { Category, Listing } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
@@ -113,7 +114,10 @@ export const HomeSearchView = memo(function HomeSearchView({
 }: HomeSearchViewProps) {
   const toast = useToast();
   const { theme, isDark } = useTheme();
-  const { width: screenWidth } = useWindowDimensions();
+  // Desktop: the overlay is the centred feed frame, so its pager pages are too.
+  const { width: windowWidth } = useWindowDimensions();
+  const isDesktop = useIsDesktop();
+  const screenWidth = isDesktop ? Math.min(windowWidth, DESKTOP_FEED_MAX) : windowWidth;
   const inputRef = useRef<any>(null);
   const pagerRef = useRef<ScrollView>(null);
 
@@ -470,6 +474,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   }, [hasSubmitted, handleClose]));
 
   const rootAnimatedStyle = useAnimatedStyle(() => {
+    if (isDesktop) return { opacity: animProgress.value };
     const translateX = interpolate(
       animProgress.value,
       [0, 1],
@@ -493,10 +498,11 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   const { cardWidth } = useGridDimensions({
     min: 2,
-    max: 4,
-    thresholds: [560, 900, 1200],
+    max: isDesktop ? 5 : 4,
+    thresholds: isDesktop ? [560, 900, 1150] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? DESKTOP_FEED_MAX : undefined,
   });
 
   const hasQuery = query.trim().length > 0;
@@ -1231,7 +1237,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           backgroundColor: theme.background,
           shadowColor: '#000',
           shadowOffset: { width: -3, height: 0 },
-          shadowOpacity: isDark ? 0.35 : 0.1,
+          shadowOpacity: isDesktop ? 0 : isDark ? 0.35 : 0.1,
           shadowRadius: 10,
           elevation: 12,
         },
@@ -1241,181 +1247,259 @@ export const HomeSearchView = memo(function HomeSearchView({
       onTouchEnd={Platform.OS === 'web' ? handleTouchEnd : undefined}
     >
       {/* ── Top Header Row ── */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 8,
-          gap: 10,
-          borderBottomWidth: 0,
-        }}
-      >
-        {/* Back Button '<' (Always visible on left, matching Reference Image 2 & 3) */}
-        <Pressable
-          onPress={() => {
-            haptic();
-            if (hasSubmitted) {
-              setHasSubmitted(false);
-              inputRef.current?.focus?.();
-              setQuery('');
-              setSearchFilters(EMPTY_SEARCH_FILTERS);
-              ++searchRequestIdRef.current;
-              setSellerResults([]);
-              setListingResults([]);
-              setLoading(false);
-            } else {
-              handleClose();
-            }
+      {isDesktop ? (
+        // Desktop: the query is edited in the header field (DesktopSearch),
+        // so this is a results heading, not a second search bar.
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            gap: 10,
+            paddingHorizontal: 16,
+            paddingTop: 22,
+            paddingBottom: 6,
           }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={hasSubmitted ? "Back to search" : "Close search"}
-          style={({ pressed }) => ({
-            width: 32,
-            height: 44,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.6 : 1,
-            transform: [{ scale: pressed ? 0.94 : 1 }],
-          })}
         >
-          <Feather
-            name="chevron-left"
-            size={28}
-            color={theme.text}
-          />
-        </Pressable>
-
-        {/* Search Input Box (Pill shape matching Reference Image 2) */}
-        <Animated.View
-          style={[
-            {
-              flex: 1,
-              flexDirection: 'row',
-              alignItems: 'center',
-              backgroundColor: isDark ? theme.surface : '#F4F4F5',
-              borderRadius: radii.pill,
-              paddingLeft: 14,
-              paddingRight: query.length > 0 ? 8 : 14,
-              height: 44,
-              borderWidth: 0,
-            },
-            searchBarAnimatedStyle,
-          ]}
-        >
-          <Feather
-            name="search"
-            size={18}
-            color={isDark ? "#9CA3AF" : "#6B7280"}
-            style={{ flexShrink: 0 }}
-          />
-          <TextInput
-            ref={inputRef}
-            value={query}
-            onChangeText={(text) => {
-              setQuery(text);
-              setHasSubmitted(false);
-            }}
-            onFocus={() => {
-              if (query.trim().length > 0 && hasSubmitted) {
-                setHasSubmitted(false);
-              }
-            }}
-            onSubmitEditing={handleSubmitSearch}
-            placeholder={searchPlaceholder}
-            accessibilityLabel={searchPlaceholder}
-            placeholderTextColor={isDark ? "#9CA3AF" : "#8E8E93"}
-            autoFocus={Platform.OS === 'web'}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={
-              {
-                flex: 1,
-                minWidth: 0,
-                flexShrink: 1,
-                marginLeft: 8,
-                marginRight: query.length > 0 ? 4 : 0,
-                fontFamily: typography.family.sans,
-                fontSize: 16,
-                letterSpacing: -0.15,
-                color: theme.text,
-                padding: 0,
-                outlineStyle: 'none',
-                outlineWidth: 0,
-              } as any
-            }
-          />
-
-          {/* Clear icon inside search pill (only rendered when query text exists) */}
-          {query.length > 0 && (
-            <Pressable
-              onPress={() => {
-                haptic();
-                setQuery('');
-                if (!searchFilters.category) {
-                  setHasSubmitted(false);
-                  ++searchRequestIdRef.current;
-                  setSellerResults([]);
-                  setListingResults([]);
-                  setLoading(false);
-                }
-                inputRef.current?.focus?.();
-              }}
-              hitSlop={8}
-              accessibilityLabel="Clear search"
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
               style={{
-                width: 24,
-                height: 24,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 2,
+                fontSize: 11,
+                fontWeight: '700',
+                letterSpacing: 1.4,
+                textTransform: 'uppercase',
+                color: theme.textMuted,
+                marginBottom: 4,
               }}
             >
-              <Feather name="x" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+              {query.trim() ? (activeTab === 'seller' ? 'Members matching' : 'Results for') : 'Category'}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{ fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.6, color: theme.ink }}
+            >
+              {query.trim()
+                ? `“${query.trim()}”`
+                : categoryLabel(searchFilters.category) || 'Search'}
+            </Text>
+          </View>
+          {hasSubmitted && (
+            <Pressable
+              onPress={handleToggleSaveSearch}
+              accessibilityRole="button"
+              accessibilityLabel={isSaved ? 'Saved search active' : 'Save this search'}
+              style={(state) => ({
+                height: 36,
+                paddingHorizontal: 14,
+                borderRadius: 18,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                borderWidth: 1,
+                borderColor: isSaved || (state as { hovered?: boolean }).hovered ? theme.ink : theme.border,
+                backgroundColor: theme.panel,
+              })}
+            >
+              <Ionicons name={isSaved ? 'star' : 'star-outline'} size={15} color={isSaved ? theme.purple : theme.ink} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: theme.ink }}>
+                {isSaved ? 'Search saved' : 'Save search'}
+              </Text>
             </Pressable>
           )}
-        </Animated.View>
-
-        {/* After Searching: Save Your Search Star / Favourite Button (Reference Image 3) */}
-        {hasSubmitted && (
           <Pressable
-            onPress={handleToggleSaveSearch}
-            hitSlop={8}
+            onPress={handleClose}
             accessibilityRole="button"
-            accessibilityLabel={isSaved ? "Saved search active" : "Save this search"}
-            style={({ pressed }) => ({
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: isSaved
-                ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
-                : (isDark ? theme.panel : theme.surface),
-              borderWidth: 1,
-              borderColor: isSaved
-                ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
-                : theme.border,
+            accessibilityLabel="Close search"
+            style={(state) => ({
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: pressed ? 0.75 : 1,
-              transform: [{ scale: pressed ? 0.92 : 1 }],
-              shadowColor: isSaved ? theme.purple : '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isSaved ? 0.16 : 0.05,
-              shadowRadius: 6,
-              elevation: isSaved ? 3 : 1,
+              borderWidth: 1,
+              borderColor: (state as { hovered?: boolean }).hovered ? theme.ink : theme.border,
+              backgroundColor: theme.panel,
             })}
           >
-            <Ionicons
-              name={isSaved ? "star" : "star-outline"}
-              size={21}
-              color={isSaved ? theme.purple : theme.mute}
+            <Feather name="x" size={17} color={theme.ink} />
+          </Pressable>
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingTop: 8,
+            paddingBottom: 8,
+            gap: 10,
+            borderBottomWidth: 0,
+          }}
+        >
+          {/* Back Button '<' (Always visible on left, matching Reference Image 2 & 3) */}
+          <Pressable
+            onPress={() => {
+              haptic();
+              if (hasSubmitted) {
+                setHasSubmitted(false);
+                inputRef.current?.focus?.();
+                setQuery('');
+                setSearchFilters(EMPTY_SEARCH_FILTERS);
+                ++searchRequestIdRef.current;
+                setSellerResults([]);
+                setListingResults([]);
+                setLoading(false);
+              } else {
+                handleClose();
+              }
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={hasSubmitted ? "Back to search" : "Close search"}
+            style={({ pressed }) => ({
+              width: 32,
+              height: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.6 : 1,
+              transform: [{ scale: pressed ? 0.94 : 1 }],
+            })}
+          >
+            <Feather
+              name="chevron-left"
+              size={28}
+              color={theme.text}
             />
           </Pressable>
-        )}
-      </View>
+
+          {/* Search Input Box (Pill shape matching Reference Image 2) */}
+          <Animated.View
+            style={[
+              {
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: isDark ? theme.surface : '#F4F4F5',
+                borderRadius: radii.pill,
+                paddingLeft: 14,
+                paddingRight: query.length > 0 ? 8 : 14,
+                height: 44,
+                borderWidth: 0,
+              },
+              searchBarAnimatedStyle,
+            ]}
+          >
+            <Feather
+              name="search"
+              size={18}
+              color={isDark ? "#9CA3AF" : "#6B7280"}
+              style={{ flexShrink: 0 }}
+            />
+            <TextInput
+              ref={inputRef}
+              value={query}
+              onChangeText={(text) => {
+                setQuery(text);
+                setHasSubmitted(false);
+              }}
+              onFocus={() => {
+                if (query.trim().length > 0 && hasSubmitted) {
+                  setHasSubmitted(false);
+                }
+              }}
+              onSubmitEditing={handleSubmitSearch}
+              placeholder={searchPlaceholder}
+              accessibilityLabel={searchPlaceholder}
+              placeholderTextColor={isDark ? "#9CA3AF" : "#8E8E93"}
+              autoFocus={Platform.OS === 'web'}
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={
+                {
+                  flex: 1,
+                  minWidth: 0,
+                  flexShrink: 1,
+                  marginLeft: 8,
+                  marginRight: query.length > 0 ? 4 : 0,
+                  fontFamily: typography.family.sans,
+                  fontSize: 16,
+                  letterSpacing: -0.15,
+                  color: theme.text,
+                  padding: 0,
+                  outlineStyle: 'none',
+                  outlineWidth: 0,
+                } as any
+              }
+            />
+
+            {/* Clear icon inside search pill (only rendered when query text exists) */}
+            {query.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  haptic();
+                  setQuery('');
+                  if (!searchFilters.category) {
+                    setHasSubmitted(false);
+                    ++searchRequestIdRef.current;
+                    setSellerResults([]);
+                    setListingResults([]);
+                    setLoading(false);
+                  }
+                  inputRef.current?.focus?.();
+                }}
+                hitSlop={8}
+                accessibilityLabel="Clear search"
+                style={{
+                  width: 24,
+                  height: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 2,
+                }}
+              >
+                <Feather name="x" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+              </Pressable>
+            )}
+          </Animated.View>
+
+          {/* After Searching: Save Your Search Star / Favourite Button (Reference Image 3) */}
+          {hasSubmitted && (
+            <Pressable
+              onPress={handleToggleSaveSearch}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={isSaved ? "Saved search active" : "Save this search"}
+              style={({ pressed }) => ({
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: isSaved
+                  ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
+                  : (isDark ? theme.panel : theme.surface),
+                borderWidth: 1,
+                borderColor: isSaved
+                  ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
+                  : theme.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: pressed ? 0.75 : 1,
+                transform: [{ scale: pressed ? 0.92 : 1 }],
+                shadowColor: isSaved ? theme.purple : '#000000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: isSaved ? 0.16 : 0.05,
+                shadowRadius: 6,
+                elevation: isSaved ? 3 : 1,
+              })}
+            >
+              <Ionicons
+                name={isSaved ? "star" : "star-outline"}
+                size={21}
+                color={isSaved ? theme.purple : theme.mute}
+              />
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {/* Tab Switcher ('Items' & 'Members') */}
       {!hasSubmitted && (

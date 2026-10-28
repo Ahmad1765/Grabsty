@@ -37,23 +37,27 @@ function render(element: React.ReactElement<any>) {
 }
 
 describe('GrabstyLogo Component', () => {
-  it('renders mark variant with default size 28 and purple background', () => {
+  it('renders the favicon tile: brand purple, ink outline layers, white face', () => {
     const rendered = render(React.createElement(GrabstyLogo));
     const svg = rendered.props.children;
     expect(svg.props.width).toBe(28);
     expect(svg.props.height).toBe(28);
-    expect(svg.props.viewBox).toBe('0 0 24 24');
     expect(svg.props.accessibilityLabel).toBe('Grabsty');
 
-    const [rect, path] = svg.props.children;
-    expect(rect.props.fill).toBe('#6C47FF');
-    expect(path.props.fill).toBe('#FFFFFF');
+    const [rect, inkLayers, face] = svg.props.children;
+    expect(rect.props.fill).toBe('#5A59EE');
+    expect(inkLayers).toHaveLength(2);
+    inkLayers.forEach((p: any) => expect(p.props.fill).toBe('#231F20'));
+    expect(face.props.fill).toBe('#FFFFFF');
   });
 
-  it('renders full variant with mark and wordmark text', () => {
+  it('renders full variant as the mark plus the official logotype in ink', () => {
     const rendered = render(React.createElement(GrabstyLogo, { variant: 'full', size: 32 }));
-    const [mark, text] = rendered.props.children;
+    const [mark, logotype] = rendered.props.children;
     expect(mark.props.width).toBe(32);
-    expect(text.props.children).toBe('Grabsty');
+    expect(logotype.props.height).toBe(32);
+    const glyphs = logotype.props.children;
+    expect(glyphs).toHaveLength(7); // G r a b s t y
+    glyphs.forEach((p: any) => expect(p.props.fill).toBe('#0F0F0F'));
   });
 });

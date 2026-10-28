@@ -9,15 +9,17 @@
 // its explicit props (`images`, `liked`, `saved`, `heartCount`) change.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { memo } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { View, Pressable } from 'react-native';
+import { Image } from 'expo-image';
+import { getOptimizedImageUrl } from '@/lib/images';
 
 import Animated from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ImageCarousel } from '@/components/product/ImageCarousel';
 import { PopIcon, type PopIconHandle } from '@/components/product/PopIcon';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
-import { BRAND_PURPLE, HAIRLINE } from '@/components/product/shared';
+import { BRAND_PURPLE, HAIRLINE, useProductDimensions } from '@/components/product/shared';
 import { SoldBadge } from '@/components/ui/SoldBadge';
 
 
@@ -53,8 +55,20 @@ export const ProductHeroSection = memo(function ProductHeroSection({
   listingId,
 }: ProductHeroSectionProps) {
   const { theme } = useTheme();
+  const { desktop } = useProductDimensions();
+  // Desktop thumbnail strip <-> carousel. `shown` follows the carousel,
+  // `requested` is a thumbnail click.
+  const [shown, setShown] = useState(0);
+  const [requested, setRequested] = useState<number | undefined>(undefined);
+  const photos = images.filter(Boolean);
+  const onIndexChange = useCallback((i: number) => {
+    setShown(i);
+    // Once the carousel moves elsewhere, the same thumbnail can be asked for again.
+    setRequested((r) => (r === i ? r : undefined));
+  }, []);
   return (
-    <View style={{ position: 'relative' }}>
+    <View>
+    <View style={{ position: 'relative', borderRadius: desktop ? 16 : 0, overflow: desktop ? 'hidden' : 'visible' }}>
       {/* Parallax / Stretch layer wraps only the carousel */}
       <Animated.View style={heroParallaxStyle}>
         <ImageCarousel
@@ -63,6 +77,8 @@ export const ProductHeroSection = memo(function ProductHeroSection({
           onImagePress={onImagePress}
           placeholderImage={placeholderImage}
           listingId={listingId}
+          index={requested}
+          onIndexChange={onIndexChange}
         />
       </Animated.View>
 
@@ -162,6 +178,36 @@ export const ProductHeroSection = memo(function ProductHeroSection({
           />
         </Pressable>
       </View>
+    </View>
+
+      {desktop && photos.length > 1 && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+          {photos.map((uri, i) => (
+            <Pressable
+              key={`${uri}-${i}`}
+              onPress={() => setRequested(i)}
+              accessibilityRole="button"
+              accessibilityLabel={`Show photo ${i + 1} of ${photos.length}`}
+              accessibilityState={{ selected: i === shown }}
+              style={(state) => ({
+                width: 64,
+                height: 80,
+                borderRadius: 8,
+                overflow: 'hidden',
+                borderWidth: 2,
+                borderColor: i === shown ? theme.ink : 'transparent',
+                opacity: i === shown || (state as { hovered?: boolean }).hovered ? 1 : 0.72,
+              })}
+            >
+              <Image
+                source={{ uri: getOptimizedImageUrl(uri, { width: 160 }) }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+              />
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 });

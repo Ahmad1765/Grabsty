@@ -51,7 +51,7 @@ import { BRAND } from '@/lib/brand';
 import { buildTopicCovers } from '@/lib/discover';
 import { useFeedListingsQuery } from '@/lib/queries';
 import { radii, type } from '@/lib/theme';
-import { HIT_SLOP_8 } from '@/lib/responsive';
+import { HIT_SLOP_8, isDesktopWidth, useIsDesktop } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type TopicAction } from './SearchLanding';
@@ -96,6 +96,7 @@ export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
   }, []);
   const close = useCallback(() => setVisible(false), []);
   const api = useMemo(() => ({ open }), [open]);
+  const isDesktop = useIsDesktop();
 
   // Keep the viewport and document pinned to top (0, 0) when the soft keyboard
   // opens on mobile web, preventing Safari from scrolling the search bar offscreen.
@@ -128,7 +129,8 @@ export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
       {children}
       <Modal
         visible={visible}
-        animationType="slide"
+        // Desktop shows the sheet as a centred dialog (see SheetShell).
+        animationType={isDesktop ? 'fade' : 'slide'}
         transparent
         onRequestClose={close}
         statusBarTranslucent
@@ -201,7 +203,8 @@ function SheetShell({
 }) {
   const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { height: winHeight } = useWindowDimensions();
+  const { height: winHeight, width: winWidth } = useWindowDimensions();
+  const desktop = isDesktopWidth(winWidth);
   const translateY = useSharedValue(0);
   // Scrim fades in rather than arriving with the slide — the Modal animates
   // this whole view up, so a fully-opaque scrim would read as a dark band
@@ -282,18 +285,33 @@ function SheetShell({
         accessibilityRole="button"
         accessibilityLabel="Dismiss search"
         tabIndex={-1}
-        style={{ height: topGap, outlineStyle: 'none' } as any}
+        style={
+          (desktop
+            ? [StyleSheet.absoluteFill, { outlineStyle: 'none' }]
+            : { height: topGap, outlineStyle: 'none' }) as any
+        }
       />
 
       <Animated.View
         style={[
-          {
-            flex: 1,
-            backgroundColor: colors.background,
-            borderTopLeftRadius: skin.radius,
-            borderTopRightRadius: skin.radius,
-            overflow: 'hidden',
-          },
+          desktop
+            ? {
+                // Desktop: a centred dialog over the page, not a phone sheet.
+                width: 680,
+                maxWidth: '92%',
+                height: Math.min(winHeight * 0.82, 760),
+                margin: 'auto',
+                backgroundColor: colors.background,
+                borderRadius: skin.radius,
+                overflow: 'hidden',
+              }
+            : {
+                flex: 1,
+                backgroundColor: colors.background,
+                borderTopLeftRadius: skin.radius,
+                borderTopRightRadius: skin.radius,
+                overflow: 'hidden',
+              },
           sheetStyle,
         ]}
       >

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeContainer } from '@/components/ui/SafeContainer';
+import { GrabstyLogo } from '@/components/ui/GrabstyLogo';
+import { isDesktopWidth } from '@/lib/responsive';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Linking from 'expo-linking';
 import Feather from '@expo/vector-icons/Feather';
@@ -72,6 +74,7 @@ function LoginScreen() {
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
   const { width, height } = useWindowDimensions();
+  const isDesktop = isDesktopWidth(width);
   const [step, setStep] = useState<Step>(() =>
     params.step === 'form' || params.mode === 'signin' || params.mode === 'signup' ? 'form' : 'welcome'
   );
@@ -279,7 +282,12 @@ function LoginScreen() {
       edges={['top', 'bottom']}
       backgroundColor={colors.paper}
       style={{ flex: 1 }}
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingBottom: 24,
+        // Desktop: the phone layout as a centred card-width column.
+        ...(isDesktop && { width: '100%', maxWidth: 480, alignSelf: 'center', justifyContent: 'center' }),
+      }}
       scrollViewProps={{ bounces: false }}
     >
           {/* Top bar */}
@@ -312,28 +320,7 @@ function LoginScreen() {
                 <Feather name="arrow-left" size={18} color={colors.ink} />
               </Pressable>
             ) : (
-              <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-                <Text
-                  style={{
-                    fontSize: 22,
-                    fontWeight: '900',
-                    color: colors.ink,
-                    letterSpacing: -0.6,
-                  }}
-                >
-                  {BRAND}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 22,
-                    color: colors.primary,
-                    marginLeft: 2,
-                    fontWeight: '900',
-                  }}
-                >
-                  .
-                </Text>
-              </View>
+              <GrabstyLogo variant="full" size={26} />
             )}
             {router.canDismiss() && step === 'welcome' && (
               <Pressable

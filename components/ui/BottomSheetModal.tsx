@@ -28,6 +28,7 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { Text } from '@/lib/rnText';
 import { colors, radii, type } from '@/lib/theme';
+import { isDesktopWidth } from '@/lib/responsive';
 import { useTheme } from '@/context/ThemeContext';
 
 export interface BottomSheetModalProps {
@@ -91,9 +92,12 @@ export function BottomSheetModal({
   const insets = useSafeAreaInsets();
   // Live window height: a module-level Dimensions read goes stale on
   // foldables, split-screen and web resize, mis-sizing the sheet.
-  const { height: SCREEN_HEIGHT } = useWindowDimensions();
+  const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = useWindowDimensions();
   const { theme } = useTheme();
-  const calculatedHeight = fixedHeight ?? (autoHeight ? undefined : SCREEN_HEIGHT * Math.min(Math.max(snapHeightRatio, 0.3), 0.95));
+  // Desktop web: a centred dialog instead of a bottom sheet, capped in height.
+  const desktop = isDesktopWidth(SCREEN_WIDTH);
+  const sheetHeight = fixedHeight ?? (autoHeight ? undefined : SCREEN_HEIGHT * Math.min(Math.max(snapHeightRatio, 0.3), 0.95));
+  const calculatedHeight = desktop && sheetHeight ? Math.min(sheetHeight, 720) : sheetHeight;
   const fallbackDismissHeight = calculatedHeight ?? 400;
 
   const translateY = useSharedValue(Platform.OS === 'web' ? 0 : SCREEN_HEIGHT);
@@ -177,7 +181,7 @@ export function BottomSheetModal({
       statusBarTranslucent
       onRequestClose={onClose}
     >
-      <GestureHandlerRootView style={styles.root}>
+      <GestureHandlerRootView style={[styles.root, desktop && { justifyContent: 'center' }]}>
         {/* Backdrop Scrim (Z: 100) */}
         <Animated.View style={[styles.backdrop, backdropAnimatedStyle]}>
           <Pressable
@@ -200,6 +204,7 @@ export function BottomSheetModal({
               paddingBottom: Math.max(insets.bottom, 16),
             },
             calculatedHeight ? { height: calculatedHeight } : { maxHeight: SCREEN_HEIGHT * 0.88 },
+            desktop && { maxWidth: 520, borderRadius: radii['3xl'], borderWidth: StyleSheet.hairlineWidth, paddingBottom: 16 },
             sheetAnimatedStyle,
             style,
           ]}
@@ -207,9 +212,13 @@ export function BottomSheetModal({
           {/* Ergonomic Drag Indicator Pill & Header with Pan Gesture */}
           <GestureDetector gesture={panGesture}>
             <View>
-              <View style={styles.dragHandleContainer}>
-                <View style={[styles.dragHandle, { backgroundColor: theme.hairline }]} />
-              </View>
+              {desktop ? (
+                <View style={{ height: 8 }} />
+              ) : (
+                <View style={styles.dragHandleContainer}>
+                  <View style={[styles.dragHandle, { backgroundColor: theme.hairline }]} />
+                </View>
+              )}
 
               {/* Custom Header or Default Header with Title & Dismiss Button */}
               {customHeader ? (

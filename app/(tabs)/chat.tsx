@@ -6,7 +6,6 @@ import {
   RefreshControl,
   Animated,
   Platform,
-  useWindowDimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   LayoutChangeEvent,
@@ -43,7 +42,13 @@ import { useTheme } from '@/context/ThemeContext';
 import { EmptyState, BellIcon } from '@/components/ui';
 import { InboxRow, InboxSkeleton, OrdersInboxPage } from '@/components/chat';
 import { withBold } from '@/components/chat/MessageRow';
-import { HIT_SLOP_8, useTabBarClearance } from '@/lib/responsive';
+import {
+  HIT_SLOP_8,
+  useTabBarClearance,
+  useContentWidth,
+  useIsDesktop,
+  DESKTOP_READING_MAX,
+} from '@/lib/responsive';
 import { PressableScale } from '@/components/PressableScale';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 
@@ -781,7 +786,11 @@ function PushNotificationBanner({ onDismiss }: { onDismiss: () => void }) {
 export default function InboxScreen() {
   const { theme } = useTheme();
   const { user, loading: authLoading } = useAuth();
-  const { width: pageWidth } = useWindowDimensions();
+  // Desktop: Activity is a centred reading column, and the pager pages are
+  // exactly that wide.
+  const isDesktop = useIsDesktop();
+  const contentWidth = useContentWidth();
+  const pageWidth = isDesktop ? Math.min(contentWidth, DESKTOP_READING_MAX) : contentWidth;
   const tabBarClearance = useTabBarClearance();
 
   const params = useLocalSearchParams<{
@@ -988,7 +997,21 @@ export default function InboxScreen() {
   });
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView
+      edges={['top']}
+      style={{
+        flex: 1,
+        backgroundColor: theme.background,
+        ...(isDesktop && {
+          width: pageWidth + 2, // + the two 1px borders, so pages stay pageWidth
+          maxWidth: '100%',
+          alignSelf: 'center',
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderColor: theme.border,
+        }),
+      }}
+    >
       {/* Header */}
       <View
         style={{

@@ -32,6 +32,38 @@ export function useIsTablet(): boolean {
   return width >= bp.lg;
 }
 
+// ── Desktop web ─────────────────────────────────────────────────────────────
+// From bp.xl up, the web build swaps the bottom tab bar for a top header
+// (components/navigation/DesktopTopNav) and centres content in capped frames.
+// Native is never "desktop": a landscape iPad keeps the phone chrome it was
+// tested with.
+export function isDesktopWidth(width: number): boolean {
+  return Platform.OS === 'web' && width >= bp.xl;
+}
+
+export function useIsDesktop(): boolean {
+  return isDesktopWidth(useWindowDimensions().width);
+}
+
+// Width of the area screens render into. Grids size from this.
+export function useContentWidth(): number {
+  return useWindowDimensions().width;
+}
+
+// Side padding that centres a `max`-wide frame in the content area on
+// desktop. 0 on phones and whenever the content area is narrower than `max`.
+export function useDesktopGutter(max: number): number {
+  const width = useContentWidth();
+  return useIsDesktop() ? Math.max(0, (width - max) / 2) : 0;
+}
+
+// Max widths for centred desktop columns. Feeds get a wide frame; reading
+// and form-style screens (activity, chat, notifications) a narrow one.
+export const DESKTOP_FEED_MAX = 1320;
+export const DESKTOP_READING_MAX = 760;
+// Shop grids (own profile, other users' profiles).
+export const DESKTOP_PROFILE_MAX = 1080;
+
 export function useIsCompact(): boolean {
   const { width, height } = useWindowDimensions();
   return width < bp.sm || height < 700;
@@ -47,7 +79,13 @@ export function useResponsiveColumns(opts: {
   // Width breakpoint thresholds that bump the column count up by 1
   thresholds?: number[];
 } = {}): number {
-  const { width } = useWindowDimensions();
+  return columnsFor(useContentWidth(), opts);
+}
+
+function columnsFor(
+  width: number,
+  opts: { min?: number; max?: number; thresholds?: number[] },
+): number {
   const min = opts.min ?? 2;
   const max = opts.max ?? 5;
   const thresholds = opts.thresholds ?? [bp.md, bp.lg, bp.xl, 1440];
@@ -84,9 +122,13 @@ export function useGridDimensions(opts: {
   thresholds?: number[];
   horizontalPadding?: number;
   gap?: number;
+  // Desktop: the grid sits in a centred frame this wide at most. Columns and
+  // card widths are computed against the frame, not the full content area.
+  maxWidth?: number;
 } = {}): { columns: number; cardWidth: number; viewportWidth: number } {
-  const { width } = useWindowDimensions();
-  const columns = useResponsiveColumns(opts);
+  const contentWidth = useContentWidth();
+  const width = opts.maxWidth ? Math.min(contentWidth, opts.maxWidth) : contentWidth;
+  const columns = columnsFor(width, opts);
   const w = cardWidth({
     rowWidth: width,
     columns,
@@ -128,6 +170,8 @@ export const CONTENT_MAX_WIDTH = 720;
 export const TAB_BAR_HEIGHT = 62;
 export function useTabBarClearance(extra = 12): number {
   const insets = useSafeAreaInsets();
+  // Desktop has no bottom bar to clear — the top header takes its place.
+  if (useIsDesktop()) return extra;
   // The bar sits flush at the bottom with internal paddingBottom = insets.bottom.
   // Content clearance = bar content height + insets + extra breathing room.
   return TAB_BAR_HEIGHT + insets.bottom + extra;

@@ -20,7 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Pressable, Alert, Share, type LayoutChangeEvent } from 'react-native';
+import { View, Pressable, Alert, Share, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '@/lib/nav';
@@ -65,8 +65,11 @@ import {
   useProductDimensions,
   FALLBACK_SELLER,
   EMPTY_LISTINGS,
+  DESKTOP_COLUMN_GAP,
+  DESKTOP_DETAILS_WIDTH,
 } from '@/components/product/shared';
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
+import { categoryLabel, subcategoryLabel } from '@/lib/categories';
 import { useTheme } from '@/context/ThemeContext';
 import { BRAND, APP_URL } from '@/lib/brand';
 import { reportListing, REPORT_REASONS } from '@/lib/reports';
@@ -91,6 +94,23 @@ import {
 // Read-side normalization for useListingQuery.
 const withFallbackSeller = (row: Listing | null): Listing | null =>
   row ? { ...row, seller: row.seller ?? (FALLBACK_SELLER as Listing['seller']) } : null;
+
+// Desktop renders ProductActionBar inside the details column instead of as a
+// fixed bottom dock: strip only the dock container (position, edge padding,
+// top border, shadow). The Offer / Buy buttons keep their Rule 2.9 geometry.
+const DESKTOP_INLINE_BAR = {
+  position: 'relative',
+  left: undefined,
+  right: undefined,
+  bottom: undefined,
+  zIndex: 0,
+  paddingHorizontal: 0,
+  paddingTop: 0,
+  paddingBottom: 0,
+  borderTopWidth: 0,
+  backgroundColor: 'transparent',
+  boxShadow: 'none',
+} as ViewStyle;
 
 export default function ProductScreen() {
   const { theme, isDark } = useTheme();
@@ -252,7 +272,12 @@ export default function ProductScreen() {
     }, [sellerId, isOwnListing, refetchFollow]),
   );
 
-  const { imageHeight: heroHeight } = useProductDimensions();
+  const {
+    imageHeight: heroHeight,
+    contentWidth: heroWidth,
+    desktop,
+    frameWidth,
+  } = useProductDimensions();
   const heroHeightSv = useSharedValue(heroHeight);
   useEffect(() => {
     heroHeightSv.value = heroHeight;
@@ -549,169 +574,216 @@ export default function ProductScreen() {
   const images = listing.images ?? [];
   const heroPlaceholder = placeholderImage || cardImageUrl(listing, 0) || undefined;
 
+  // 2. Hero Image Carousel & Action Discs
+  const hero = (
+    <ProductHeroSection
+      images={images}
+      placeholderImage={heroPlaceholder}
+      listingId={productIdParam}
+      isSold={listing.is_sold}
+      liked={engagement.liked}
+      saved={engagement.saved}
+      heartCount={engagement.heartCount}
+      heroParallaxStyle={heroParallaxStyle}
+      heartAnimRef={heartAnimRef}
+      saveAnimRef={saveAnimRef}
+      onImagePress={(i) => {
+        tap('selection');
+        engagement.setFullscreenIndex(i);
+      }}
+      onHeartPress={engagement.handleHeartPress}
+      onOpenSaveList={engagement.handleOpenSaveList}
+    />
+  );
+
+  // 3. Product Overview (Title, Metadata, Price & Buyer Protection)
+  const overview = (
+    <ProductOverviewHeader
+      listing={listing}
+      bpFee={bpFee}
+      onOpenBpSheet={() => engagement.setBpVisible(true)}
+      likers={likers}
+      onOpenLikersSheet={() => setLikersVisible(true)}
+    />
+  );
+
+  // 4. Seller Profile Card
+  const sellerCard = (
+    <ProductSellerProfileCard
+      seller={listing.seller}
+      createdAt={listing.created_at}
+      isOwnListing={isOwnListing}
+      ownerBusy={ownerBusy}
+      deleteBusy={deleteBusy}
+      followed={followed}
+      onDelete={handleDelete}
+      onEdit={() => openSellSheet(listing)}
+      onFollowPress={handleFollowPress}
+      onMessagePress={() => openChat('message')}
+      onMoreOptionsPress={() => {
+        tap('selection');
+        engagement.setSellerOptionsVisible(true);
+      }}
+    />
+  );
+
+  // 5. Product Editorial Details Table (Description, Details Box, Safety)
+  const details = (
+    <ProductDetailsTable
+      listing={listing}
+      descExpanded={descExpanded}
+      onToggleDescExpanded={() => {
+        tap('selection');
+        setDescExpanded((v) => !v);
+      }}
+      onShare={shareListing}
+      onReport={handleReport}
+    />
+  );
+
+  // 6. Multi-Item Bundle Section & Related Grid
+  const related = (
+    <ProductRelatedSection
+      listing={listing}
+      relatedTab={bundle.relatedTab}
+      sellerItems={sellerItems}
+      similarItems={similarItems}
+      selectedBundleIds={bundle.selectedBundleIds}
+      bundlesEnabled={sellerBundlesEnabled}
+      onTabChange={bundle.setRelatedTab}
+      onToggleBundleItem={bundle.handleToggleBundleItem}
+      onSelectAllBundle={bundle.handleSelectAllBundle}
+      onClearAllBundle={bundle.handleClearAllBundle}
+      onBuyBundle={bundle.handleBuyBundle}
+      onSendBundleOffer={bundle.handleSendBundleOffer}
+      onLayout={handleRelatedSectionLayout}
+    />
+  );
+
+  const actionBar = (
+    <ProductActionBar
+      style={desktop ? DESKTOP_INLINE_BAR : undefined}
+      price={itemPrice}
+      buyTotal={activeBuyTotal}
+      bottomInset={insets.bottom}
+      isOwner={isOwnListing}
+      isSold={listing.is_sold || Boolean(buyerOrder && buyerOrder.status !== 'awaiting_payment')}
+      hasPurchased={Boolean(buyerOrder && buyerOrder.status !== 'awaiting_payment')}
+      isAwaitingPayment={false}
+      awaitingAmount={undefined}
+      isBundle={isBundleActive}
+      bundleCount={bundleCount}
+      onCompleteCheckoutPress={() => {
+        tap('medium');
+        const amount = buyerOrder?.amount_cents ? Math.round(buyerOrder.amount_cents / 100) : undefined;
+        router.push({
+          pathname: `/payment/${listing.id}`,
+          params: amount ? { offer: String(amount) } : undefined,
+        } as any);
+      }}
+      onViewOrderPress={() => {
+        tap('selection');
+        router.push(`/invoice/${buyerOrder?.id || listing.id}` as any);
+      }}
+      onChatPress={() => openChat('message')}
+      onOfferPress={() => {
+        if (!canOffer()) return;
+        engagement.setOfferVisible(true);
+      }}
+      onBuyPress={() => {
+        tap('medium');
+        if (isOwnListing) {
+          openSellSheet(listing);
+          return;
+        }
+        if (!user) {
+          guestGate.prompt({
+            title: isBundleActive ? 'Sign in to bundle' : 'Almost yours',
+            message: isBundleActive
+              ? 'Create a free account to buy bundled items with a discount.'
+              : 'Create a free account to check out securely with buyer protection included.',
+            icon: isBundleActive ? 'package' : 'shopping-bag',
+            cta: 'Create account & continue',
+          });
+          return;
+        }
+        if (!listing?.id) return;
+
+        if (isBundleActive) {
+          bundle.handleBuyBundle(
+            bundlePricing?.total ?? itemPrice,
+            Array.from(bundle.selectedBundleIds),
+          );
+          return;
+        }
+
+        router.push({
+          pathname: `/payment/${listing.id}`,
+        } as any);
+      }}
+    />
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       <StatusBar style={isDark ? 'light' : 'dark'} animated />
 
       {/* 1. Floating Top Navigation Bar (Z: 30) */}
-      <ProductHeaderNav
-        showStickyHeader={showStickyHeader}
-        title={listing.title}
-        onBack={() => safeBack()}
-      />
+      {/* Desktop has DesktopTopNav and browser back instead. */}
+      {!desktop && (
+        <ProductHeaderNav
+          showStickyHeader={showStickyHeader}
+          title={listing.title}
+          onBack={() => safeBack()}
+        />
+      )}
 
       <Animated.ScrollView
         ref={mainScrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: Math.max(insets.bottom, 16) + 120,
-          width: '100%',
-          maxWidth: CONTENT_MAX_WIDTH,
-          alignSelf: 'center',
-        }}
+        contentContainerStyle={
+          desktop
+            ? { paddingTop: 28, paddingBottom: 64, width: frameWidth, alignSelf: 'center' }
+            : {
+                paddingBottom: Math.max(insets.bottom, 16) + 120,
+                width: '100%',
+                maxWidth: CONTENT_MAX_WIDTH,
+                alignSelf: 'center',
+              }
+        }
         onScroll={scrollHandler}
         scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="never"
         automaticallyAdjustContentInsets={false}
       >
-        {/* 2. Hero Image Carousel & Action Discs */}
-        <ProductHeroSection
-          images={images}
-          placeholderImage={heroPlaceholder}
-          listingId={productIdParam}
-          isSold={listing.is_sold}
-          liked={engagement.liked}
-          saved={engagement.saved}
-          heartCount={engagement.heartCount}
-          heroParallaxStyle={heroParallaxStyle}
-          heartAnimRef={heartAnimRef}
-          saveAnimRef={saveAnimRef}
-          onImagePress={(i) => {
-            tap('selection');
-            engagement.setFullscreenIndex(i);
-          }}
-          onHeartPress={engagement.handleHeartPress}
-          onOpenSaveList={engagement.handleOpenSaveList}
-        />
-
-        {/* 3. Product Overview (Title, Metadata, Price & Buyer Protection) */}
-        <ProductOverviewHeader
-          listing={listing}
-          bpFee={bpFee}
-          onOpenBpSheet={() => engagement.setBpVisible(true)}
-          likers={likers}
-          onOpenLikersSheet={() => setLikersVisible(true)}
-        />
-
-        {/* 4. Seller Profile Card */}
-        <ProductSellerProfileCard
-          seller={listing.seller}
-          createdAt={listing.created_at}
-          isOwnListing={isOwnListing}
-          ownerBusy={ownerBusy}
-          deleteBusy={deleteBusy}
-          followed={followed}
-          onDelete={handleDelete}
-          onEdit={() => openSellSheet(listing)}
-          onFollowPress={handleFollowPress}
-          onMessagePress={() => openChat('message')}
-          onMoreOptionsPress={() => {
-            tap('selection');
-            engagement.setSellerOptionsVisible(true);
-          }}
-        />
-
-        {/* 5. Product Editorial Details Table (Description, Details Box, Safety) */}
-        <ProductDetailsTable
-          listing={listing}
-          descExpanded={descExpanded}
-          onToggleDescExpanded={() => {
-            tap('selection');
-            setDescExpanded((v) => !v);
-          }}
-          onShare={shareListing}
-          onReport={handleReport}
-        />
-
-        {/* 6. Multi-Item Bundle Section & Related Grid */}
-        <ProductRelatedSection
-          listing={listing}
-          relatedTab={bundle.relatedTab}
-          sellerItems={sellerItems}
-          similarItems={similarItems}
-          selectedBundleIds={bundle.selectedBundleIds}
-          bundlesEnabled={sellerBundlesEnabled}
-          onTabChange={bundle.setRelatedTab}
-          onToggleBundleItem={bundle.handleToggleBundleItem}
-          onSelectAllBundle={bundle.handleSelectAllBundle}
-          onClearAllBundle={bundle.handleClearAllBundle}
-          onBuyBundle={bundle.handleBuyBundle}
-          onSendBundleOffer={bundle.handleSendBundleOffer}
-          onLayout={handleRelatedSectionLayout}
-        />
+        {desktop ? (
+          <>
+            {/* Desktop: gallery | details column, related grid full width below. */}
+            <Breadcrumbs category={listing.category} subcategory={listing.subcategory} />
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: DESKTOP_COLUMN_GAP }}>
+              <View style={{ width: heroWidth }}>{hero}</View>
+              <View style={{ width: DESKTOP_DETAILS_WIDTH }}>
+                {overview}
+                <View style={{ paddingHorizontal: 16, marginTop: 4, marginBottom: 8 }}>{actionBar}</View>
+                {sellerCard}
+                {details}
+              </View>
+            </View>
+            {related}
+          </>
+        ) : (
+          <>
+            {hero}
+            {overview}
+            {sellerCard}
+            {details}
+            {related}
+          </>
+        )}
       </Animated.ScrollView>
 
-      {/* 7. Fixed Bottom Thumb Zone Action Bar (Z: 50) */}
-      <ProductActionBar
-        price={itemPrice}
-        buyTotal={activeBuyTotal}
-        bottomInset={insets.bottom}
-        isOwner={isOwnListing}
-        isSold={listing.is_sold || Boolean(buyerOrder && buyerOrder.status !== 'awaiting_payment')}
-        hasPurchased={Boolean(buyerOrder && buyerOrder.status !== 'awaiting_payment')}
-        isAwaitingPayment={false}
-        awaitingAmount={undefined}
-        isBundle={isBundleActive}
-        bundleCount={bundleCount}
-        onCompleteCheckoutPress={() => {
-          tap('medium');
-          const amount = buyerOrder?.amount_cents ? Math.round(buyerOrder.amount_cents / 100) : undefined;
-          router.push({
-            pathname: `/payment/${listing.id}`,
-            params: amount ? { offer: String(amount) } : undefined,
-          } as any);
-        }}
-        onViewOrderPress={() => {
-          tap('selection');
-          router.push(`/invoice/${buyerOrder?.id || listing.id}` as any);
-        }}
-        onChatPress={() => openChat('message')}
-        onOfferPress={() => {
-          if (!canOffer()) return;
-          engagement.setOfferVisible(true);
-        }}
-        onBuyPress={() => {
-          tap('medium');
-          if (isOwnListing) {
-            openSellSheet(listing);
-            return;
-          }
-          if (!user) {
-            guestGate.prompt({
-              title: isBundleActive ? 'Sign in to bundle' : 'Almost yours',
-              message: isBundleActive
-                ? 'Create a free account to buy bundled items with a discount.'
-                : 'Create a free account to check out securely with buyer protection included.',
-              icon: isBundleActive ? 'package' : 'shopping-bag',
-              cta: 'Create account & continue',
-            });
-            return;
-          }
-          if (!listing?.id) return;
-
-          if (isBundleActive) {
-            bundle.handleBuyBundle(
-              bundlePricing?.total ?? itemPrice,
-              Array.from(bundle.selectedBundleIds),
-            );
-            return;
-          }
-
-          router.push({
-            pathname: `/payment/${listing.id}`,
-          } as any);
-        }}
-      />
+      {/* 7. Fixed Bottom Thumb Zone Action Bar (Z: 50) — inline in the details column on desktop */}
+      {!desktop && actionBar}
 
       {/* 8. Modal & Sheet Overlays */}
       {user?.id ? (
@@ -762,6 +834,43 @@ export default function ProductScreen() {
         listingId={listing.id}
         onClose={() => setLikersVisible(false)}
       />
+    </View>
+  );
+}
+
+// Desktop: where this item sits in the catalogue, and a way back up it. Takes
+// the place of the phone's floating back button.
+function Breadcrumbs({ category, subcategory }: { category?: string | null; subcategory?: string | null }) {
+  const { theme } = useTheme();
+  const crumbs: { label: string; href?: string }[] = [{ label: 'Home', href: '/' }];
+  if (category) {
+    crumbs.push({ label: categoryLabel(category), href: `/?searchOpen=1&searchCategory=${category}` });
+    if (subcategory) crumbs.push({ label: subcategoryLabel(category, subcategory) });
+  }
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+      {crumbs.map((c, i) => (
+        <View key={c.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {i > 0 && <Feather name="chevron-right" size={13} color={theme.mute} />}
+          {c.href && i < crumbs.length - 1 ? (
+            <Pressable accessibilityRole="link" onPress={() => router.navigate(c.href as any)}>
+              {(state) => (
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: theme.textMuted,
+                    textDecorationLine: (state as { hovered?: boolean }).hovered ? 'underline' : 'none',
+                  }}
+                >
+                  {c.label}
+                </Text>
+              )}
+            </Pressable>
+          ) : (
+            <Text style={{ fontSize: 13, color: theme.ink, fontWeight: '600' }}>{c.label}</Text>
+          )}
+        </View>
+      ))}
     </View>
   );
 }
