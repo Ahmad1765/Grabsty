@@ -28,6 +28,7 @@ import { attachResponseListener, configureNotifications } from '@/lib/notificati
 import { onOrderUpdated } from '@/lib/paymentService';
 import { LISTING_QUERY_PREFIXES } from '@/lib/queries/keys';
 import { AuthProvider } from '@/lib/auth';
+import { GoogleOneTap } from '@/lib/googleOneTap';
 import { ToastProvider } from '@/lib/toast';
 import { installKeyboardFocusRing } from '@/lib/keyboardFocusRing';
 import { GuestGateProvider } from '@/components/GuestGate';
@@ -313,6 +314,7 @@ function RootLayoutNav() {
       <ErrorBoundary>
       <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <AuthProvider>
+        <GoogleOneTap />
         <ToastProvider>
         <GuestGateProvider>
         <SellSheetProvider>
