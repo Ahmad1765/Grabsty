@@ -2,6 +2,7 @@
 //   1. CATEGORY GRID     — Image bento tiles, 2 rows × 3, same categories as Home:
 //                          • Row 1: Clothing, Shoes, Bags
 //                          • Row 2: Accessories, Beauty, Solid Ink "Explore all" card
+//                          • Row 3: New drops, Trending, Best deals (Home feed sorts)
 //   2. RECOMMENDED USERS — Sellers ranked by the buyer's taste (get_recommendations), 2×2 photo collage (own uploads only,
 //                          grey placeholder for empty slots), profile avatar,
 //                          and real Supabase-backed + Follow action.
@@ -66,18 +67,27 @@ const BROWSE_CATEGORIES: { id: CategoryId; label: string; sub: string; fallback?
   { id: 'beauty', label: 'Beauty', sub: 'Makeup & care' },
 ];
 
+// Row 3: feed sorts — open Home with the matching sort + chip.
+const BROWSE_SORTS = [
+  { sort: 'newest', label: 'New drops', sub: 'Just listed', chip: 'New drops', icon: 'clock' },
+  { sort: 'popular', label: 'Trending', sub: 'Most popular', chip: 'Trending', icon: 'trending-up' },
+  { sort: 'price_asc', label: 'Best deals', sub: 'Lowest price', chip: 'Deals', icon: 'tag' },
+] as const;
+
 // ── Main SearchLanding Component ────────────────────────────────────────────
 export function SearchLanding({
   covers,
   listings = [],
   userId,
   onTopic,
+  onSort,
   onSelectSeller,
 }: {
   covers?: Partial<Record<string, string>>;
   listings?: Listing[];
   userId?: string | null;
   onTopic: (action: TopicAction) => void;
+  onSort: (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onSearch?: (query: string) => void;
   onSelectSeller?: (sellerIdOrUsername: string) => void;
 }) {
@@ -100,6 +110,17 @@ export function SearchLanding({
     }
     return byCat;
   }, [covers, listings]);
+
+  // Row 3 covers: newest, most-liked and cheapest live listings.
+  const sortCovers = useMemo(() => {
+    const img = (l?: Listing) => l?.thumbnails?.[0] || l?.images?.[0];
+    const cheapest = listings.reduce<Listing | undefined>((m, l) => (!m || l.price < m.price ? l : m), undefined);
+    return {
+      newest: img(listings[0]),
+      popular: img(listings.find((l) => (l.likes ?? 0) > 0) ?? listings[1]),
+      price_asc: img(cheapest),
+    };
+  }, [listings]);
 
   // Query real platform profiles from Supabase to guarantee 100% real sellers and functional follow mutations
   const { data: realProfiles = [] } = useQuery({
@@ -290,6 +311,19 @@ export function SearchLanding({
               <Feather name="arrow-right" size={24} color="#FFFFFF" />
             </View>
           </Pressable>
+        </View>
+        <View style={{ flexDirection: 'row', gap: GAP }}>
+          {BROWSE_SORTS.map((s) => (
+            <BentoTile
+              key={s.sort}
+              label={s.label}
+              sub={s.sub}
+              image={sortCovers[s.sort]}
+              cardBg={cardBg}
+              isDark={isDark}
+              onPress={() => onSort(s.sort, s.chip, s.icon)}
+            />
+          ))}
         </View>
       </View>
 

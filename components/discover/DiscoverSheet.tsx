@@ -55,6 +55,7 @@ import { HIT_SLOP_8, isDesktopWidth, useIsDesktop } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type TopicAction } from './SearchLanding';
+import type { SortKey } from '@/lib/listings';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 
@@ -402,6 +403,14 @@ function DiscoverSheetBody({
     [onClose],
   );
 
+  const onSort = useCallback(
+    (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => {
+      onClose();
+      router.push(withNonce(`/?sort=${sort}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
+    },
+    [onClose],
+  );
+
   const suggestions = useMemo(
     () => getSearchSuggestions(query, { limit: 10 }),
     [query],
@@ -524,6 +533,7 @@ function DiscoverSheetBody({
             listings={gridQ.data ?? []}
             userId={user?.id ?? null}
             onTopic={onTopic}
+            onSort={onSort}
             onSearch={handleSelectSuggestion}
             onSelectSeller={(seller) => {
               onClose();
