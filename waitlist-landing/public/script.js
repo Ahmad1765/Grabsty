@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const COLORS = ['#6C47FF', '#F59E0B', '#EC4899', '#10B981', '#FFFFFF', '#0F0F0F', '#60A5FA'];
+    const COLORS = ['#5A59EE', '#CEFF1B', '#FF4110', '#FBD2FF', '#FFFFFF', '#0F0F0F'];
     const particles = [];
     const PARTICLE_COUNT = 140;
 

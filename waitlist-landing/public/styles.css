@@ -93,10 +93,10 @@ html { overflow-x: clip; }
   --ink-surface: #171717;
   --ink-elevated: #1F1F1F;
   --paper: #FFFFFF;
-  --signal: #6C47FF;
-  --signal-hover: #7E5CFF;
-  --signal-subtle: rgba(108, 71, 255, 0.12);
-  --signal-glow: rgba(108, 71, 255, 0.35);
+  --signal: #5A59EE;
+  --signal-hover: #7271F2;
+  --signal-subtle: rgba(90, 89, 238, 0.12);
+  --signal-glow: rgba(90, 89, 238, 0.35);
   
   /* Semantic Approved Exceptions */
   --shield-bg: #F2F3FE;
@@ -146,7 +146,7 @@ body {
   background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    radial-gradient(circle at 50% 50%, rgba(108, 71, 255, 0.045) 1px, transparent 1px);
+    radial-gradient(circle at 50% 50%, rgba(90, 89, 238, 0.045) 1px, transparent 1px);
   background-size: 32px 32px, 32px 32px, 16px 16px;
   background-position: 0 0, 0 0, 8px 8px;
   color: var(--paper);
@@ -263,7 +263,7 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
   z-index: 1;
   opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='none'%3E%3Cpath d='M60 0L75 45L120 60L75 75L60 120L45 75L0 60L45 45Z' stroke='%23FFFFFF' stroke-width='1'/%3E%3Crect x='30' y='30' width='60' height='60' stroke='%236C47FF' stroke-width='0.8' transform='rotate(45 60 60)'/%3E%3Ccircle cx='60' cy='60' r='20' stroke='%23FFFFFF' stroke-width='0.8' stroke-dasharray='3 3'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='none'%3E%3Cpath d='M60 0L75 45L120 60L75 75L60 120L45 75L0 60L45 45Z' stroke='%23FFFFFF' stroke-width='1'/%3E%3Crect x='30' y='30' width='60' height='60' stroke='%235A59EE' stroke-width='0.8' transform='rotate(45 60 60)'/%3E%3Ccircle cx='60' cy='60' r='20' stroke='%23FFFFFF' stroke-width='0.8' stroke-dasharray='3 3'/%3E%3C/svg%3E");
   background-size: 120px 120px;
 }
 
@@ -272,7 +272,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 600px;
   height: 600px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(108, 71, 255, 0.14) 0%, rgba(108, 71, 255, 0.03) 45%, transparent 70%);
+  background: radial-gradient(circle, rgba(90, 89, 238, 0.14) 0%, rgba(90, 89, 238, 0.03) 45%, transparent 70%);
   pointer-events: none;
   z-index: 1;
   transform: translate(-50%, -50%);
@@ -297,7 +297,7 @@ h1, h2, h3, h4, h5, h6 {
 .memphis-shape {
   position: absolute;
   will-change: transform;
-  filter: drop-shadow(0 0 18px rgba(108, 71, 255, 0.18));
+  filter: drop-shadow(0 0 18px rgba(90, 89, 238, 0.18));
 }
 
 @media (max-width: 1180px) {
@@ -461,6 +461,32 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-1px);
 }
 
+/* Phones: icon-only SFX toggle so the header stays on one line */
+@media (max-width: 479px) {
+  .sfx-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .header-meta {
+    gap: 0.75rem;
+  }
+}
+
+.header-action-btn {
+  white-space: nowrap;
+}
+
+.success-sticker-badge img {
+  width: 135px;
+  height: auto;
+  margin: 0 auto 0.75rem;
+  transform: rotate(-5deg);
+}
+
 .header-sfx-btn.muted {
   opacity: 0.6;
   border-color: var(--paper-20);
@@ -619,6 +645,41 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.85rem 1.5rem;
   box-shadow: -5px 5px 0 var(--signal);
   text-align: center;
+  position: relative;
+}
+
+/* Brand stickers: slapped on corners, never in the reading or form path */
+.brand-sticker {
+  display: block;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(3px 4px 0 rgba(0, 0, 0, 0.45));
+}
+
+.hero-subtitle-box .brand-sticker {
+  position: absolute;
+  z-index: 2;
+}
+
+.sticker-thrifter {
+  display: none;
+  width: clamp(84px, 11vw, 132px);
+  top: 0;
+  left: 0;
+}
+
+.sticker-steal {
+  width: clamp(92px, 12vw, 144px);
+  right: 0;
+  bottom: 0;
+  transform: translate(18%, 72%) rotate(7deg);
+}
+
+@media (min-width: 768px) {
+  /* Phones have no gutter beside the box, so this one only shows from tablet up */
+  .sticker-thrifter { display: block; transform: translate(-58%, -70%) rotate(-9deg); }
+  .sticker-steal { transform: translate(42%, 56%) rotate(7deg); }
 }
 
 .subtitle-text {
@@ -719,8 +780,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .loc-status-pill {
-  font-family: var(--font-kelsi-fill);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
   font-weight: 800;
   color: var(--paper);
   background-color: var(--signal);
@@ -1181,7 +1242,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .success-queue-tag {
-  font-family: var(--font-kelsi-fill);
+  font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-weight: 800;
   background-color: var(--ink);
@@ -1244,13 +1305,13 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   color: var(--paper);
   text-align: right;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .success-text {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--paper);
   line-height: 1.5;
   margin-bottom: 1.15rem;
 }
@@ -1682,13 +1743,47 @@ h1, h2, h3, h4, h5, h6 {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2rem;
-  align-items: center;
+  align-items: start;
 }
 
 @media (min-width: 880px) {
   .arch-card-content-grid {
     grid-template-columns: 1.15fr 1fr;
   }
+
+  .arch-card-visual {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+/* Phones: keep the order diagram at a readable size and let it scroll sideways */
+@media (max-width: 600px) {
+  .arch-card-visual {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .arch-blueprint-svg {
+    min-width: 540px;
+  }
+}
+
+.arch-brand-stickers {
+  display: flex;
+  align-items: flex-end;
+  margin-top: 1.75rem;
+}
+
+.sticker-price-tag {
+  width: clamp(150px, 40vw, 190px);
+  transform: rotate(-6deg);
+}
+
+.sticker-bag {
+  width: clamp(78px, 20vw, 96px);
+  margin-left: 0.25rem;
+  transform: rotate(9deg);
 }
 
 .arch-card-visual {
@@ -2076,7 +2171,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .mockup-img-container {
   height: 90px;
-  background: rgba(108, 71, 255, 0.05);
+  background: rgba(90, 89, 238, 0.05);
   border: 1px dashed var(--paper-20);
   position: relative;
   display: flex;
@@ -2489,6 +2584,24 @@ h1, h2, h3, h4, h5, h6 {
   padding: 3.5rem 2rem;
   text-align: center;
   box-shadow: 12px 12px 0 var(--ink), 12px 12px 0 4px var(--paper);
+  position: relative;
+}
+
+.cta-sticker-sun {
+  position: absolute;
+  top: -3.25rem;
+  right: 4%;
+  width: clamp(84px, 11vw, 124px);
+  height: auto;
+  transform: rotate(14deg);
+  filter: none;
+  pointer-events: none;
+}
+
+.cta-kelsi {
+  letter-spacing: 0.01em;
+  text-shadow: none;
+  color: var(--ink);
 }
 
 .cta-inner {
@@ -2510,7 +2623,7 @@ h1, h2, h3, h4, h5, h6 {
 .cta-desc {
   font-size: 1.0625rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--paper);
   margin-bottom: 2rem;
 }
 

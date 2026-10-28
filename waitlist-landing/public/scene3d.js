@@ -113,11 +113,11 @@ async function initScene() {
   logomarkWhiteTex.colorSpace = THREE.SRGBColorSpace;
   const logomarkPurpleTex = texLoader.load('brand/LOGOMARK/PNG/Logomark Purple.png');
   logomarkPurpleTex.colorSpace = THREE.SRGBColorSpace;
-  const tagStickerTex = texLoader.load('brand/STICKERS/PNG/7.png');
+  const tagStickerTex = texLoader.load('brand/STICKERS/WEBP/7.webp');
   tagStickerTex.colorSpace = THREE.SRGBColorSpace;
-  const sunStickerTex = texLoader.load('brand/STICKERS/PNG/2.png');
+  const sunStickerTex = texLoader.load('brand/STICKERS/WEBP/2.webp');
   sunStickerTex.colorSpace = THREE.SRGBColorSpace;
-  const thrifterStickerTex = texLoader.load('brand/STICKERS/PNG/8.png');
+  const thrifterStickerTex = texLoader.load('brand/STICKERS/WEBP/8.webp');
   thrifterStickerTex.colorSpace = THREE.SRGBColorSpace;
 
   function mesh(geometry, material, lines) {
