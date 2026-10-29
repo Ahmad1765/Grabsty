@@ -56,6 +56,7 @@ import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, type TopicAction } from './SearchLanding';
 import type { SortKey } from '@/lib/listings';
+import type { DiscoverTab } from './SearchTabs';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 
@@ -411,6 +412,14 @@ function DiscoverSheetBody({
     [onClose],
   );
 
+  const onTab = useCallback(
+    (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => {
+      onClose();
+      router.push(withNonce(`/?tab=${tab}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
+    },
+    [onClose],
+  );
+
   const suggestions = useMemo(
     () => getSearchSuggestions(query, { limit: 10 }),
     [query],
@@ -534,6 +543,7 @@ function DiscoverSheetBody({
             userId={user?.id ?? null}
             onTopic={onTopic}
             onSort={onSort}
+            onTab={onTab}
             onSearch={handleSelectSuggestion}
             onSelectSeller={(seller) => {
               onClose();

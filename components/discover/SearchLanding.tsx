@@ -1,8 +1,9 @@
 // Discover's search panel body — clean, simplified bento-grid layout:
-//   1. CATEGORY GRID     — Image bento tiles, 2 rows × 3, same categories as Home:
-//                          • Row 1: Clothing, Shoes, Bags
-//                          • Row 2: Accessories, Beauty, Solid Ink "Explore all" card
-//                          • Row 3: New drops, Trending, Best deals (Home feed sorts)
+//   1. BROWSE GRID       — Image bento tiles (3-2-3 row layout):
+//                          • Row 1 (3 items): New drops, Trending, Deals
+//                          • Row 2 (2 items): Wide "Top closets" card (flex: 2) + Solid Ink "Explore all"
+//                            accent card with white right arrow (flex: 1)
+//                          • Row 3 (3 items): Clothing, Sneakers, Accessories
 //   2. RECOMMENDED USERS — Sellers ranked by the buyer's taste (get_recommendations), 2×2 photo collage (own uploads only,
 //                          grey placeholder for empty slots), profile avatar,
 //                          and real Supabase-backed + Follow action.
@@ -58,22 +59,6 @@ export type RecommendedUser = {
   photos: [string | null, string | null, string | null, string | null];
 };
 
-// Same categories as Home's filter sheet; "Explore all" fills the sixth slot.
-const BROWSE_CATEGORIES: { id: CategoryId; label: string; sub: string; fallback?: string }[] = [
-  { id: 'clothing', label: 'Clothing', sub: 'Apparel', fallback: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=300&auto=format&fit=crop&q=80' },
-  { id: 'shoes', label: 'Shoes', sub: 'Kicks & boots', fallback: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&auto=format&fit=crop&q=80' },
-  { id: 'bags', label: 'Bags', sub: 'Totes & clutches' },
-  { id: 'accessories', label: 'Accessories', sub: 'Watches & jewelry', fallback: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&auto=format&fit=crop&q=80' },
-  { id: 'beauty', label: 'Beauty', sub: 'Makeup & care' },
-];
-
-// Row 3: feed sorts — open Home with the matching sort + chip.
-const BROWSE_SORTS = [
-  { sort: 'newest', label: 'New drops', sub: 'Just listed', chip: 'New drops', icon: 'clock' },
-  { sort: 'popular', label: 'Trending', sub: 'Most popular', chip: 'Trending', icon: 'trending-up' },
-  { sort: 'price_asc', label: 'Best deals', sub: 'Lowest price', chip: 'Deals', icon: 'tag' },
-] as const;
-
 // ── Main SearchLanding Component ────────────────────────────────────────────
 export function SearchLanding({
   covers,
@@ -81,6 +66,7 @@ export function SearchLanding({
   userId,
   onTopic,
   onSort,
+  onTab,
   onSelectSeller,
 }: {
   covers?: Partial<Record<string, string>>;
@@ -88,14 +74,15 @@ export function SearchLanding({
   userId?: string | null;
   onTopic: (action: TopicAction) => void;
   onSort: (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => void;
+  onTab: (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onSearch?: (query: string) => void;
   onSelectSeller?: (sellerIdOrUsername: string) => void;
 }) {
   const { theme, isDark } = useTheme();
   const toast = useToast();
 
-  // 1. CATEGORY TILE COVERS (first live listing photo per category)
-  const categoryCovers = useMemo(() => {
+  // 1. DYNAMIC BENTO TILE COVERS (From live listings & category taxonomy)
+  const bentoCovers = useMemo(() => {
     const byCat: Record<string, string> = {};
     if (covers) {
       for (const [k, v] of Object.entries(covers)) {
@@ -108,19 +95,23 @@ export function SearchLanding({
         byCat[l.category] = img;
       }
     }
-    return byCat;
-  }, [covers, listings]);
+    const newestImg = listings[0]?.thumbnails?.[0] || listings[0]?.images?.[0];
+    const trendingImg = listings.find((l) => (l.likes ?? 0) > 0)?.thumbnails?.[0] || listings[1]?.thumbnails?.[0] || listings[1]?.images?.[0];
+    const sortedByPrice = [...listings].sort((a, b) => a.price - b.price);
+    const dealsImg = sortedByPrice[0]?.thumbnails?.[0] || sortedByPrice[0]?.images?.[0];
+    const topSeller = listings.find((l) => l.seller?.avatar_url)?.seller;
+    const closetsImg = topSeller?.avatar_url || listings[0]?.thumbnails?.[0] || listings[0]?.images?.[0];
 
-  // Row 3 covers: newest, most-liked and cheapest live listings.
-  const sortCovers = useMemo(() => {
-    const img = (l?: Listing) => l?.thumbnails?.[0] || l?.images?.[0];
-    const cheapest = listings.reduce<Listing | undefined>((m, l) => (!m || l.price < m.price ? l : m), undefined);
     return {
-      newest: img(listings[0]),
-      popular: img(listings.find((l) => (l.likes ?? 0) > 0) ?? listings[1]),
-      price_asc: img(cheapest),
+      new: newestImg || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=300&auto=format&fit=crop&q=80',
+      trending: trendingImg || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&auto=format&fit=crop&q=80',
+      deals: dealsImg || 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=300&auto=format&fit=crop&q=80',
+      closets: closetsImg || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
+      clothing: byCat['clothing'] || 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=300&auto=format&fit=crop&q=80',
+      shoes: byCat['shoes'] || 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=300&auto=format&fit=crop&q=80',
+      accessories: byCat['accessories'] || 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=300&auto=format&fit=crop&q=80',
     };
-  }, [listings]);
+  }, [covers, listings]);
 
   // Query real platform profiles from Supabase to guarantee 100% real sellers and functional follow mutations
   const { data: realProfiles = [] } = useQuery({
@@ -235,35 +226,130 @@ export function SearchLanding({
 
   return (
     <View style={{ paddingTop: 14 }}>
-      {/* ── CATEGORY GRID (2 rows × 3) ─────────────────────────────────── */}
+      {/* ── BROWSE IMAGE BENTO GRID (3-2-3 Layout) ─────────────────────── */}
       <View style={{ paddingHorizontal: PAD, gap: GAP }}>
+        {/* ROW 1: 3 equal cards */}
         <View style={{ flexDirection: 'row', gap: GAP }}>
-          {BROWSE_CATEGORIES.slice(0, 3).map((c) => (
-            <BentoTile
-              key={c.id}
-              label={c.label}
-              sub={c.sub}
-              image={categoryCovers[c.id] ?? c.fallback}
-              cardBg={cardBg}
-              isDark={isDark}
-              onPress={() => onTopic({ kind: 'category', category: c.id })}
-            />
-          ))}
+          <BentoTile
+            label="New drops"
+            sub="Just listed"
+            image={bentoCovers.new}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onSort('newest', 'New drops', 'clock');
+            }}
+          />
+          <BentoTile
+            label="Trending"
+            sub="Most popular"
+            image={bentoCovers.trending}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onSort('popular', 'Trending', 'trending-up');
+            }}
+          />
+          <BentoTile
+            label="Best deals"
+            sub="Lowest price"
+            image={bentoCovers.deals}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onSort('price_asc', 'Deals', 'tag');
+            }}
+          />
         </View>
-        <View style={{ flexDirection: 'row', gap: GAP }}>
-          {BROWSE_CATEGORIES.slice(3).map((c) => (
-            <BentoTile
-              key={c.id}
-              label={c.label}
-              sub={c.sub}
-              image={categoryCovers[c.id] ?? c.fallback}
-              cardBg={cardBg}
-              isDark={isDark}
-              onPress={() => onTopic({ kind: 'category', category: c.id })}
-            />
-          ))}
 
-          {/* Explore all: Solid Ink card with white right arrow */}
+        {/* ROW 2: Wide Card (flex: 2) + Solid Ink Accent Card (flex: 1) */}
+        <View style={{ flexDirection: 'row', gap: GAP }}>
+          {/* Wide card: Top Closets */}
+          <Pressable
+            onPress={() => {
+              haptic();
+              onTab('users', 'Top closets', 'users');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Browse top closets"
+            style={({ pressed }) => ({
+              flex: 2,
+              minWidth: 0,
+              height: 104,
+              borderRadius: 18,
+              overflow: 'hidden',
+              backgroundColor: cardBg,
+              padding: 12,
+              justifyContent: 'space-between',
+              transform: [{ scale: pressed ? 0.97 : 1 }],
+            })}
+          >
+            <View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <View
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: theme.purple,
+                  }}
+                />
+                <Text
+                  style={{
+                    fontSize: 10.5,
+                    fontFamily: type.family.sansBold,
+                    color: theme.purple,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  Nearby
+                </Text>
+              </View>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontFamily: type.family.sansBold,
+                  color: isDark ? '#FFFFFF' : '#111111',
+                  letterSpacing: -0.2,
+                  marginTop: 2,
+                }}
+                numberOfLines={1}
+              >
+                Top closets
+              </Text>
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontFamily: type.family.sans,
+                  color: isDark ? 'rgba(255,255,255,0.5)' : '#8E8E93',
+                  marginTop: 1,
+                }}
+                numberOfLines={1}
+              >
+                Verified sellers
+              </Text>
+            </View>
+
+            {/* Stylized Right Image */}
+            <Image
+              source={{ uri: bentoCovers.closets }}
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                width: 96,
+                height: 84,
+                borderTopLeftRadius: 18,
+                borderBottomRightRadius: 18,
+              }}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={IMAGE_TRANSITION}
+            />
+          </Pressable>
+
+          {/* Accent Card: Solid Ink background with bold white right arrow */}
           <Pressable
             onPress={() => {
               haptic();
@@ -307,23 +393,46 @@ export function SearchLanding({
                 Categories
               </Text>
             </View>
+
+            {/* Prominent White Right Arrow */}
             <View style={{ alignSelf: 'flex-end' }}>
               <Feather name="arrow-right" size={24} color="#FFFFFF" />
             </View>
           </Pressable>
         </View>
+
+        {/* ROW 3: 3 equal cards */}
         <View style={{ flexDirection: 'row', gap: GAP }}>
-          {BROWSE_SORTS.map((s) => (
-            <BentoTile
-              key={s.sort}
-              label={s.label}
-              sub={s.sub}
-              image={sortCovers[s.sort]}
-              cardBg={cardBg}
-              isDark={isDark}
-              onPress={() => onSort(s.sort, s.chip, s.icon)}
-            />
-          ))}
+          <BentoTile
+            label="Clothing"
+            sub="Apparel"
+            image={bentoCovers.clothing}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onTopic({ kind: 'category', category: 'clothing' });
+            }}
+          />
+          <BentoTile
+            label="Sneakers"
+            sub="Kicks & boots"
+            image={bentoCovers.shoes}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onTopic({ kind: 'category', category: 'shoes' });
+            }}
+          />
+          <BentoTile
+            label="Accessories"
+            sub="Bags & jewelry"
+            image={bentoCovers.accessories}
+            cardBg={cardBg}
+            isDark={isDark}
+            onPress={() => {
+              onTopic({ kind: 'category', category: 'accessories' });
+            }}
+          />
         </View>
       </View>
 

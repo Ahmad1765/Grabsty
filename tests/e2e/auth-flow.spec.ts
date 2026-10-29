@@ -17,7 +17,7 @@ test.describe("Auth modal", () => {
   }) => {
     await expect(page.getByText("Grabsty").first()).toBeVisible();
     await expect(
-      page.getByText(/Your story[\s\S]*starts now\./i),
+      page.getByText(/Your story[\s\S]*starts\s+now\./i),
     ).toBeVisible();
     await expect(page.getByText("Continue as guest")).toBeVisible();
     await expect(page.getByText("Sign up with email")).toBeVisible();

@@ -355,6 +355,9 @@ function MessagesPage({
 }
 
 // ── Working Support Hub Page ────────────────────────────────────────────────
+// Same language as its neighbours: a flat contact header like a profile row,
+// open threads rendered with the Messages tab's InboxRow, and help topics as a
+// Settings-style grouped list (hairline dividers, no per-row cards).
 function SupportPage({
   data,
   userId,
@@ -372,13 +375,43 @@ function SupportPage({
   onRefresh: () => void;
   bottomInset: number;
 }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
+  const [opening, setOpening] = useState(false);
 
   const toggleTopic = (id: string) => {
     haptic();
     setExpandedTopicId((prev) => (prev === id ? null : id));
   };
+
+  const openSupportChat = () => {
+    if (opening) return;
+    haptic();
+    setOpening(true);
+    getOrCreateSupportConversation(userId)
+      .then((conv) => router.push((conv ? `/conversation/${conv.id}` : '/conversation/new?support=true') as any))
+      .catch(() => router.push('/conversation/new?support=true' as any))
+      .finally(() => setOpening(false));
+  };
+
+  // Mirrors ChatGPTGroup / ChatGPTItem in components/settings/SettingsRow.tsx.
+  const groupStyle = {
+    backgroundColor: theme.panel,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.hairline,
+    overflow: 'hidden' as const,
+  };
+  const sectionLabel = {
+    fontFamily: typography.family.sansSemibold,
+    fontSize: 12,
+    letterSpacing: 0.2,
+    textTransform: 'uppercase' as const,
+    color: theme.mute,
+    marginLeft: 12,
+    marginBottom: 8,
+  };
+  const divider = isDark ? '#262626' : '#F0F0F0';
 
   return (
     <View style={{ width: pageWidth, height: pageHeight }}>
@@ -386,284 +419,188 @@ function SupportPage({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 14,
+          paddingTop: 18,
           paddingBottom: bottomInset + 100,
         }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />
         }
       >
-        {/* Grabsty Support Information Card */}
-        <View
-          style={{
-            backgroundColor: theme.surface,
-            borderRadius: radii['2xl'],
-            borderWidth: 1,
-            borderColor: theme.hairline,
-            padding: 16,
-            marginBottom: 20,
-            ...shadow.sm,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <View style={{ position: 'relative' }}>
-              <Image
-                source={{ uri: SUPPORT_BOT_AVATAR }}
-                style={{ width: 48, height: 48, borderRadius: 24 }}
-                contentFit="cover"
-              />
-              <View
-                style={{
-                  position: 'absolute',
-                  bottom: -1,
-                  right: -1,
-                  width: 13,
-                  height: 13,
-                  borderRadius: 7,
-                  backgroundColor: theme.purple,
-                  borderWidth: 2,
-                  borderColor: theme.surface,
-                }}
-              />
-            </View>
-
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontFamily: typography.family.sansBold, fontSize: 16, color: theme.ink }}>
-                  {SUPPORT_BOT_NAME}
-                </Text>
-                <View
-                  style={{
-                    paddingHorizontal: 6,
-                    paddingVertical: 1,
-                    borderRadius: radii.pill,
-                    backgroundColor: 'rgba(108, 71, 255, 0.10)',
-                  }}
-                >
-                  <Text style={{ fontSize: 10, fontFamily: typography.family.sansBold, color: theme.purple }}>
-                    ONLINE
-                  </Text>
-                </View>
-              </View>
-              <Text style={{ fontFamily: typography.family.sans, fontSize: 12.5, color: theme.mute, marginTop: 2 }}>
-                Customer Care & Dispute Resolution Team
-              </Text>
-            </View>
-          </View>
-
-          <Text
-            style={{
-              fontFamily: typography.family.sans,
-              fontSize: 13.5,
-              lineHeight: 19,
-              color: theme.ink,
-              marginBottom: 14,
-            }}
-          >
-            A support chat opens automatically when you dispute an order. For anything else, message our team here.
-          </Text>
-
-          <PressableScale
-            onPress={() => {
-              haptic();
-              getOrCreateSupportConversation(userId)
-                .then((conv) => router.push((conv ? `/conversation/${conv.id}` : '/conversation/new?support=true') as any))
-                .catch(() => router.push('/conversation/new?support=true' as any));
-            }}
-            style={{
-              height: 42,
-              borderRadius: radii.pill,
-              backgroundColor: theme.panel,
-              borderWidth: 1,
-              borderColor: theme.hairline,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              ...shadow.sm,
-            }}
-          >
-            <Feather name="message-square" size={15} color={theme.ink} />
-            <Text style={{ fontFamily: typography.family.sansBold, fontSize: 13.5, color: theme.ink }}>
-              Message Support
-            </Text>
-          </PressableScale>
-        </View>
-
-        {/* Quick Help Topics (Interactive Accordion, does not start chats) */}
-        <Text
-          style={{
-            fontFamily: typography.family.sansBold,
-            fontSize: 11.5,
-            letterSpacing: 0.8,
-            textTransform: 'uppercase',
-            color: theme.muteSoft,
-            marginBottom: 10,
-            paddingHorizontal: 2,
-          }}
-        >
-          Frequently Asked Questions & Guides
-        </Text>
-
-        <View style={{ gap: 8, marginBottom: 24 }}>
-          {SUPPORT_TOPICS.map((topic) => {
-            const isExpanded = expandedTopicId === topic.id;
-            const answer = generateSupportResponse(topic.prompt);
-            return (
-              <View
-                key={topic.id}
-                style={{
-                  backgroundColor: theme.surface,
-                  borderRadius: radii.xl,
-                  borderWidth: 1,
-                  borderColor: theme.hairline,
-                  overflow: 'hidden',
-                  ...shadow.sm,
-                }}
-              >
-                <PressableScale
-                  onPress={() => toggleTopic(topic.id)}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingHorizontal: 14,
-                    paddingVertical: 12,
-                    gap: 12,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 38,
-                      height: 38,
-                      borderRadius: 19,
-                      backgroundColor: theme.panel,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {topic.icon === 'shield' ? (
-                      <ShieldCheckIcon size={22} />
-                    ) : (
-                      <Feather name={topic.icon as any} size={17} color={theme.primary} />
-                    )}
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontFamily: typography.family.sansBold, fontSize: 14, color: theme.ink }}>
-                      {topic.title}
-                    </Text>
-                    <Text style={{ fontFamily: typography.family.sans, fontSize: 12, color: theme.mute, marginTop: 1 }}>
-                      {topic.description}
-                    </Text>
-                  </View>
-
-                  <Feather
-                    name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                    size={18}
-                    color={theme.muteSoft}
-                  />
-                </PressableScale>
-
-                {isExpanded && (
-                  <View
-                    style={{
-                      paddingHorizontal: 16,
-                      paddingBottom: 14,
-                      paddingTop: 4,
-                      borderTopWidth: 1,
-                      borderTopColor: theme.hairline,
-                      backgroundColor: theme.panel,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: typography.family.sans,
-                        fontSize: 13,
-                        lineHeight: 19,
-                        color: theme.ink,
-                      }}
-                    >
-                      {withBold(answer)}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            );
-          })}
-        </View>
-
-        {/* Active Support Threads */}
-        <Text
-          style={{
-            fontFamily: typography.family.sansBold,
-            fontSize: 11.5,
-            letterSpacing: 0.8,
-            textTransform: 'uppercase',
-            color: theme.muteSoft,
-            marginBottom: 8,
-            paddingHorizontal: 2,
-          }}
-        >
-          Your Support Threads
-        </Text>
-
-        {data.length > 0 ? (
-          <View
-            style={{
-              backgroundColor: theme.surface,
-              borderRadius: radii.xl,
-              borderWidth: 1,
-              borderColor: theme.hairline,
-              overflow: 'hidden',
-            }}
-          >
-            {data.map((conv) => (
-              <InboxListRow key={conv.id} conv={conv} userId={userId} />
-            ))}
-          </View>
-        ) : (
-          <View
-            style={{
-              backgroundColor: theme.surface,
-              borderRadius: radii.xl,
-              borderWidth: 1,
-              borderColor: theme.hairline,
-              padding: 24,
-              alignItems: 'center',
-              ...shadow.sm,
-            }}
-          >
+        {/* Contact header: flat, like a profile row */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View>
+            <Image
+              source={{ uri: SUPPORT_BOT_AVATAR }}
+              style={{
+                width: 54,
+                height: 54,
+                borderRadius: 27,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+              contentFit="cover"
+            />
             <View
               style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: theme.panel,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
+                position: 'absolute',
+                bottom: 1,
+                right: 1,
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: theme.purple,
+                borderWidth: 2,
+                borderColor: theme.background,
               }}
+            />
+          </View>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              numberOfLines={1}
+              style={{ fontFamily: typography.family.sansBold, fontSize: 17, letterSpacing: -0.3, color: theme.ink }}
             >
-              <Feather name="message-square" size={22} color={theme.muteSoft} />
-            </View>
-            <Text style={{ fontFamily: typography.family.sansBold, fontSize: 15, color: theme.ink, textAlign: 'center' }}>
-              No active support chats
+              {SUPPORT_BOT_NAME}
             </Text>
             <Text
-              style={{
-                fontFamily: typography.family.sans,
-                fontSize: 13,
-                color: theme.mute,
-                textAlign: 'center',
-                marginTop: 6,
-                lineHeight: 18,
-                maxWidth: 280,
-              }}
+              numberOfLines={1}
+              style={{ fontFamily: typography.family.sans, fontSize: 13.5, color: theme.mute, marginTop: 2 }}
             >
-              Support conversations are created when an order is disputed or can be opened from Settings.
+              Customer care and disputes
             </Text>
           </View>
+        </View>
+
+        <Text
+          style={{
+            fontFamily: typography.family.sans,
+            fontSize: 14,
+            lineHeight: 20,
+            color: theme.mute,
+            marginTop: 14,
+          }}
+        >
+          Disputing an order opens a support chat automatically. For anything else, message the team directly.
+        </Text>
+
+        <PressableScale
+          onPress={openSupportChat}
+          disabled={opening}
+          accessibilityRole="button"
+          accessibilityLabel="Message support"
+          accessibilityState={{ busy: opening }}
+          testID="support-message-button"
+          style={{
+            height: 44,
+            marginTop: 14,
+            borderRadius: radii.pill,
+            backgroundColor: theme.ink,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            opacity: opening ? 0.7 : 1,
+          }}
+        >
+          <Feather name="message-circle" size={16} color={theme.background} />
+          <Text style={{ fontFamily: typography.family.sansBold, fontSize: 14, color: theme.background }}>
+            {opening ? 'Opening chat…' : 'Message support'}
+          </Text>
+        </PressableScale>
+
+        {/* Open threads first: the thing a returning user came back for */}
+        {data.length > 0 && (
+          <View style={{ marginTop: 28 }}>
+            <Text style={sectionLabel}>Your conversations</Text>
+            <View style={groupStyle}>
+              {data.map((conv, i) => (
+                <View key={conv.id}>
+                  {i > 0 && (
+                    <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: divider, marginLeft: 82 }} />
+                  )}
+                  <InboxListRow conv={conv} userId={userId} />
+                </View>
+              ))}
+            </View>
+          </View>
         )}
+
+        {/* Help topics: Settings-style grouped list with inline answers */}
+        <View style={{ marginTop: 28 }}>
+          <Text style={sectionLabel}>Help topics</Text>
+          <View style={groupStyle}>
+            {SUPPORT_TOPICS.map((topic, i) => {
+              const isExpanded = expandedTopicId === topic.id;
+              return (
+                <View key={topic.id}>
+                  {i > 0 && (
+                    <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: divider, marginLeft: 54 }} />
+                  )}
+                  <Pressable
+                    onPress={() => toggleTopic(topic.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ expanded: isExpanded }}
+                    accessibilityLabel={topic.title}
+                    accessibilityHint={topic.description}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      paddingHorizontal: 16,
+                      paddingVertical: 13,
+                      minHeight: 56,
+                      backgroundColor: pressed
+                        ? isDark
+                          ? 'rgba(255,255,255,0.05)'
+                          : 'rgba(0,0,0,0.03)'
+                        : 'transparent',
+                    })}
+                  >
+                    <View style={{ width: 28, marginRight: 10, alignItems: 'flex-start' }}>
+                      {topic.icon === 'shield' ? (
+                        <ShieldCheckIcon size={20} />
+                      ) : (
+                        <Feather name={topic.icon as any} size={18} color={theme.ink} />
+                      )}
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text
+                        style={{
+                          fontFamily: typography.family.sansMedium,
+                          fontSize: 15,
+                          letterSpacing: -0.1,
+                          color: theme.ink,
+                        }}
+                      >
+                        {topic.title}
+                      </Text>
+                      <Text
+                        numberOfLines={1}
+                        style={{ fontFamily: typography.family.sans, fontSize: 12.5, color: theme.mute, marginTop: 2 }}
+                      >
+                        {topic.description}
+                      </Text>
+                    </View>
+                    <Feather
+                      name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                      size={16}
+                      color={isDark ? '#555555' : '#C7C7CC'}
+                      style={{ marginLeft: 8 }}
+                    />
+                  </Pressable>
+
+                  {isExpanded && (
+                    <View style={{ paddingLeft: 54, paddingRight: 16, paddingBottom: 14 }}>
+                      <Text
+                        style={{ fontFamily: typography.family.sans, fontSize: 13.5, lineHeight: 20, color: theme.mute }}
+                      >
+                        {withBold(generateSupportResponse(topic.prompt))}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </View>
       </ScrollView>
     </View>
   );

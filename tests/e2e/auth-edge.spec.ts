@@ -20,7 +20,7 @@ test.describe('Auth edges', () => {
     // The RequireAuth gate surfaces the welcome modal. Any of these phrases
     // means the gate did its job.
     await expect(
-      page.getByText(/Continue as guest|Sign up with email|Your story[\s\S]*starts now\./i).first(),
+      page.getByText(/Continue as guest|Sign up with email|Your story[\s\S]*starts\s+now\./i).first(),
     ).toBeVisible();
   });
 
@@ -28,7 +28,7 @@ test.describe('Auth edges', () => {
     await page.goto('/profile');
     await waitForAppReady(page);
     await expect(
-      page.getByText(/Continue as guest|Sign up with email|Your story[\s\S]*starts now\./i).first(),
+      page.getByText(/Continue as guest|Sign up with email|Your story[\s\S]*starts\s+now\./i).first(),
     ).toBeVisible();
   });
 

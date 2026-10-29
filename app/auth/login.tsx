@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeContainer } from '@/components/ui/SafeContainer';
-import { GrabstyLogo } from '@/components/ui/GrabstyLogo';
 import { isDesktopWidth } from '@/lib/responsive';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Linking from 'expo-linking';
@@ -14,6 +13,12 @@ import { signInWithGoogle } from '@/lib/oauth';
 import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
 import { BRAND } from '@/lib/brand';
+import { Image } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFeedListingsQuery } from '@/lib/queries';
+import { cardImageUrl, getOptimizedImageUrl } from '@/lib/images';
+import { formatPrice } from '@/lib/currency';
+import type { Listing } from '@/types';
 
 import { useTheme } from '@/context/ThemeContext';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -74,6 +79,7 @@ function LoginScreen() {
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const isDesktop = isDesktopWidth(width);
   const [step, setStep] = useState<Step>(() =>
     params.step === 'form' || params.mode === 'signin' || params.mode === 'signup' ? 'form' : 'welcome'
@@ -126,7 +132,28 @@ function LoginScreen() {
   // Short or narrow phones: smaller headline, and a height floor so the
   // panel's chip + headline + subtitle never clip.
   const compact = height < 760 || width < 375;
-  const welcomeHeight = Math.max(Math.min(height * 0.42, 460), compact ? 270 : 300);
+  // Welcome: the hero takes whatever the three buttons + log-in line leave.
+  const welcomeHeight = Math.max(
+    Math.min(height - insets.top - insets.bottom - 300, 600),
+    compact ? 300 : 340,
+  );
+  // Same query key as Discover's browse grid, so this is usually a cache hit.
+  const feedQ = useFeedListingsQuery({ tab: 'popular', limit: 60 });
+  const pillListings = useMemo(
+    () =>
+      (feedQ.data ?? [])
+        .filter((l) => !l.is_sold && cardImageUrl(l))
+        .slice(0, PILL_SLOTS.length),
+    [feedQ.data],
+  );
+  // Pills need ~190px under the headline; short heroes skip them entirely.
+  // Room under the headline. Short heroes keep only the rows that fit; tall
+  // ones spread the pile upward instead of leaving a dead band.
+  const pillArea = Math.min(welcomeHeight - (compact ? 220 : 270), 250);
+  const pillScale = Math.max(1, pillArea / 190);
+  const fitSlots = PILL_SLOTS.filter((slot) => slot.bottom + 52 <= pillArea);
+  const pills = pillListings.slice(0, fitSlots.length).map((l, i) => ({ l, slot: fitSlots[i] }));
+  const showPills = step === 'welcome' && pills.length > 0;
   const formHeight = Math.max(Math.min(height * 0.28, 240), 180);
   const panelHeight = stepAnim.interpolate({
     inputRange: [0, 1],
@@ -270,11 +297,12 @@ function LoginScreen() {
     setStep('welcome');
   };
 
-  const headline = step === 'welcome'
-    ? 'Your story\nstarts now.'
+  // [first line, last word]: the last word renders a tone quieter.
+  const headline: [string, string] = step === 'welcome'
+    ? ['Your story\nstarts', 'now.']
     : mode === 'signup'
-      ? 'Make it\nyours.'
-      : 'Welcome\nback.';
+      ? ['Make it', 'yours.']
+      : ['Welcome', 'back.'];
 
   return (
     <SafeContainer
@@ -290,111 +318,57 @@ function LoginScreen() {
       }}
       scrollViewProps={{ bounces: false }}
     >
-          {/* Top bar */}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: 20,
-              paddingTop: 8,
-              paddingBottom: 8,
-            }}
-          >
-            {step === 'form' ? (
-              <Pressable
-                onPress={backToWelcome}
-                hitSlop={12}
-                style={({ pressed }) => ({
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: colors.paper,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 1,
-                  borderColor: colors.hairline,
-                  transform: [{ scale: pressed ? 0.96 : 1 }],
-                })}
-              >
-                <Feather name="arrow-left" size={18} color={colors.ink} />
-              </Pressable>
-            ) : (
-              <GrabstyLogo variant="full" size={26} />
-            )}
-            {router.canDismiss() && step === 'welcome' && (
-              <Pressable
-                onPress={() => router.dismiss()}
-                hitSlop={12}
-                style={({ pressed }) => ({
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  backgroundColor: colors.paper,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: 1,
-                  borderColor: colors.hairline,
-                  transform: [{ scale: pressed ? 0.96 : 1 }],
-                })}
-              >
-                <Feather name="x" size={18} color={colors.ink} />
-              </Pressable>
-            )}
-          </View>
-
-          {/* Purple hero panel */}
+          {/* Hero panel: controls ride inside it, listing pills tumble along the bottom */}
           <Animated.View
             style={{
               marginHorizontal: 16,
-              marginTop: 4,
+              marginTop: 8,
               height: panelHeight,
               // Hero carries white text/overlays, so it stays dark in both themes
               // (`primary` flips to white in dark mode).
               backgroundColor: isDark ? colors.panel : colors.primary,
               borderRadius: 32,
-              padding: 28,
-              justifyContent: 'space-between',
+              padding: 24,
               overflow: 'hidden',
             }}
           >
-            {/* Subtle pattern dots — palette-compliant decoration */}
             <View
               style={{
-                position: 'absolute',
-                right: -40,
-                top: -40,
-                width: 220,
-                height: 220,
-                borderRadius: 110,
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                pointerEvents: 'none',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: compact ? 18 : 26,
               }}
-            />
-            <View
-              style={{
-                position: 'absolute',
-                left: -60,
-                bottom: -80,
-                width: 200,
-                height: 200,
-                borderRadius: 100,
-                backgroundColor: 'rgba(255,255,255,0.06)',
-                pointerEvents: 'none',
-              }}
-            />
-
-            <View>
+            >
+              {step === 'form' || router.canDismiss() ? (
+                <Pressable
+                  onPress={step === 'form' ? backToWelcome : () => router.dismiss()}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel={step === 'form' ? 'Back' : 'Close'}
+                  style={({ pressed }) => ({
+                    width: 38,
+                    height: 38,
+                    borderRadius: 19,
+                    backgroundColor: 'rgba(255,255,255,0.14)',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: [{ scale: pressed ? 0.94 : 1 }],
+                  })}
+                >
+                  <Feather name={step === 'form' ? 'arrow-left' : 'x'} size={18} color={colors.white} />
+                </Pressable>
+              ) : (
+                <View />
+              )}
               <View
                 style={{
-                  alignSelf: 'flex-start',
                   flexDirection: 'row',
                   alignItems: 'center',
                   paddingHorizontal: 12,
                   height: 30,
                   borderRadius: 999,
-                  backgroundColor: 'rgba(255,255,255,0.16)',
-                  marginBottom: 18,
+                  backgroundColor: 'rgba(255,255,255,0.14)',
                 }}
               >
                 <View
@@ -418,46 +392,57 @@ function LoginScreen() {
                   {BRAND}
                 </Text>
               </View>
-
-              <Text
-                style={{
-                  fontSize: step === 'welcome' ? (compact ? 40 : 52) : compact ? 36 : 40,
-                  fontWeight: '900',
-                  color: colors.white,
-                  lineHeight: step === 'welcome' ? (compact ? 42 : 54) : compact ? 38 : 42,
-                  letterSpacing: -1.8,
-                }}
-              >
-                {headline}
-              </Text>
             </View>
 
-            {step === 'welcome' && (
-              <Text
+            <Text
+              style={{
+                fontSize: step === 'welcome' ? (compact ? 46 : 58) : compact ? 38 : 44,
+                fontWeight: '900',
+                color: colors.white,
+                lineHeight: step === 'welcome' ? (compact ? 46 : 58) : compact ? 40 : 46,
+                letterSpacing: -2,
+              }}
+            >
+              {headline[0]}
+              {'\n'}
+              {/* Last word sits back a tone, like a second voice in the line. */}
+              <Text style={{ color: 'rgba(255,255,255,0.42)' }}>{headline[1]}</Text>
+            </Text>
+
+            {showPills && (
+              <Animated.View
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
                 style={{
-                  fontSize: 15,
-                  color: 'rgba(255,255,255,0.82)',
-                  lineHeight: 22,
-                  maxWidth: '88%',
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: pillArea,
+                  opacity: stepAnim.interpolate({ inputRange: [0, 0.4], outputRange: [1, 0], extrapolate: 'clamp' }),
                 }}
               >
-                Buy and sell preloved fashion. Locally, beautifully, in a minute.
-              </Text>
+                {pills.map(({ l, slot }, i) => (
+                  <ListingPill key={l.id} listing={l} slot={slot} index={i} scale={pillScale} />
+                ))}
+              </Animated.View>
             )}
           </Animated.View>
 
           {/* Action area */}
-          <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
+          <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
             {step === 'welcome' ? (
               <View style={{ gap: 12 }}>
                 <PressableScale onPress={goGuest} style={{}}>
                   <View
                     style={{
-                      height: 58,
-                      borderRadius: 18,
+                      height: 56,
+                      borderRadius: 16,
+                      // Resting controls stay Paper White + hairline (UI_GUARDRAILS: no grey fills).
                       backgroundColor: colors.paper,
-                      borderWidth: 1.5,
-                      borderColor: colors.hairline,
+                      borderWidth: 1,
+                      borderColor: colors.border,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -468,7 +453,7 @@ function LoginScreen() {
                     <Text
                       style={{
                         marginLeft: 10,
-                        fontSize: 16,
+                        fontSize: 15.5,
                         fontWeight: '700',
                         color: colors.ink,
                         letterSpacing: 0.1,
@@ -482,8 +467,8 @@ function LoginScreen() {
                 <PressableScale onPress={() => openForm('signup')} style={{}}>
                   <View
                     style={{
-                      height: 58,
-                      borderRadius: 18,
+                      height: 56,
+                      borderRadius: 16,
                       backgroundColor: colors.primary,
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -495,7 +480,7 @@ function LoginScreen() {
                     <Text
                       style={{
                         marginLeft: 10,
-                        fontSize: 16,
+                        fontSize: 15.5,
                         fontWeight: '800',
                         color: colors.background,
                         letterSpacing: 0.1,
@@ -506,31 +491,15 @@ function LoginScreen() {
                   </View>
                 </PressableScale>
 
-                {/* Divider */}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 2 }}>
-                  <View style={{ flex: 1, height: 1, backgroundColor: colors.hairline }} />
-                  <Text
-                    style={{
-                      marginHorizontal: 12,
-                      fontSize: 12,
-                      fontWeight: '700',
-                      color: colors.muteSoft,
-                      letterSpacing: 0.6,
-                    }}
-                  >
-                    OR
-                  </Text>
-                  <View style={{ flex: 1, height: 1, backgroundColor: colors.hairline }} />
-                </View>
-
                 <PressableScale onPress={handleGoogle} disabled={oauthLoading} style={{}}>
                   <View
                     style={{
-                      height: 58,
-                      borderRadius: 18,
+                      height: 56,
+                      borderRadius: 16,
+                      // Resting controls stay Paper White + hairline (UI_GUARDRAILS: no grey fills).
                       backgroundColor: colors.paper,
-                      borderWidth: 1.5,
-                      borderColor: colors.hairline,
+                      borderWidth: 1,
+                      borderColor: colors.border,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -541,7 +510,7 @@ function LoginScreen() {
                     <Text
                       style={{
                         marginLeft: 10,
-                        fontSize: 16,
+                        fontSize: 15.5,
                         fontWeight: '700',
                         color: colors.ink,
                         letterSpacing: 0.1,
@@ -934,5 +903,116 @@ function Field({
         </View>
       ) : null}
     </View>
+  );
+}
+
+// ── Hero listing pills ──────────────────────────────────────────────────────
+// Real live listings scattered along the hero's bottom edge, tilted and
+// clipped by the panel so they read as a pile rather than a grid. Positions are
+// ordered so any count from 1 to 6 still looks composed. One inverted pill
+// breaks the run of white without adding a colour.
+type PillSlot = { left: `${number}%`; bottom: number; rotate: string; inverted?: boolean };
+const PILL_SLOTS: PillSlot[] = [
+  { left: '-6%', bottom: 124, rotate: '-8deg' },
+  { left: '52%', bottom: 70, rotate: '7deg' },
+  { left: '-3%', bottom: 16, rotate: '5deg' },
+  { left: '46%', bottom: 14, rotate: '-5deg', inverted: true },
+  { left: '58%', bottom: 128, rotate: '-6deg' },
+  { left: '-14%', bottom: 70, rotate: '-3deg' },
+];
+
+const PILL_INK = '#0F0F0F';
+
+function ListingPill({
+  listing,
+  slot,
+  index,
+  scale,
+}: {
+  listing: Listing;
+  slot: PillSlot;
+  index: number;
+  scale: number;
+}) {
+  const [enter] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    Animated.timing(enter, {
+      toValue: 1,
+      duration: 520,
+      delay: 120 + index * 70,
+      easing: Easing.bezier(0.23, 1, 0.32, 1),
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  }, [enter, index]);
+
+  const thumb = getOptimizedImageUrl(cardImageUrl(listing), { width: 96 });
+  const name = listing.brand || listing.title;
+  const sub = [formatPrice(listing.price, { whole: true }), listing.size].filter(Boolean).join(' · ');
+  const inverted = !!slot.inverted;
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: slot.left,
+        bottom: Math.round(slot.bottom * scale),
+        opacity: enter,
+        transform: [
+          { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
+          { rotate: slot.rotate },
+        ],
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          height: 48,
+          maxWidth: 190,
+          paddingLeft: 5,
+          paddingRight: 16,
+          borderRadius: 24,
+          backgroundColor: inverted ? 'rgba(255,255,255,0.14)' : '#FFFFFF',
+          borderWidth: inverted ? 1 : 0,
+          borderColor: 'rgba(255,255,255,0.22)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: inverted ? 0 : 0.14,
+          shadowRadius: 10,
+          elevation: inverted ? 0 : 3,
+        }}
+      >
+        <Image
+          source={{ uri: thumb }}
+          style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(15,15,15,0.08)' }}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+        />
+        <View style={{ marginLeft: 9, flexShrink: 1 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: 'Inter_700Bold',
+              fontSize: 13,
+              letterSpacing: -0.2,
+              color: inverted ? '#FFFFFF' : PILL_INK,
+            }}
+          >
+            {name}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              fontFamily: 'Inter_500Medium',
+              fontSize: 11,
+              marginTop: 1,
+              color: inverted ? 'rgba(255,255,255,0.65)' : 'rgba(15,15,15,0.55)',
+            }}
+          >
+            {sub}
+          </Text>
+        </View>
+      </View>
+    </Animated.View>
   );
 }
