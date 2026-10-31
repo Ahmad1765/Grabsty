@@ -177,6 +177,14 @@ function fromOrder(
   const sellerId = str(record.seller_id);
   const buyerId = str(record.buyer_id);
   if (!orderId || !listingId) return [];
+  // A losing duplicate payment is inserted as refund_due: that buyer is owed
+  // their money back and the seller already got "Sold!" for the winning order.
+  const status = str(record.status);
+  if (status && ['refund_due', 'refunded', 'failed', 'canceled', 'cancelled'].includes(status)) {
+    return [];
+  }
+  // Cash on delivery: nothing has been paid yet, so don't say it has.
+  const isCod = str(record.payment_method) === 'cod';
 
   const title = str(lookups.listingTitle) ?? 'your item';
   const data = { type: 'order', listingId };
@@ -196,8 +204,10 @@ function fromOrder(
   if (buyerId) {
     out.push({
       userId: buyerId,
-      title: 'Payment confirmed',
-      body: `Payment confirmed — ${truncate(title, 60)}`,
+      title: isCod ? 'Order placed' : 'Payment confirmed',
+      body: isCod
+        ? `Order placed — ${truncate(title, 60)}. Pay cash on delivery.`
+        : `Payment confirmed — ${truncate(title, 60)}`,
       data,
       idempotencyKey: `orders:${orderId}:INSERT:${buyerId}`,
     });

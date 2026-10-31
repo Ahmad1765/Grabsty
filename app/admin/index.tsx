@@ -72,6 +72,13 @@ function KycPhoto({ value, style }: { value: string; style: React.ComponentProps
   return <Image source={uri ? { uri } : undefined} style={style} contentFit="cover" />;
 }
 
+// A transaction still needs work unless it's finished — or its order already
+// died (failed card checkout, canceled) without the escrow row being closed.
+function isOpenTransaction(t: EscrowLogisticsItem): boolean {
+  if (['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status)) return false;
+  return !['failed', 'canceled', 'cancelled', 'refunded'].includes(t.order?.status ?? '');
+}
+
 function deriveRef(id: string): string {
   const hex = id.replace(/-/g, '').slice(0, 8);
   return hex.toUpperCase();
@@ -231,19 +238,19 @@ export default function AdminConsoleScreen() {
   // ── Metrics Calculation ───────────────────────────────────────────────────
   const metrics = useMemo(() => {
     const totalTransactions = transactions.length;
-    const activeEscrow = transactions.filter(
-      (t) => !['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status),
-    );
+    const activeEscrow = transactions.filter(isOpenTransaction);
     const inTransit = transactions.filter((t) => t.status === 'IN_TRANSIT');
     const disputed = transactions.filter((t) => t.status === 'DISPUTED');
     const pendingKyc = verifications.filter((v) => v.status === 'submitted');
     const supportCount = supportConvs.length;
     const openSupportDisputes = supportConvs.filter((c) => c.is_dispute).length;
 
-    const totalEscrowVolume = activeEscrow.reduce(
-      (sum, t) => sum + (t.order?.amount_cents || t.amount_cents || 0),
-      0,
-    );
+    // Money held = buyer has actually paid (card captured, or COD cash
+    // collected) and it hasn't been released or refunded yet. Unpaid COD and
+    // abandoned card checkouts hold nothing.
+    const totalEscrowVolume = activeEscrow
+      .filter((t) => t.order?.payment_status === 'paid' || !!t.order?.cod_paid_at)
+      .reduce((sum, t) => sum + (t.order?.amount_cents || t.amount_cents || 0), 0);
 
     return {
       totalTransactions,
@@ -262,7 +269,7 @@ export default function AdminConsoleScreen() {
     let list = transactions;
 
     if (logisticsFilter === 'active') {
-      list = list.filter((t) => !['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status));
+      list = list.filter(isOpenTransaction);
     } else if (logisticsFilter !== 'all') {
       list = list.filter((t) => t.status === logisticsFilter);
     }

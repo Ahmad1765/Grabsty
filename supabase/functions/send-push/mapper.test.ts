@@ -205,6 +205,22 @@ describe('buildPushNotifications — orders INSERT', () => {
     expect(out[0].body).toBe('You sold your item');
   });
 
+  it('tells a cash-on-delivery buyer the order is placed, not paid', () => {
+    const cod = { ...orderInsert, record: { ...orderInsert.record, status: 'pending', payment_method: 'cod' } };
+    const out = buildPushNotifications(cod, { listingTitle: 'Vintage Levi 501' });
+    expect(out).toHaveLength(2);
+    expect(out[1]).toMatchObject({
+      userId: BUYER,
+      title: 'Order placed',
+      body: 'Order placed — Vintage Levi 501. Pay cash on delivery.',
+    });
+  });
+
+  it('sends nothing for a losing duplicate payment awaiting refund', () => {
+    const dup = { ...orderInsert, record: { ...orderInsert.record, status: 'refund_due', payment_method: 'card' } };
+    expect(buildPushNotifications(dup, { listingTitle: 'x' })).toEqual([]);
+  });
+
   it('ignores order updates', () => {
     expect(
       buildPushNotifications({ ...orderInsert, type: 'UPDATE' }, {}),

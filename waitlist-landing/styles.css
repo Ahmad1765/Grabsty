@@ -2645,10 +2645,32 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   font-size: 1.125rem;
   font-weight: 900;
   color: var(--paper);
   letter-spacing: -0.02em;
+}
+
+/* Logotype SVG has ~10% built-in padding; negative margins align glyphs to the content edge. */
+.footer-logotype {
+  display: block;
+  height: 56px;
+  width: auto;
+  margin: -10px -12px -10px -12px;
+}
+
+@media (min-width: 640px) {
+  .footer-logotype { height: 68px; margin: -12px -15px -12px -15px; }
+}
+
+.footer-copy-inline {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--paper-40);
 }
 
 .footer-tagline {
