@@ -48,7 +48,8 @@ import {
   type EscrowLogisticsItem,
 } from '@/lib/escrowService';
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
-import type { EscrowStatus, Verification, User } from '@/types';
+import { AdminUsers } from '@/components/admin/AdminUsers';
+import type { EscrowStatus, Verification } from '@/types';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import {
   fetchAdminSupportConversations,
@@ -126,10 +127,6 @@ export default function AdminConsoleScreen() {
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('submitted');
   const [processingKycId, setProcessingKycId] = useState<string | null>(null);
 
-  // Users Directory State
-  const [users, setUsers] = useState<User[]>([]);
-  const [userSearch, setUserSearch] = useState('');
-
   // Support Team State
   const [supportConvs, setSupportConvs] = useState<AdminSupportConversation[]>([]);
   const [supportFilter, setSupportFilter] = useState<'all' | 'disputes' | 'general'>('all');
@@ -148,16 +145,14 @@ export default function AdminConsoleScreen() {
   const loadAllData = useCallback(async () => {
     if (!profile?.is_admin) return;
     try {
-      const [txs, kycRes, usersRes, supportConvsData] = await Promise.all([
+      const [txs, kycRes, supportConvsData] = await Promise.all([
         escrowService.fetchLogisticsTransactions('all', 100),
         supabase.rpc('admin_get_verifications', { p_status: 'all' }),
-        supabase.rpc('admin_get_users', { p_limit: 100 }),
         fetchAdminSupportConversations('all'),
       ]);
 
       setTransactions(txs);
       if (kycRes.data) setVerifications(kycRes.data as Verification[]);
-      if (usersRes.data) setUsers(usersRes.data as User[]);
       if (supportConvsData) {
         // A chat is a dispute when its user is party to a DISPUTED order. The old
         // signal (the word "dispute" in the latest message) vanished on any reply.
@@ -299,18 +294,6 @@ export default function AdminConsoleScreen() {
     if (verificationFilter === 'all') return verifications;
     return verifications.filter((v) => v.status === verificationFilter);
   }, [verifications, verificationFilter]);
-
-  // ── Filtered Users ────────────────────────────────────────────────────────
-  const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return users;
-    const q = userSearch.toLowerCase().trim();
-    return users.filter(
-      (u) =>
-        u.username?.toLowerCase().includes(q) ||
-        u.full_name?.toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
 
   // ── Filtered Support Conversations ────────────────────────────────────────
   const filteredSupportConvs = useMemo(() => {
@@ -1600,104 +1583,8 @@ export default function AdminConsoleScreen() {
           )}
 
           {/* TAB 5: USERS & SELLERS DIRECTORY */}
-          {activeTab === 'users' && (
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginBottom: 14, alignItems: isDesktop ? 'center' : 'stretch', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, minHeight: 38, width: isDesktop ? 300 : '100%' }}>
-                  <Feather name="search" size={14} color={theme.textMuted} />
-                  <TextInput
-                    value={userSearch}
-                    onChangeText={setUserSearch}
-                    placeholder="Search by username, full name, ID..."
-                    placeholderTextColor={theme.textMuted}
-                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text, paddingVertical: 6 }}
-                  />
-                  {userSearch ? (
-                    <Pressable onPress={() => setUserSearch('')} hitSlop={8}>
-                      <Feather name="x" size={14} color={theme.textMuted} />
-                    </Pressable>
-                  ) : null}
-                </View>
+          {activeTab === 'users' && <AdminUsers />}
 
-                <Text style={{ fontSize: 12, color: theme.textMuted }}>
-                  Total {filteredUsers.length} members
-                </Text>
-              </View>
-
-              <FlatList
-                data={filteredUsers}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={true}
-                renderItem={({ item }) => {
-                  const initial = (item.full_name || item.username || 'U').charAt(0).toUpperCase();
-
-                  return (
-                    <View
-                      style={{
-                        backgroundColor: theme.panel,
-                        borderRadius: 12,
-                        padding: 14,
-                        borderWidth: 1,
-                        borderColor: theme.border,
-                        marginBottom: 10,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                          {item.avatar_url ? (
-                            <Image
-                              source={{ uri: getOptimizedImageUrl(item.avatar_url, { width: 80 }) }}
-                              style={{ width: 40, height: 40 }}
-                              contentFit="cover"
-                            />
-                          ) : (
-                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.text }}>{initial}</Text>
-                          )}
-                        </View>
-
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={{ fontSize: 14, fontWeight: '700', color: theme.text }} numberOfLines={1}>
-                              {item.full_name || item.username}
-                            </Text>
-                            {item.is_verified && <ShieldCheckIcon size={14} />}
-                            {item.is_admin && (
-                              <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: isDark ? '#333' : '#E5E5E5' }}>
-                                <Text style={{ fontSize: 9, fontWeight: '800', color: theme.text }}>ADMIN</Text>
-                              </View>
-                            )}
-                          </View>
-                          <Text style={{ fontSize: 12, color: theme.textMuted }}>@{item.username} · {item.total_sales || 0} sales</Text>
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                        <Pressable
-                          onPress={() => router.push(`/user/${item.id}` as any)}
-                          style={({ pressed }) => ({
-                            width: 32,
-                            height: 32,
-                            borderRadius: 6,
-                            backgroundColor: theme.surface,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <Feather name="external-link" size={14} color={theme.text} />
-                        </Pressable>
-                      </View>
-                    </View>
-                  );
-                }}
-              />
-            </View>
-          )}
-
-          {/* TAB 6: SUPPORT CHATS & INQUIRIES WORKBENCH */}
           {activeTab === 'support' && (
             <View style={{ flex: 1 }}>
               {/* Header (hidden on phones while a chat is open, so the thread gets the screen) */}
