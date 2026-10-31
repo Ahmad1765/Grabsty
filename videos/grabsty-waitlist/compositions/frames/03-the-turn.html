@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face{font-family:"Bricolage Grotesque 96pt";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque96pt-Bold.ttf") format("truetype");}
+        @font-face{font-family:"JetBrains Mono";font-weight:400 800;font-style:normal;font-display:block;src:url("assets/fonts/JetBrainsMono-latin.woff2") format("woff2");}
+
+        #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; color: #FFFFFF; }
+        .f3-bg { position: absolute; inset: 0; background: #6C47FF; }
+        .f3-stage { position: absolute; inset: 0; }
+        .f3-bloom { position: absolute; left: 190px; top: 130px; width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.32) 0%, rgba(255,255,255,0) 65%); }
+        .f3-plate { position: absolute; left: 300px; top: 210px; width: 480px; height: 480px; background: #0F0F0F; border: 5px solid #FFFFFF; box-shadow: 18px 18px 0 #0F0F0F; display: flex; align-items: center; justify-content: center; }
+        .f3-plate img { width: 400px; height: auto; display: block; }
+        .f3-mark { position: absolute; left: 230px; top: 770px; width: 620px; height: 275px; }
+        .f3-mark img { width: 620px; height: auto; display: block; }
+        .f3-promise { position: absolute; left: 72px; top: 1110px; width: 936px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 104px; line-height: 0.98; letter-spacing: -0.01em; text-transform: uppercase; }
+        .f3-row { display: block; white-space: nowrap; }
+        .f3-w { display: inline-block; margin-right: 26px; }
+        .f3-first { display: inline-block; background: #0F0F0F; color: #FFFFFF; padding: 6px 22px 2px; box-shadow: 10px 10px 0 #FFFFFF; margin-top: 18px; }
+      </style>
+
+      <div data-hf-id="hf-x6fu" id="root" data-composition-id="03-the-turn" data-width="1080" data-height="1920" data-start="0" data-duration="3.5">
+        <div data-hf-id="hf-8w7s" id="f3-bg" class="f3-bg clip" data-start="0" data-duration="3.5" data-track-index="0"></div>
+        <div data-hf-id="hf-qcb9" id="f3-stage" class="f3-stage clip" data-start="0" data-duration="3.5" data-track-index="1">
+          <div data-hf-id="hf-89xq" class="f3-bloom" id="f3-bloom"></div>
+          <div data-hf-id="hf-4q22" class="f3-plate" id="f3-plate"><img data-hf-id="hf-ng8e" src="assets/3d-g-tile-cut.png" alt="" /></div>
+          <div data-hf-id="hf-vqa8" class="f3-mark" id="f3-mark"><img data-hf-id="hf-ov5f" src="assets/logotype-white.svg" alt="Grabsty" /></div>
+          <div data-hf-id="hf-gpyx" class="f3-promise">
+            <span data-hf-id="hf-w2xr" class="f3-row"><span data-hf-id="hf-cf1n" class="f3-w">The</span><span data-hf-id="hf-lw7v" class="f3-w">seller</span><span data-hf-id="hf-i0xe" class="f3-w">doesn't</span></span>
+            <span data-hf-id="hf-ybmn" class="f3-row"><span data-hf-id="hf-sics" class="f3-w">get</span><span data-hf-id="hf-mcp7" class="f3-w">your</span><span data-hf-id="hf-kv3o" class="f3-w">money</span></span>
+            <span data-hf-id="hf-xxbm" class="f3-row"><span data-hf-id="hf-wytk" class="f3-w f3-first">First.</span></span>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // Scene 1 — the G plate drops in and lands; soft bloom behind
+        tl.fromTo("#f3-plate", { opacity: 0, y: -700, rotation: -8 }, { opacity: 1, y: 0, rotation: 0, duration: 0.6, ease: "expo.out" }, 0.05);
+        tl.fromTo("#f3-bloom", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" }, 0.3);
+        // Scene 2 — wordmark completes left→right
+        tl.fromTo("#f3-mark", { clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "power3.inOut" }, 0.85);
+        // Scene 3 — the promise, word by word; FIRST. lands last
+        tl.fromTo(".f3-promise .f3-w:not(.f3-first)", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.32, ease: "power3.out", stagger: 0.1 }, 1.45);
+        tl.fromTo(".f3-first", { opacity: 0, scale: 1.5 }, { opacity: 1, scale: 1, duration: 0.35, ease: "expo.out" }, 2.15);
+
+        window.__timelines["03-the-turn"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" class="loc-arch-svg">
+                  <!-- Base Plinth -->
+                  <line x1="3" y1="28" x2="29" y2="28" stroke="#FFFFFF" stroke-width="1.6" opacity="0.7"></line>
+                  <line x1="4" y1="30" x2="28" y2="30" stroke="#6C47FF" stroke-width="1.4"></line>
+                  <!-- Flanking Defensive Bastion Turrets -->
+                  <rect x="5" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5"></rect>
+                  <rect x="21" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5"></rect>
+                  <!-- Turret Chhatri Domes -->
+                  <path d="M5 10 Q8 6 11 10 Z" fill="#6C47FF" stroke="#6C47FF" stroke-width="1"></path>
+                  <path d="M21 10 Q24 6 27 10 Z" fill="#6C47FF" stroke="#6C47FF" stroke-width="1"></path>
+                  <!-- Rampart Battlements / Crenellations -->
+                  <path d="M11 11 H21" stroke="#FFFFFF" stroke-width="1.2" opacity="0.6"></path>
+                  <rect x="12" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7"></rect>
+                  <rect x="15" y="8" width="2" height="3" fill="#6C47FF"></rect>
+                  <rect x="18" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7"></rect>
+                  <!-- Central Grand Cusped Portal Arch -->
+                  <path d="M11 28 V19 Q11 14 16 12 Q21 14 21 19 V28" stroke="#6C47FF" stroke-width="1.8" fill="rgba(108, 71, 255, 0.15)"></path>
+                  <path d="M13 28 V20 Q13 16 16 15 Q19 16 19 20 V28" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 1" fill="none" opacity="0.7"></path>
+                  <circle cx="16" cy="12" r="1" fill="#FFFFFF"></circle>
+                </svg>

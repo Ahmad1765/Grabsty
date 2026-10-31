@@ -10,7 +10,7 @@
   <!-- Official Grabsty Brand Favicon -->
   <link rel="icon" type="image/svg+xml" href="brand/favicon.svg" />
 
-  <link rel="stylesheet" href="styles.css?v=20261028-01" />
+  <link rel="stylesheet" href="styles.css?v=20261031-01" />
   
   <!-- Preload Official Grabsty Brand Fonts (From brand/fonts/) -->
   <link rel="preload" href="brand/fonts/BricolageGrotesque[opsz,wdth,wght].ttf" as="font" type="font/ttf" crossorigin />
@@ -229,8 +229,7 @@
     <div class="header-inner">
       <div class="header-left">
         <a href="#" class="brand-logo" aria-label="Grabsty Home">
-          <img src="brand/LOGOMARK/SVG/Logomark%20Purple.svg" alt="" class="brand-logomark" width="30" height="32" />
-          <img src="brand/LOGOTYPE/SVG/Logotype%20White.svg" alt="Grabsty" class="brand-logotype" height="22" />
+          <img src="brand/LOGOTYPE/SVG/Logotype%20White.svg" alt="Grabsty" class="brand-logotype" height="60" />
         </a>
         <!-- Ambient Lahore & Regional Waitlist Ticker -->
         <div class="header-live-ticker" id="global-ticker" aria-hidden="true">
@@ -240,10 +239,6 @@
       </div>
       
       <div class="header-meta">
-        <!-- Audio Haptics Toggle -->
-        <button type="button" id="sfx-toggle-btn" class="header-sfx-btn" title="Toggle Tactile Sound Effects" aria-pressed="true">
-          <span id="sfx-icon">🔊</span> <span class="sfx-label">SFX: ON</span>
-        </button>
         <a href="#waitlist-section" class="header-action-btn">JOIN WAITLIST</a>
       </div>
     </div>
@@ -268,10 +263,8 @@
       
       <div class="hero-subtitle-box animate-on-scroll reveal-rotate delay-350">
         <p class="subtitle-text">
-          Buy and sell pre-loved clothes, sneakers and bags without sending money to strangers first. Your payment stays in escrow until your order arrives and you've had 48 hours to check it.
+          Buy and sell pre-loved clothes, sneakers and bags with escrow protection. Grabsty holds your payment until your order arrives and you've had 24 hours to check it. Sellers get paid right after.
         </p>
-        <!-- Brand stickers slapped on the box corners, out of the form's way -->
-        <img src="brand/STICKERS/WEBP/8.webp" alt="" class="brand-sticker sticker-thrifter" width="800" height="373" aria-hidden="true" />
         <img src="brand/STICKERS/WEBP/9.webp" alt="" class="brand-sticker sticker-steal" width="800" height="366" aria-hidden="true" />
       </div>
 
@@ -282,39 +275,6 @@
           <div class="referral-banner hidden" id="referral-banner" aria-live="polite">
             <span class="ref-badge-icon" aria-hidden="true">✦</span>
             <span>Invited by <strong id="referrer-code">#GRB-1024</strong></span>
-          </div>
-
-          <!-- Waitlist Hub Badge (Accurate Location Banner) -->
-          <div class="waitlist-location-card">
-            <div class="waitlist-loc-left">
-              <div class="loc-arch-badge" aria-hidden="true">
-                <svg viewBox="0 0 32 32" fill="none" class="loc-arch-svg">
-                  <!-- Base Plinth -->
-                  <line x1="3" y1="28" x2="29" y2="28" stroke="#FFFFFF" stroke-width="1.6" opacity="0.7"/>
-                  <line x1="4" y1="30" x2="28" y2="30" stroke="#5A59EE" stroke-width="1.4"/>
-                  <!-- Flanking Defensive Bastion Turrets -->
-                  <rect x="5" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5"/>
-                  <rect x="21" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5"/>
-                  <!-- Turret Chhatri Domes -->
-                  <path d="M5 10 Q8 6 11 10 Z" fill="#5A59EE" stroke="#5A59EE" stroke-width="1"/>
-                  <path d="M21 10 Q24 6 27 10 Z" fill="#5A59EE" stroke="#5A59EE" stroke-width="1"/>
-                  <!-- Rampart Battlements / Crenellations -->
-                  <path d="M11 11 H21" stroke="#FFFFFF" stroke-width="1.2" opacity="0.6"/>
-                  <rect x="12" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7"/>
-                  <rect x="15" y="8" width="2" height="3" fill="#5A59EE"/>
-                  <rect x="18" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7"/>
-                  <!-- Central Grand Cusped Portal Arch -->
-                  <path d="M11 28 V19 Q11 14 16 12 Q21 14 21 19 V28" stroke="#5A59EE" stroke-width="1.8" fill="rgba(90, 89, 238, 0.15)"/>
-                  <path d="M13 28 V20 Q13 16 16 15 Q19 16 19 20 V28" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 1" fill="none" opacity="0.7"/>
-                  <circle cx="16" cy="12" r="1" fill="#FFFFFF"/>
-                </svg>
-              </div>
-              <div class="loc-text-col">
-                <span class="loc-title">WAITLIST HUB: LAHORE, PAKISTAN</span>
-                <span class="loc-sub">Walled City &bull; Gulberg &bull; DHA &bull; Mall Road &bull; Cantt</span>
-              </div>
-            </div>
-            <span class="loc-status-pill">OFFICIAL WAITLIST</span>
           </div>
 
           <!-- Waitlist Registration Form -->
@@ -334,46 +294,6 @@
                 </button>
               </div>
               <input type="hidden" name="role" id="selected-role" value="buyer" />
-            </div>
-
-            <!-- Focus / Interest Selector (Lahore Architecture Design & Fashion) -->
-            <div class="interest-selector-wrap">
-              <span class="role-selector-label">WHAT ARE YOU INTO?</span>
-              <div class="interest-pills" role="radiogroup" aria-label="Select what you want to buy or sell">
-                <button type="button" role="radio" aria-checked="false" class="interest-pill" data-interest="clothing">
-                  <span class="interest-icon-svg" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                      <path d="M2 14 V7 Q2 4 8 2 Q14 4 14 7 V14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                      <path d="M5 14 V8 Q5 6 8 5 Q11 6 11 8 V14" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1"/>
-                      <line x1="1" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="1.4"/>
-                      <circle cx="8" cy="2" r="1" fill="currentColor"/>
-                    </svg>
-                  </span>
-                  CLOTHING
-                </button>
-                <button type="button" role="radio" aria-checked="false" class="interest-pill" data-interest="sneakers_bags">
-                  <span class="interest-icon-svg" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                      <path d="M12 2 L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-                      <circle cx="12" cy="2" r="1.5" stroke="currentColor" stroke-width="1"/>
-                      <path d="M3 12 Q6 10 9 13 T15 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-                    </svg>
-                  </span>
-                  SNEAKERS &amp; BAGS
-                </button>
-                <button type="button" role="radio" aria-checked="true" class="interest-pill active" data-interest="both">
-                  <span class="interest-icon-svg" aria-hidden="true">
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                      <rect x="3" y="3" width="10" height="10" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                      <rect x="3" y="3" width="10" height="10" stroke="currentColor" stroke-width="1.2" transform="rotate(45 8 8)" fill="none"/>
-                      <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
-                    </svg>
-                  </span>
-                  BOTH
-                </button>
-              </div>
-              <input type="hidden" name="interest" id="selected-interest" value="both" />
-              <input type="hidden" name="city" id="selected-city" value="Lahore" />
             </div>
 
             <!-- Form Inputs: Name, Phone Number, Optional Email -->
@@ -451,7 +371,7 @@
           <!-- Status Lookup Switcher -->
           <div class="lookup-toggle-wrap">
             <button type="button" id="lookup-toggle-btn" class="lookup-toggle-btn">
-              Already joined on this device? See your invite link &rarr;
+              Already joined? Check your position &rarr;
             </button>
           </div>
         </div>
@@ -459,95 +379,33 @@
         <!-- Success Confirmation Card -->
         <div class="success-state hidden" id="success-container" aria-live="polite">
           <div class="success-card" id="waitlist-success-card">
-            <div class="success-badge-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
             <div class="success-queue-tag" id="success-queue-tag">WAITLIST SPOT CONFIRMED</div>
-            <div class="success-sticker-badge" aria-hidden="true">
-              <img src="brand/STICKERS/WEBP/8.webp" alt="" width="800" height="373" />
-            </div>
             <h2 class="success-title" id="success-title">You're On The Waitlist!</h2>
-            
-            <div class="success-details-box">
-              <div class="success-detail-item">
-                <span class="detail-label">NAME</span>
-                <span class="detail-value" id="confirmed-name">—</span>
+
+            <div class="success-stats">
+              <div class="success-stat">
+                <span class="detail-label">YOUR POSITION</span>
+                <span class="success-stat-value" id="queue-position">#—</span>
+                <span class="success-stat-sub" id="queue-total">&nbsp;</span>
               </div>
-              <div class="success-detail-item">
-                <span class="detail-label">PHONE</span>
-                <span class="detail-value" id="confirmed-phone">—</span>
-              </div>
-              <div class="success-detail-item" id="confirmed-email-row">
-                <span class="detail-label">EMAIL</span>
-                <span class="detail-value" id="confirmed-email">—</span>
-              </div>
-              <div class="success-detail-item">
-                <span class="detail-label">LOCATION</span>
-                <span class="detail-value" id="confirmed-location">Lahore, Pakistan</span>
-              </div>
-              <div class="success-detail-item">
-                <span class="detail-label">JOINING AS</span>
-                <span class="detail-value" id="confirmed-role">BUYER &bull; ALL CATEGORIES</span>
+              <div class="success-stat">
+                <span class="detail-label">FRIENDS JOINED</span>
+                <span class="success-stat-value" id="ref-count">0</span>
+                <span class="success-stat-sub">via your link</span>
               </div>
             </div>
 
             <p class="success-text" id="success-message">
-              We'll send your invite on WhatsApp or SMS as soon as Grabsty opens in your city.
+              Each friend who joins with your link moves you up. We'll send your invite on WhatsApp when Grabsty opens.
             </p>
 
-            <!-- Referral Station -->
-            <div class="referral-station">
-              <div class="ref-station-header">
-                <span class="ref-station-tag">COMMUNITY INVITATION</span>
-                <h3 class="ref-station-title">Invite friends who buy and sell</h3>
-                <p class="ref-station-desc">
-                  Share your link. Everyone who joins with it is counted below.
-                </p>
-              </div>
-
-              <div class="ref-link-box">
-                <input 
-                  type="text" 
-                  id="referral-link-input" 
-                  class="ref-link-input" 
-                  readonly 
-                  value="https://grabsty.com/?ref=GRB-1001"
-                  aria-label="Your unique referral link"
-                />
-                <button type="button" id="copy-ref-btn" class="copy-ref-btn">
-                  <span class="copy-text">COPY LINK</span>
-                </button>
-              </div>
-
-              <div class="ref-share-actions">
-                <a id="share-wa-btn" class="ref-share-btn share-wa" href="#" target="_blank" rel="noopener noreferrer">
-                  WHATSAPP
-                </a>
-                <a id="share-x-btn" class="ref-share-btn share-x" href="#" target="_blank" rel="noopener noreferrer">
-                  SHARE ON 𝕏
-                </a>
-                <button type="button" id="native-share-btn" class="ref-share-btn share-native hidden">
-                  SHARE SHEET ↗
-                </button>
-              </div>
-
-              <div class="ref-tracker-pill">
-                <span class="ref-tracker-dot" aria-hidden="true"></span>
-                <span id="ref-count-text">0 Referrals Tracked</span>
-              </div>
-            </div>
+            <a id="share-wa-btn" class="ref-share-btn share-wa" href="#" target="_blank" rel="noopener noreferrer">
+              INVITE ON WHATSAPP
+            </a>
 
             <div class="success-footer-info">
               <span class="ticket-id" id="ticket-number">#GRB-1001</span>
-              <span class="ticket-status">WAITLIST ENTRY CONFIRMED</span>
-            </div>
-
-            <div class="success-actions-row">
-              <button type="button" id="back-to-form-btn" class="back-link-btn">
-                &larr; Register Another Waitlist Member
-              </button>
+              <button type="button" id="back-to-form-btn" class="back-link-btn">Register someone else</button>
             </div>
           </div>
         </div>
@@ -562,11 +420,11 @@
           <img src="brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24" />
           <span>GUARANTEED ESCROW PROTECTION</span>
           <img src="brand/STICKERS/SVG/4.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>ZERO ADVANCE PAYMENT RISK</span>
+          <span>SELLERS PAID RIGHT AFTER</span>
           <img src="brand/STICKERS/SVG/5.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>48-HOUR INSPECTION WINDOW</span>
+          <span>24-HOUR CHECK WINDOW</span>
           <img src="brand/STICKERS/SVG/3.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>NO MORE INSTAGRAM SCAMS</span>
+          <span>PRE-LOVED CLOTHES, SNEAKERS &amp; BAGS</span>
           <img src="brand/STICKERS/SVG/6.svg" class="marquee-sticker" alt="" width="28" height="18" />
           <span>DUAL-CONFIRMED CASH ON DELIVERY</span>
           <img src="brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24" />
@@ -576,395 +434,17 @@
           <img src="brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24" />
           <span>GUARANTEED ESCROW PROTECTION</span>
           <img src="brand/STICKERS/SVG/4.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>ZERO ADVANCE PAYMENT RISK</span>
+          <span>SELLERS PAID RIGHT AFTER</span>
           <img src="brand/STICKERS/SVG/5.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>48-HOUR INSPECTION WINDOW</span>
+          <span>24-HOUR CHECK WINDOW</span>
           <img src="brand/STICKERS/SVG/3.svg" class="marquee-sticker" alt="" width="24" height="24" />
-          <span>NO MORE INSTAGRAM SCAMS</span>
+          <span>PRE-LOVED CLOTHES, SNEAKERS &amp; BAGS</span>
           <img src="brand/STICKERS/SVG/6.svg" class="marquee-sticker" alt="" width="28" height="18" />
           <span>DUAL-CONFIRMED CASH ON DELIVERY</span>
           <img src="brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24" />
         </div>
       </div>
     </div>
-
-    <!-- Escrow Program Mechanics & The High Cost of the Status Quo -->
-    <section class="features-section" id="features">
-      <div class="section-tag animate-on-scroll reveal-rotate">
-        <span>THE ESCROW PROGRAM</span>
-      </div>
-      
-      <h2 class="section-heading animate-on-scroll reveal-up delay-100">
-        WHAT YOU LOSE ON INSTAGRAM &amp; OLX.<br />AND HOW GRABSTY PROTECTS YOU.
-      </h2>
-
-      <div class="lahore-architecture-card animate-on-scroll reveal-up delay-150">
-        <div class="arch-card-header">
-          <div class="arch-badge-group">
-            <span class="arch-card-tag">ESCROW ENGINE</span>
-            <span class="arch-card-pill">BUYER PROTECTION &bull; ESCROW PAYMENTS &bull; TRACKED DELIVERY</span>
-          </div>
-          <div class="arch-study-switcher" role="tablist" aria-label="How escrow works">
-            <button type="button" class="arch-study-tab active" data-study="01" role="tab" aria-selected="true" id="tab-study-01">
-              PROGRAM 01: HOW ESCROW PROTECTS YOU
-            </button>
-            <button type="button" class="arch-study-tab" data-study="02" role="tab" aria-selected="false" id="tab-study-02">
-              PROGRAM 02: WHAT YOU LOSE WITHOUT IT
-            </button>
-          </div>
-        </div>
-
-        <div class="arch-card-content-grid">
-          <div class="arch-card-visual">
-            <div class="arch-blueprint-frame">
-              <!-- Blueprint Study 01: Grabsty Atomic Escrow Pipeline -->
-              <svg viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel" id="blueprint-study-01" aria-label="How a Grabsty order moves from offer to payout">
-                <!-- Technical Grid Pattern -->
-                <defs>
-                  <pattern id="archGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"/>
-                  </pattern>
-                  <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#5A59EE" />
-                  </marker>
-                  <marker id="arrowHeadMuted" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#FFFFFF" opacity="0.6" />
-                  </marker>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#archGridPattern)" />
-                
-                <!-- Header Status Line -->
-                <text x="18" y="24" fill="#5A59EE" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">HOW A GRABSTY ORDER WORKS</text>
-                <text x="442" y="24" fill="rgba(255,255,255,0.4)" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">OFFER TO PAYOUT</text>
-                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(255,255,255,0.15)" stroke-dasharray="3 3" stroke-width="1"/>
-
-                <!-- Stage 01: In-Chat Offer -->
-                <g transform="translate(18, 52)">
-                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"/>
-                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)"/>
-                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 CHAT</text>
-                  <!-- Tag Icon -->
-                  <path d="M26 38 L38 38 L46 46 L38 54 L26 54 Z" stroke="#5A59EE" stroke-width="1.2" fill="none"/>
-                  <circle cx="30" cy="46" r="1.5" fill="#5A59EE"/>
-                  <text x="36" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BINDING</text>
-                  <text x="36" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">OFFER</text>
-                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Instant Accept</text>
-                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or Counter</text>
-                  <rect x="6" y="123" width="60" height="9" fill="rgba(90, 89, 238,0.2)"/>
-                  <text x="36" y="130" fill="#5A59EE" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">PROPOSED</text>
-                </g>
-
-                <!-- Connector 01 -> 02 -->
-                <line x1="90" y1="120" x2="103" y2="120" stroke="#5A59EE" stroke-width="1.5" marker-end="url(#arrowHead)"/>
-
-                <!-- Stage 02: Escrow Vault (Hero Step) -->
-                <g transform="translate(105, 42)">
-                  <rect width="78" height="154" stroke="#5A59EE" stroke-width="2" fill="rgba(90, 89, 238,0.12)"/>
-                  <rect x="0" y="0" width="78" height="22" fill="#5A59EE"/>
-                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 VAULT</text>
-                  <!-- Padlock Icon -->
-                  <circle cx="39" cy="48" r="14" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="2 2" fill="none"/>
-                  <rect x="31" y="44" width="16" height="13" stroke="#FFFFFF" stroke-width="1.4" fill="var(--ink)"/>
-                  <path d="M34 44 V39 C34 36.5 36.5 34.5 39 34.5 C41.5 34.5 44 36.5 44 39 V44" stroke="#FFFFFF" stroke-width="1.4" fill="none"/>
-                  <circle cx="39" cy="50.5" r="1.5" fill="#5A59EE"/>
-                  <text x="39" y="78" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ESCROW</text>
-                  <text x="39" y="90" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LOCKED</text>
-                  <text x="39" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller NOT Paid</text>
-                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Funds In Vault</text>
-                  <rect x="6" y="132" width="66" height="14" fill="#5A59EE"/>
-                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">SECURED_ESCROW</text>
-                </g>
-
-                <!-- Connector 02 -> 03 -->
-                <line x1="183" y1="120" x2="196" y2="120" stroke="#5A59EE" stroke-width="1.5" marker-end="url(#arrowHead)"/>
-
-                <!-- Stage 03: Managed Doorstep Pickup & Tracking -->
-                <g transform="translate(198, 52)">
-                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"/>
-                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)"/>
-                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DISPATCH</text>
-                  <!-- Truck Courier Icon -->
-                  <rect x="23" y="40" width="16" height="12" stroke="#5A59EE" stroke-width="1.2" fill="none"/>
-                  <path d="M39 44 H45 L48 48 V52 H39 V44 Z" stroke="#5A59EE" stroke-width="1.2" fill="none"/>
-                  <circle cx="28" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1"/>
-                  <circle cx="44" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1"/>
-                  <text x="36" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">DOORSTEP</text>
-                  <text x="36" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">PICKUP</text>
-                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Live Courier</text>
-                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Tracking Link</text>
-                  <rect x="6" y="123" width="60" height="9" fill="rgba(255,255,255,0.08)"/>
-                  <text x="36" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IN_TRANSIT</text>
-                </g>
-
-                <!-- Connector 03 -> 04 -->
-                <line x1="270" y1="120" x2="283" y2="120" stroke="#5A59EE" stroke-width="1.5" marker-end="url(#arrowHead)"/>
-
-                <!-- Stage 04: 72-Hour Physical Inspection (Hero Step) -->
-                <g transform="translate(285, 42)">
-                  <rect width="80" height="154" stroke="#FFFFFF" stroke-width="2" fill="rgba(255,255,255,0.05)"/>
-                  <rect x="0" y="0" width="80" height="22" fill="#FFFFFF"/>
-                  <text x="40" y="15" fill="#0F0F0F" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 INSPECT</text>
-                  <!-- Inspection Magnifier / Shield Icon -->
-                  <circle cx="37" cy="46" r="10" stroke="#5A59EE" stroke-width="1.5" fill="none"/>
-                  <line x1="44" y1="53" x2="51" y2="60" stroke="#5A59EE" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M33 46 L36 49 L43 42" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="40" y="78" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">48-HOUR</text>
-                  <text x="40" y="90" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">WINDOW</text>
-                  <text x="40" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Check The Item</text>
-                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Verify Quality</text>
-                  <rect x="6" y="132" width="68" height="14" fill="rgba(255,255,255,0.15)"/>
-                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">DELIVERED</text>
-                </g>
-
-                <!-- Connector 04 -> 05 -->
-                <line x1="365" y1="120" x2="378" y2="120" stroke="#5A59EE" stroke-width="1.5" marker-end="url(#arrowHead)"/>
-
-                <!-- Stage 05: Atomic Funds Release -->
-                <g transform="translate(380, 52)">
-                  <rect width="66" height="136" stroke="#5A59EE" stroke-width="1.4" fill="rgba(15,15,15,0.95)"/>
-                  <rect x="0" y="0" width="66" height="20" fill="#5A59EE"/>
-                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 PAYOUT</text>
-                  <!-- Shield Check Icon -->
-                  <circle cx="33" cy="46" r="12" fill="#F2F3FE"/>
-                  <path d="M29 46 L32 49 L38 43" stroke="#5356EE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  <text x="33" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">FUNDS</text>
-                  <text x="33" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RELEASED</text>
-                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Paid To Bank,</text>
-                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">JazzCash Or Easypaisa</text>
-                  <rect x="5" y="123" width="56" height="9" fill="#10B981"/>
-                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">COMPLETED</text>
-                </g>
-
-                <!-- Footer Summary Label -->
-                <line x1="18" y1="216" x2="442" y2="216" stroke="#FFFFFF" stroke-width="1.5" opacity="0.4"/>
-                <text x="230" y="238" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ESCROW PAYMENT &bull; NO ADVANCE TRANSFERS &bull; 48-HR INSPECTION</text>
-              </svg>
-
-              <!-- Blueprint Study 02: What You Lose on Instagram & OLX -->
-              <svg viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel hidden" id="blueprint-study-02" aria-label="What You Lose Without Escrow: The Instagram and OLX Trap">
-                <rect width="100%" height="100%" fill="url(#archGridPattern)" />
-                
-                <defs>
-                  <marker id="arrowFail" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#EF4444" />
-                  </marker>
-                </defs>
-
-                <!-- Header Warning Line -->
-                <text x="18" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">WITHOUT GRABSTY: PAYING A STRANGER UPFRONT</text>
-                <text x="442" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">BUYER_RISK = 100%</text>
-                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(239,68,68,0.35)" stroke-dasharray="3 3" stroke-width="1"/>
-
-                <!-- Failure Step 01: Blind Bank Transfer -->
-                <g transform="translate(18, 52)">
-                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"/>
-                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)"/>
-                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 ADVANCE</text>
-                  <!-- Send money icon -->
-                  <path d="M26 44 H46 M46 44 L39 37 M46 44 L39 51" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round"/>
-                  <text x="36" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RAAST /</text>
-                  <text x="36" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BANK PAY</text>
-                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">100% Upfront</text>
-                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Blind Transfer</text>
-                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)"/>
-                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IRREVERSIBLE</text>
-                </g>
-
-                <!-- Connector 01 -> 02 -->
-                <line x1="90" y1="120" x2="103" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"/>
-
-                <!-- Failure Step 02: Zero Holding Vault -->
-                <g transform="translate(105, 42)">
-                  <rect width="78" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)"/>
-                  <rect x="0" y="0" width="78" height="22" fill="#EF4444"/>
-                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 NO VAULT</text>
-                  <!-- Broken Lock Icon -->
-                  <circle cx="39" cy="48" r="14" stroke="#EF4444" stroke-width="1.2" stroke-dasharray="2 2" fill="none"/>
-                  <path d="M31 46 H47 V58 H31 Z" stroke="#EF4444" stroke-width="1.4" fill="var(--ink)"/>
-                  <path d="M34 44 V37 C34 34 39 34 42 37" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round" fill="none"/>
-                  <line x1="33" y1="33" x2="45" y2="45" stroke="#EF4444" stroke-width="1.5"/>
-                  <text x="39" y="78" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ZERO</text>
-                  <text x="39" y="90" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LEVERAGE</text>
-                  <text x="39" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller Has Cash</text>
-                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">You Have Zero</text>
-                  <rect x="6" y="132" width="66" height="14" fill="#EF4444"/>
-                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_PROTECTION</text>
-                </g>
-
-                <!-- Connector 02 -> 03 -->
-                <line x1="183" y1="120" x2="196" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"/>
-
-                <!-- Failure Step 03: Replica, Fake, or Ghosting -->
-                <g transform="translate(198, 52)">
-                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"/>
-                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)"/>
-                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DELIVERY</text>
-                  <!-- Warning triangle icon -->
-                  <polygon points="36,36 49,56 23,56" stroke="#EF4444" stroke-width="1.3" fill="none"/>
-                  <text x="36" y="52" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">!</text>
-                  <text x="36" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">REPLICA OR</text>
-                  <text x="36" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BLOCKED</text>
-                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Fake Fabric</text>
-                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or DM Ghost</text>
-                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)"/>
-                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">COUNTERFEIT</text>
-                </g>
-
-                <!-- Connector 03 -> 04 -->
-                <line x1="270" y1="120" x2="283" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"/>
-
-                <!-- Failure Step 04: "No Returns / Sold As-Is" -->
-                <g transform="translate(285, 42)">
-                  <rect width="80" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)"/>
-                  <rect x="0" y="0" width="80" height="22" fill="#EF4444"/>
-                  <text x="40" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 NO RETURN</text>
-                  <!-- Prohibited Icon -->
-                  <circle cx="40" cy="48" r="13" stroke="#EF4444" stroke-width="1.4" fill="none"/>
-                  <line x1="31" y1="39" x2="49" y2="57" stroke="#EF4444" stroke-width="1.5"/>
-                  <text x="40" y="78" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">"SOLD</text>
-                  <text x="40" y="90" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">AS-IS"</text>
-                  <text x="40" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Zero Inspection</text>
-                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">No Chargeback</text>
-                  <rect x="6" y="132" width="68" height="14" fill="#EF4444"/>
-                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_EXCHANGE</text>
-                </g>
-
-                <!-- Connector 04 -> 05 -->
-                <line x1="365" y1="120" x2="378" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"/>
-
-                <!-- Failure Step 05: Total Loss -->
-                <g transform="translate(380, 52)">
-                  <rect width="66" height="136" stroke="#EF4444" stroke-width="1.4" fill="rgba(15,15,15,0.95)"/>
-                  <rect x="0" y="0" width="66" height="20" fill="#EF4444"/>
-                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 LOSS</text>
-                  <!-- Skull / Crossmark Icon -->
-                  <circle cx="33" cy="46" r="12" fill="rgba(239,68,68,0.2)"/>
-                  <line x1="27" y1="40" x2="39" y2="52" stroke="#EF4444" stroke-width="1.6"/>
-                  <line x1="39" y1="40" x2="27" y2="52" stroke="#EF4444" stroke-width="1.6"/>
-                  <text x="33" y="74" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">TOTAL</text>
-                  <text x="33" y="86" fill="#FFFFFF" font-family="'Bricolage Grotesque', sans-serif" font-size="8" font-weight="800" text-anchor="middle">LOSS</text>
-                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Money Gone</text>
-                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Zero Recourse</text>
-                  <rect x="5" y="123" width="56" height="9" fill="#EF4444"/>
-                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">PERMANENT</text>
-                </g>
-
-                <!-- Footer Warning Summary -->
-                <line x1="18" y1="216" x2="442" y2="216" stroke="#EF4444" stroke-width="1.5" opacity="0.5"/>
-                <text x="230" y="238" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ADVANCE TRANSFER &bull; NO RETURNS &bull; NO WAY TO GET YOUR MONEY BACK</text>
-              </svg>
-            </div>
-          </div>
-
-          <div class="arch-card-info">
-            <h3 class="arch-info-title">Stop sending advance payments to strangers</h3>
-            <p class="arch-info-desc">
-              Buying pre-loved clothes, sneakers or bags on Instagram, WhatsApp or OLX puts all the risk on you. Sellers demand advance payment via Raast or bank transfer before shipping. If the item is fake, damaged, or never shipped, your money is gone with zero recourse.
-            </p>
-            <p class="arch-info-desc">
-              On Grabsty, your payment is held in escrow when you buy. The seller isn't paid upfront. Once your tracked parcel is delivered, you have 48 hours to check the item. If it's damaged or not as described, report an issue and the payout stays on hold while support sorts it out.
-            </p>
-            <div class="arch-tags-list">
-              <span class="arch-tag-pill">
-                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <rect x="2" y="5" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/>
-                  <path d="M4 5 V3.5 C4 2 5.5 1 7 1 C8.5 1 10 2 10 3.5 V5" stroke="currentColor" stroke-width="1.2"/>
-                  <circle cx="7" cy="9" r="1" fill="currentColor"/>
-                </svg>
-                Escrow payments
-              </span>
-              <span class="arch-tag-pill">
-                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
-                  <polyline points="7,4 7,7 9,8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                </svg>
-                48-hour inspection window
-              </span>
-              <span class="arch-tag-pill">
-                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <path d="M2 10 L5 13 L12 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1"/>
-                </svg>
-                Cash on delivery
-              </span>
-              <span class="arch-tag-pill">
-                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                  <rect x="1" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.2"/>
-                  <path d="M9 6 H12 L13.5 8 V11 H9 V6 Z" stroke="currentColor" stroke-width="1.2"/>
-                  <circle cx="4" cy="11" r="1.5" fill="currentColor"/>
-                  <circle cx="11" cy="11" r="1.5" fill="currentColor"/>
-                </svg>
-                Tracked delivery
-              </span>
-            </div>
-            <!-- Authentic Preloved Resale Price Tag & Protection Bag Stickers -->
-            <div class="arch-brand-stickers" aria-hidden="true">
-              <img src="brand/STICKERS/WEBP/7.webp" alt="" class="brand-sticker sticker-price-tag" width="800" height="449" loading="lazy" />
-              <img src="brand/STICKERS/WEBP/1.webp" alt="" class="brand-sticker sticker-bag" width="800" height="1128" loading="lazy" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- What You Lose Without Grabsty: 3 Catastrophic Failure Points -->
-      <div class="arch-lineage-grid animate-on-scroll reveal-up delay-200">
-        <div class="lineage-card">
-          <div class="lineage-card-num">01</div>
-          <div class="lineage-card-body">
-            <h4 class="lineage-card-title">ADVANCE TRANSFER SCAMS</h4>
-            <p class="lineage-card-desc">
-              Many Instagram and WhatsApp sellers ask for full payment by bank transfer before they ship. If the seller blocks you, sends a replica or never posts the parcel, there is usually no way to get your money back.
-            </p>
-            <span class="lineage-badge">On Grabsty: payment held in escrow</span>
-          </div>
-        </div>
-
-        <div class="lineage-card">
-          <div class="lineage-card-num">02</div>
-          <div class="lineage-card-body">
-            <h4 class="lineage-card-title">"NO RETURNS" POLICIES</h4>
-            <p class="lineage-card-desc">
-              Most pages sell "as is" with no returns. If your item arrives stained, torn or fake, the loss is yours. On Grabsty you get 48 hours after delivery to check it before the seller is paid.
-            </p>
-            <span class="lineage-badge">On Grabsty: 48 hours to check it</span>
-          </div>
-        </div>
-
-        <div class="lineage-card">
-          <div class="lineage-card-num">03</div>
-          <div class="lineage-card-body">
-            <h4 class="lineage-card-title">SELLERS: FAKE COD ORDERS</h4>
-            <p class="lineage-card-desc">
-              Sellers lose money on fake cash-on-delivery orders and refused parcels. On Grabsty, both buyer and seller confirm cash-on-delivery payments, deliveries are tracked, and your payout is released as soon as the order is complete.
-            </p>
-            <span class="lineage-badge">On Grabsty: confirmed orders</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Wide Metrics Banner Card -->
-      <article class="bento-card card-metrics full-width animate-on-scroll delay-200" style="margin-top: 2rem;">
-        <div class="metrics-grid">
-          <div class="metric-item">
-            <span class="metric-value">100%</span>
-            <span class="metric-label">ESCROW PROTECTED</span>
-            <p class="metric-sub">The seller isn't paid until your order is delivered and checked</p>
-          </div>
-          <div class="metric-divider"></div>
-          <div class="metric-item">
-            <span class="metric-value">48hr</span>
-            <span class="metric-label">INSPECTION WINDOW</span>
-            <p class="metric-sub">Time to check the fabric, fit, tags and authenticity after delivery</p>
-          </div>
-          <div class="metric-divider"></div>
-          <div class="metric-item">
-            <span class="metric-value">Rs 0</span>
-            <span class="metric-label">SENT TO STRANGERS UPFRONT</span>
-            <p class="metric-sub">No more advance bank transfers to sellers you met in DMs</p>
-          </div>
-        </div>
-      </article>
-    </section>
 
     <!-- Important & Relevant Queries (FAQ Accordion Section) -->
     <section class="faq-section" id="faq">
@@ -976,46 +456,90 @@
       </h2>
 
       <div class="faq-list animate-on-scroll reveal-up delay-200">
-        <!-- Core Query: Why Not Instagram/OLX -->
         <details class="faq-item" open>
-          <summary class="faq-question">
-            <span>Why can’t I just keep buying and selling on Instagram or OLX?</span>
-            <span class="faq-arrow" aria-hidden="true">&plus;</span>
-          </summary>
-          <div class="faq-answer">
-            <p>
-              On Instagram and OLX, the buyer usually takes all the risk: sellers ask for advance payment by Raast or bank transfer and sell "no returns, no exchanges". If the item is fake, damaged or never shipped, your money is usually gone. On Grabsty, your payment is held in escrow, delivery is tracked, and you get 48 hours after delivery to check the item before the seller is paid.
-            </p>
-          </div>
-        </details>
-
-        <!-- Query 1 -->
-        <details class="faq-item">
           <summary class="faq-question">
             <span>What is Grabsty and how does the waitlist work?</span>
             <span class="faq-arrow" aria-hidden="true">&plus;</span>
           </summary>
           <div class="faq-answer">
             <p>
-              Grabsty is a marketplace for buying and selling pre-loved clothes, sneakers, bags and accessories in Pakistan, with every payment held in escrow. Join the waitlist and we will invite you on WhatsApp or SMS as soon as we open in your city.
+              Grabsty is a marketplace for buying and selling pre-loved clothes, sneakers, bags and accessories in Pakistan, with every payment protected by escrow. Join the waitlist to get your spot and your own invite link. We'll invite you on WhatsApp as soon as we open in your city.
             </p>
           </div>
         </details>
 
-        <!-- Query 2 -->
         <details class="faq-item">
           <summary class="faq-question">
-            <span>How does the Escrow Buyer Protection safeguard purchases?</span>
+            <span>How does escrow protection work?</span>
             <span class="faq-arrow" aria-hidden="true">&plus;</span>
           </summary>
           <div class="faq-answer">
             <p>
-              When you buy on Grabsty, your payment is held in escrow instead of going straight to the seller. Your order is shipped with tracking. After delivery you have 48 hours to check that the item matches the listing. If it does not, report an issue and the payout is paused while support looks into it. You can pay by card or cash on delivery.
+              When you buy, Grabsty holds your payment instead of sending it straight to the seller. Your order ships with tracking, and once it arrives you have 24 hours to check that it matches the listing. Then the seller is paid.
             </p>
           </div>
         </details>
 
-        <!-- Query 3 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>What if the item isn't as described?</span>
+            <span class="faq-arrow" aria-hidden="true">&plus;</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Report an issue within 24 hours of delivery. The seller's payout stays on hold while our support team sorts it out, so you're never stuck with a damaged, fake or wrong item.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>When do sellers get paid?</span>
+            <span class="faq-arrow" aria-hidden="true">&plus;</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Right after the buyer's 24-hour check window ends, or sooner if the buyer confirms the order. Payouts go to your bank account, JazzCash or Easypaisa.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>Can I pay cash on delivery?</span>
+            <span class="faq-arrow" aria-hidden="true">&plus;</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Yes. You can pay by card or cash on delivery. Both buyer and seller confirm cash-on-delivery orders, which cuts out fake orders and refused parcels for sellers.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>How do my waitlist position and referrals work?</span>
+            <span class="faq-arrow" aria-hidden="true">&plus;</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Your position is shown as soon as you join. Every friend who joins with your invite link counts as a referral and moves you up the list. Come back any time and tap "Already joined?" to check your position.
+            </p>
+          </div>
+        </details>
+
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>How is Grabsty different from OLX or Daraz?</span>
+            <span class="faq-arrow" aria-hidden="true">&plus;</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              OLX is a classifieds board where buyer and seller sort out payment themselves, and Daraz is built around new stock from shops. Grabsty is made just for pre-loved fashion, with escrow on every order and tracked delivery.
+            </p>
+          </div>
+        </details>
+
         <details class="faq-item">
           <summary class="faq-question">
             <span>Why do you need my phone number?</span>
@@ -1023,12 +547,11 @@
           </summary>
           <div class="faq-answer">
             <p>
-              So we can send your invite on WhatsApp or SMS when Grabsty opens. We don't share it with anyone, and email is optional.
+              So we can send your invite on WhatsApp when Grabsty opens. We don't share it with anyone, and email is optional.
             </p>
           </div>
         </details>
 
-        <!-- Query 4 -->
         <details class="faq-item">
           <summary class="faq-question">
             <span>What can I sell on Grabsty?</span>
@@ -1041,7 +564,6 @@
           </div>
         </details>
 
-        <!-- Query 5 -->
         <details class="faq-item">
           <summary class="faq-question">
             <span>Does it cost anything?</span>
@@ -1112,7 +634,7 @@
       });
     })(window.__POSTHOG__);
   </script>
-  <script src="script.js?v=20261028-01"></script>
-  <script type="module" src="scene3d.js?v=20261028-01"></script>
+  <script src="script.js?v=20261031-01"></script>
+  <script type="module" src="scene3d.js?v=20261031-01"></script>
 </body>
 </html>

@@ -438,39 +438,9 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: 0.02em;
 }
 
-/* Audio Haptics Button (Feature 4) */
-.header-sfx-btn {
-  background: transparent;
-  border: 1.5px solid var(--paper-40);
-  color: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  font-weight: 800;
-  padding: 0.45rem 0.75rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  transition: all 120ms ease;
-  letter-spacing: 0.04em;
-}
-
-.header-sfx-btn:hover {
-  border-color: var(--paper);
-  background: var(--paper-10);
-  transform: translateY(-1px);
-}
 
 /* Phones: icon-only SFX toggle so the header stays on one line */
 @media (max-width: 479px) {
-  .sfx-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-
   .header-meta {
     gap: 0.75rem;
   }
@@ -487,10 +457,6 @@ h1, h2, h3, h4, h5, h6 {
   transform: rotate(-5deg);
 }
 
-.header-sfx-btn.muted {
-  opacity: 0.6;
-  border-color: var(--paper-20);
-}
 
 .brand-logo {
   font-size: 1.25rem;
@@ -662,12 +628,6 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 2;
 }
 
-.sticker-thrifter {
-  display: none;
-  width: clamp(84px, 11vw, 132px);
-  top: 0;
-  left: 0;
-}
 
 .sticker-steal {
   width: clamp(92px, 12vw, 144px);
@@ -678,7 +638,6 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (min-width: 768px) {
   /* Phones have no gutter beside the box, so this one only shows from tablet up */
-  .sticker-thrifter { display: block; transform: translate(-58%, -70%) rotate(-9deg); }
   .sticker-steal { transform: translate(42%, 56%) rotate(7deg); }
 }
 
@@ -2828,4 +2787,85 @@ body.has-3d .heritage-stage { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .tilt-3d, .tilt-3d-title { transform: none !important; }
+}
+
+/* ==========================================================================
+   Header logotype + compact success card (2026-10-31)
+   ========================================================================== */
+/* The logotype SVG has ~25% empty space above and below the letters, so
+   render it tall and pull the margins in to keep the header height. */
+.brand-logotype {
+  display: block;
+  height: 60px;
+  width: auto;
+  margin: -14px 0 -14px -10px;
+}
+
+@media (max-width: 479px) {
+  .brand-logotype { height: 48px; margin: -11px 0 -11px -8px; }
+}
+
+.success-card {
+  padding: 1.5rem 1.25rem 1.1rem;
+  box-shadow: 6px 6px 0 var(--ink), 6px 6px 0 3px var(--paper);
+}
+
+.success-card .success-title {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.success-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  width: 100%;
+  margin-bottom: 0.9rem;
+}
+
+.success-stat {
+  background-color: var(--ink);
+  border: 2px solid var(--paper);
+  padding: 0.7rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.success-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--paper);
+}
+
+.success-stat-sub {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--paper-40, rgba(255, 255, 255, 0.6));
+}
+
+.success-card .success-text {
+  font-size: 0.875rem;
+  margin-bottom: 0.9rem;
+}
+
+.success-card .share-wa {
+  flex: none;
+  width: 100%;
+  height: 44px;
+  background-color: var(--ink);
+  font-size: 0.8125rem;
+  margin-bottom: 0.9rem;
+}
+
+.success-card .share-wa:hover {
+  background-color: var(--ink-surface);
+}
+
+.success-card .success-footer-info {
+  justify-content: space-between;
+  padding-top: 0.75rem;
 }

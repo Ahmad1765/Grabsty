@@ -1,0 +1,109 @@
+{
+  "bgm": {
+    "path": "assets/bgm/track.mp3",
+    "volume": 0.9,
+    "query": "confident modern hip-hop / trap-lite instrumental, punchy kick, urban fashion energy, no vocals, 95–105 BPM",
+    "duration_s": 50
+  },
+  "voices": [],
+  "sfx": [
+    {
+      "frame": 1,
+      "file": "assets/sfx/message-send-whoosh.mp3",
+      "offset_s": 1.1,
+      "duration_s": 0.288,
+      "volume": 0.35
+    },
+    {
+      "frame": 1,
+      "file": "assets/sfx/message-receive-pop.mp3",
+      "offset_s": 1.6,
+      "duration_s": 0.576,
+      "volume": 0.35
+    },
+    {
+      "frame": 1,
+      "file": "assets/sfx/error-thud.mp3",
+      "offset_s": 2.4,
+      "duration_s": 0.864,
+      "volume": 0.45
+    },
+    {
+      "frame": 2,
+      "file": "assets/sfx/impact-hit-3-escalating.mp3",
+      "offset_s": 0,
+      "duration_s": 2.9,
+      "volume": 0.4
+    },
+    {
+      "frame": 3,
+      "file": "assets/sfx/riser-into-a-soft-bass-drop-on-the-g-lan.mp3",
+      "offset_s": 0,
+      "duration_s": 3.4,
+      "volume": 0.3
+    },
+    {
+      "frame": 4,
+      "file": "assets/sfx/soft-click-per-step-3.mp3",
+      "offset_s": 0.12,
+      "duration_s": 0.768,
+      "volume": 0.35
+    },
+    {
+      "frame": 4,
+      "file": "assets/sfx/success-chime-on-final-chip.mp3",
+      "offset_s": 3.9,
+      "duration_s": 2,
+      "volume": 0.35
+    },
+    {
+      "frame": 5,
+      "file": "assets/sfx/whoosh.mp3",
+      "offset_s": 0,
+      "duration_s": 1.58,
+      "volume": 0.35
+    },
+    {
+      "frame": 5,
+      "file": "assets/sfx/rubber-stamp-thud.mp3",
+      "offset_s": 1.2,
+      "duration_s": 0.864,
+      "volume": 0.45
+    },
+    {
+      "frame": 6,
+      "file": "assets/sfx/impact-on-headline.mp3",
+      "offset_s": 0.08,
+      "duration_s": 2,
+      "volume": 0.35
+    },
+    {
+      "frame": 6,
+      "file": "assets/sfx/tick-for-spot-counter.mp3",
+      "offset_s": 1.4,
+      "duration_s": 0.9,
+      "volume": 0.25
+    },
+    {
+      "frame": 6,
+      "file": "assets/sfx/ui-click-on-button.mp3",
+      "offset_s": 3.1,
+      "duration_s": 0.768,
+      "volume": 0.35
+    },
+    {
+      "frame": 4,
+      "file": "assets/sfx/soft-click-per-step-3.mp3",
+      "offset_s": 1.1,
+      "duration_s": 0.768,
+      "volume": 0.35
+    },
+    {
+      "frame": 4,
+      "file": "assets/sfx/soft-click-per-step-3.mp3",
+      "offset_s": 2.3,
+      "duration_s": 0.768,
+      "volume": 0.35
+    }
+  ]
+}

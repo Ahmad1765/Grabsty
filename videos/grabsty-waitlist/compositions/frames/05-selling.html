@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face{font-family:"Bricolage Grotesque 96pt";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque96pt-Bold.ttf") format("truetype");}
+        @font-face{font-family:"JetBrains Mono";font-weight:400 800;font-style:normal;font-display:block;src:url("assets/fonts/JetBrainsMono-latin.woff2") format("woff2");}
+
+        #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; color: #FFFFFF; }
+        .f5-bg { position: absolute; inset: 0; background-color: #0F0F0F;
+          background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 72px 72px; }
+        .f5-stage { position: absolute; inset: 0; }
+        .f5-display { position: absolute; left: 72px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; line-height: 0.92; letter-spacing: -0.015em; text-transform: uppercase; white-space: nowrap; }
+        #f5-selling { top: 250px; font-size: 180px; text-shadow: 12px 12px 0 #6C47FF; }
+        .f5-pin { position: absolute; left: 690px; top: 70px; width: 250px; height: auto; }
+
+        .f5-order { position: absolute; left: 72px; top: 560px; width: 900px; height: 340px; background: #0F0F0F; border: 4px solid #FFFFFF; box-shadow: 16px 16px 0 #6C47FF; }
+        .f5-o-id { position: absolute; left: 40px; top: 38px; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 34px; letter-spacing: 0.1em; color: rgba(255,255,255,0.65); }
+        .f5-o-main { position: absolute; left: 40px; top: 100px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 78px; line-height: 1; text-transform: uppercase; }
+        .f5-o-sub { position: absolute; left: 40px; bottom: 36px; font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 28px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
+        .f5-stamp { position: absolute; left: 470px; top: 170px; padding: 14px 26px 8px; border: 7px solid #6C47FF; background: #0F0F0F; color: #FFFFFF; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 74px; line-height: 1; text-transform: uppercase; box-shadow: 8px 8px 0 #6C47FF; }
+
+        .f5-nomore { position: absolute; left: 72px; top: 1010px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 150px; line-height: 0.95; letter-spacing: -0.015em; text-transform: uppercase; }
+        .f5-row { display: block; white-space: nowrap; }
+        .f5-w { display: inline-block; margin-right: 34px; }
+        .f5-fake { position: relative; display: inline-block; }
+        .f5-strike-wrap { position: absolute; left: -10px; right: -10px; top: 46%; height: 16px; transform: rotate(-3deg); }
+        .f5-strike-bar { width: 100%; height: 100%; background: #EF4444; transform-origin: 0% 50%; }
+        .f5-thrifter { position: absolute; left: 40px; top: 1360px; width: 380px; height: auto; }
+      </style>
+
+      <div data-hf-id="hf-7oq1" id="root" data-composition-id="05-selling" data-width="1080" data-height="1920" data-start="0" data-duration="3.5">
+        <div data-hf-id="hf-xfzs" id="f5-bg" class="f5-bg clip" data-start="0" data-duration="3.5" data-track-index="0"></div>
+        <div data-hf-id="hf-j03d" id="f5-stage" class="f5-stage clip" data-start="0" data-duration="3.5" data-track-index="1">
+          <div data-hf-id="hf-rm59" class="f5-display" id="f5-selling">Selling?</div>
+          <img data-hf-id="hf-9mdw" class="f5-pin" id="f5-pin" src="assets/sticker-6.png" alt="" />
+
+          <div data-hf-id="hf-4366" class="f5-order" id="f5-order">
+            <div data-hf-id="hf-213l" class="f5-o-id">ORDER #GRB-2041</div>
+            <div data-hf-id="hf-0wul" class="f5-o-main">Cash on<span data-hf-id="hf-rprv" style="display:block">delivery</span></div>
+            <div data-hf-id="hf-55ns" class="f5-o-sub">Rs 4,200 · tracked</div>
+            <div data-hf-id="hf-nxq7" class="f5-stamp" id="f5-stamp">Confirmed</div>
+          </div>
+
+          <div data-hf-id="hf-xvda" class="f5-nomore">
+            <span data-hf-id="hf-nijt" class="f5-row"><span data-hf-id="hf-if43" class="f5-w" id="f5-w1">No</span><span data-hf-id="hf-u0nu" class="f5-w" id="f5-w2">more</span></span>
+            <span data-hf-id="hf-5cil" class="f5-row"><span data-hf-id="hf-r47a" class="f5-w f5-fake" id="f5-w3">Fake COD.<span data-hf-id="hf-n5ke" class="f5-strike-wrap"><span data-hf-id="hf-689s" class="f5-strike-bar" id="f5-strike" style="display:block"></span></span></span></span>
+          </div>
+          <img data-hf-id="hf-4dg6" class="f5-thrifter" id="f5-thrifter" src="assets/sticker-8.png" alt="" />
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // Scene 1 — SELLING? slams, safety pin slaps on
+        tl.fromTo("#f5-selling", { opacity: 0, x: -500 }, { opacity: 1, x: 0, duration: 0.36, ease: "expo.out" }, 0.04);
+        tl.fromTo("#f5-pin", { opacity: 0, scale: 1.7, rotation: 20 }, { opacity: 1, scale: 1, rotation: 8, duration: 0.34, ease: "back.out(1.6)" }, 0.3);
+
+        // Scene 2 — order card rises, CONFIRMED stamp slaps on
+        tl.fromTo("#f5-order", { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.42, ease: "expo.out" }, 0.75);
+        tl.fromTo("#f5-stamp", { opacity: 0, scale: 2.4, rotation: -14 }, { opacity: 1, scale: 0.94, rotation: -6, duration: 0.2, ease: "power4.in" }, 1.2);
+        tl.to("#f5-stamp", { scale: 1, duration: 0.18, ease: "power3.out" }, 1.4);
+
+        // Scene 3 — NO MORE FAKE COD., strike draws, thrifter sticker tucks in
+        tl.fromTo(["#f5-w1", "#f5-w2", "#f5-w3"], { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out", stagger: 0.12 }, 1.9);
+        tl.fromTo("#f5-strike", { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "power3.inOut" }, 2.45);
+        tl.fromTo("#f5-thrifter", { opacity: 0, y: 200, rotation: 0 }, { opacity: 1, y: 0, rotation: -10, duration: 0.4, ease: "expo.out" }, 2.6);
+
+        window.__timelines["05-selling"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

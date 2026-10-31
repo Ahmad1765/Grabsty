@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel" id="blueprint-study-01" aria-label="How a Grabsty order moves from offer to payout">
+                <!-- Technical Grid Pattern -->
+                <defs>
+                  <pattern id="archGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"></path>
+                  </pattern>
+                  <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#6C47FF"></path>
+                  </marker>
+                  <marker id="arrowHeadMuted" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#FFFFFF" opacity="0.6"></path>
+                  </marker>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#archGridPattern)"></rect>
+                
+                <!-- Header Status Line -->
+                <text x="18" y="24" fill="#6C47FF" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">HOW A GRABSTY ORDER WORKS</text>
+                <text x="442" y="24" fill="rgba(255,255,255,0.4)" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">OFFER TO PAYOUT</text>
+                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(255,255,255,0.15)" stroke-dasharray="3 3" stroke-width="1"></line>
+
+                <!-- Stage 01: In-Chat Offer -->
+                <g transform="translate(18, 52)">
+                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"></rect>
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)"></rect>
+                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 CHAT</text>
+                  <!-- Tag Icon -->
+                  <path d="M26 38 L38 38 L46 46 L38 54 L26 54 Z" stroke="#6C47FF" stroke-width="1.2" fill="none"></path>
+                  <circle cx="30" cy="46" r="1.5" fill="#6C47FF"></circle>
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BINDING</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">OFFER</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Instant Accept</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or Counter</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(108,71,255,0.2)"></rect>
+                  <text x="36" y="130" fill="#6C47FF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">PROPOSED</text>
+                </g>
+
+                <!-- Connector 01 -> 02 -->
+                <line x1="90" y1="120" x2="103" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)"></line>
+
+                <!-- Stage 02: Escrow Vault (Hero Step) -->
+                <g transform="translate(105, 42)">
+                  <rect width="78" height="154" stroke="#6C47FF" stroke-width="2" fill="rgba(108,71,255,0.12)"></rect>
+                  <rect x="0" y="0" width="78" height="22" fill="#6C47FF"></rect>
+                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 VAULT</text>
+                  <!-- Padlock Icon -->
+                  <circle cx="39" cy="48" r="14" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="2 2" fill="none"></circle>
+                  <rect x="31" y="44" width="16" height="13" stroke="#FFFFFF" stroke-width="1.4" fill="var(--ink)"></rect>
+                  <path d="M34 44 V39 C34 36.5 36.5 34.5 39 34.5 C41.5 34.5 44 36.5 44 39 V44" stroke="#FFFFFF" stroke-width="1.4" fill="none"></path>
+                  <circle cx="39" cy="50.5" r="1.5" fill="#6C47FF"></circle>
+                  <text x="39" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ESCROW</text>
+                  <text x="39" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LOCKED</text>
+                  <text x="39" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller NOT Paid</text>
+                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Funds In Vault</text>
+                  <rect x="6" y="132" width="66" height="14" fill="#6C47FF"></rect>
+                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">SECURED_ESCROW</text>
+                </g>
+
+                <!-- Connector 02 -> 03 -->
+                <line x1="183" y1="120" x2="196" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)"></line>
+
+                <!-- Stage 03: Managed Doorstep Pickup & Tracking -->
+                <g transform="translate(198, 52)">
+                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"></rect>
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)"></rect>
+                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DISPATCH</text>
+                  <!-- Truck Courier Icon -->
+                  <rect x="23" y="40" width="16" height="12" stroke="#6C47FF" stroke-width="1.2" fill="none"></rect>
+                  <path d="M39 44 H45 L48 48 V52 H39 V44 Z" stroke="#6C47FF" stroke-width="1.2" fill="none"></path>
+                  <circle cx="28" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1"></circle>
+                  <circle cx="44" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1"></circle>
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">DOORSTEP</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">PICKUP</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Live Courier</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Tracking Link</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(255,255,255,0.08)"></rect>
+                  <text x="36" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IN_TRANSIT</text>
+                </g>
+
+                <!-- Connector 03 -> 04 -->
+                <line x1="270" y1="120" x2="283" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)"></line>
+
+                <!-- Stage 04: 72-Hour Physical Inspection (Hero Step) -->
+                <g transform="translate(285, 42)">
+                  <rect width="80" height="154" stroke="#FFFFFF" stroke-width="2" fill="rgba(255,255,255,0.05)"></rect>
+                  <rect x="0" y="0" width="80" height="22" fill="#FFFFFF"></rect>
+                  <text x="40" y="15" fill="#0F0F0F" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 INSPECT</text>
+                  <!-- Inspection Magnifier / Shield Icon -->
+                  <circle cx="37" cy="46" r="10" stroke="#6C47FF" stroke-width="1.5" fill="none"></circle>
+                  <line x1="44" y1="53" x2="51" y2="60" stroke="#6C47FF" stroke-width="2" stroke-linecap="round"></line>
+                  <path d="M33 46 L36 49 L43 42" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <text x="40" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">48-HOUR</text>
+                  <text x="40" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">WINDOW</text>
+                  <text x="40" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Check The Item</text>
+                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Verify Quality</text>
+                  <rect x="6" y="132" width="68" height="14" fill="rgba(255,255,255,0.15)"></rect>
+                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">DELIVERED</text>
+                </g>
+
+                <!-- Connector 04 -> 05 -->
+                <line x1="365" y1="120" x2="378" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)"></line>
+
+                <!-- Stage 05: Atomic Funds Release -->
+                <g transform="translate(380, 52)">
+                  <rect width="66" height="136" stroke="#6C47FF" stroke-width="1.4" fill="rgba(15,15,15,0.95)"></rect>
+                  <rect x="0" y="0" width="66" height="20" fill="#6C47FF"></rect>
+                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 PAYOUT</text>
+                  <!-- Shield Check Icon -->
+                  <circle cx="33" cy="46" r="12" fill="#F2F3FE"></circle>
+                  <path d="M29 46 L32 49 L38 43" stroke="#5356EE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <text x="33" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">FUNDS</text>
+                  <text x="33" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RELEASED</text>
+                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Paid To Bank,</text>
+                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">JazzCash Or Easypaisa</text>
+                  <rect x="5" y="123" width="56" height="9" fill="#10B981"></rect>
+                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">COMPLETED</text>
+                </g>
+
+                <!-- Footer Summary Label -->
+                <line x1="18" y1="216" x2="442" y2="216" stroke="#FFFFFF" stroke-width="1.5" opacity="0.4"></line>
+                <text x="230" y="238" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ESCROW PAYMENT • NO ADVANCE TRANSFERS • 48-HR INSPECTION</text>
+              </svg>
