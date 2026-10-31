@@ -138,7 +138,7 @@ describe('Foolproof Buying & Selling Lifecycle (End-to-End)', () => {
     it('advances from IN_TRANSIT to DELIVERED when courier drops off at recipient', () => {
       expect(canAdvanceEscrow(currentEscrowStatus, 'DELIVERED')).toBe(true);
       currentEscrowStatus = 'DELIVERED';
-      expect(getEscrowStatusStyle(currentEscrowStatus).label).toBe('Delivered (48h Window)');
+      expect(getEscrowStatusStyle(currentEscrowStatus).label).toBe('Delivered (24h Window)');
     });
   });
 
