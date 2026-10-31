@@ -47,6 +47,7 @@ import {
   canAdvanceEscrow,
   type EscrowLogisticsItem,
 } from '@/lib/escrowService';
+import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import type { EscrowStatus, Verification, User } from '@/types';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import {
@@ -59,7 +60,7 @@ import {
 import type { ChatMessage } from '@/lib/chat';
 import { useVerificationPhotoUrl } from '@/lib/upload';
 
-type AdminTab = 'overview' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
+type AdminTab = 'overview' | 'analytics' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
 type LogisticsFilter = 'all' | 'active' | 'IN_TRANSIT' | 'DELIVERED' | 'COMPLETED_FUNDS_RELEASED';
 
 const COURIER_PRESETS = ['Internal Fleet', 'TCS', 'Leopards', 'Trax', 'PostEx', 'M&P', 'Custom'];
@@ -800,6 +801,27 @@ export default function AdminConsoleScreen() {
             </Pressable>
 
             <Pressable
+              testID="admin-tab-analytics"
+              onPress={() => setActiveTab('analytics')}
+              style={({ pressed }) => ({
+                height: 38,
+                borderRadius: 8,
+                backgroundColor: activeTab === 'analytics' ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                gap: 10,
+                opacity: pressed ? 0.8 : 1,
+                marginBottom: 2,
+              })}
+            >
+              <Feather name="bar-chart-2" size={16} color={activeTab === 'analytics' ? theme.text : theme.textMuted} />
+              <Text style={{ flex: 1, fontSize: 14, fontWeight: activeTab === 'analytics' ? '600' : '500', color: activeTab === 'analytics' ? theme.text : theme.textMuted }}>
+                Analytics
+              </Text>
+            </Pressable>
+
+            <Pressable
               onPress={() => setActiveTab('logistics')}
               style={({ pressed }) => ({
                 height: 38,
@@ -938,6 +960,7 @@ export default function AdminConsoleScreen() {
           >
             {[
               { key: 'overview', label: 'Overview', icon: 'activity' },
+              { key: 'analytics', label: 'Analytics', icon: 'bar-chart-2' },
               { key: 'logistics', label: `Orders (${metrics.activeEscrowCount})`, icon: 'truck' },
               { key: 'disputes', label: `Disputes (${metrics.disputedCount})`, icon: 'alert-circle' },
               { key: 'verifications', label: `KYC (${metrics.pendingKycCount})`, icon: 'shield' },
@@ -1032,6 +1055,8 @@ export default function AdminConsoleScreen() {
 
             </ScrollView>
           )}
+
+          {activeTab === 'analytics' && <AdminAnalytics />}
 
           {/* TAB 2: LOGISTICS & ESCROW ORDERS */}
           {activeTab === 'logistics' && (
