@@ -445,17 +445,19 @@ export default function UserProfileScreen() {
                       accessibilityLabel={followed ? 'Unfollow' : 'Follow'}
                       style={({ pressed }) => ({
                         height: 36,
-                        paddingHorizontal: 26,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
                         borderRadius: 10,
+                        flexDirection: 'row',
+                        gap: 6,
                         backgroundColor: followed ? colors.surface : colors.purple,
-                        borderWidth: followed ? 1 : 0,
-                        borderColor: colors.border,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        opacity: pressed || followBusy ? 0.75 : 1,
+                        opacity: pressed ? 0.75 : 1,
                         transform: [{ scale: pressed ? 0.97 : 1 }],
                       })}
                     >
+                      {followed ? <Feather name="check" size={15} color={colors.ink} /> : null}
                       <Text
                         style={{
                           fontSize: 14.5,
@@ -474,7 +476,8 @@ export default function UserProfileScreen() {
                       accessibilityLabel="Message seller"
                       style={({ pressed }) => ({
                         height: 36,
-                        paddingHorizontal: 22,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
                         borderRadius: 10,
                         backgroundColor: colors.surface,
                         alignItems: 'center',
