@@ -423,7 +423,7 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   useEffect(() => {
     animProgress.value = withTiming(1, {
-      duration: 400,
+      duration: 320,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     });
     // Opened onto results (a category or preset query): show them, don't
@@ -447,7 +447,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     animProgress.value = withTiming(
       0,
       {
-        duration: 320,
+        duration: 240,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       },
       (finished) => {
@@ -480,25 +480,24 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => subscription.remove();
   }, [hasSubmitted, handleClose]));
 
-  const rootAnimatedStyle = useAnimatedStyle(() => {
-    if (isDesktop) return { opacity: animProgress.value };
-    const translateX = interpolate(
-      animProgress.value,
-      [0, 1],
-      [screenWidth, 0],
-      Extrapolation.CLAMP,
-    );
-    return {
-      transform: [{ translateX }],
-    };
-  });
+  // Opens in place (no slide): the overlay fades over Home while the search
+  // bar starts exactly on Home's bar (HomeHeader FeedSearch: x=16, width
+  // minus the 44px bell + 10px gap) and glides right as the chevron fades in.
+  const rootAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0, 0.6], [0, 1], Extrapolation.CLAMP),
+  }));
 
-  const searchBarAnimatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(animProgress.value, [0, 1], [0.96, 1], Extrapolation.CLAMP);
-    return {
-      transform: [{ scale }],
-    };
-  });
+  // The bar itself never moves; "Close" fades in where Home's bell was.
+  const closeAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0.2, 0.7], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateX: interpolate(animProgress.value, [0, 1], [8, 0], Extrapolation.CLAMP) }],
+  }));
+
+  // The "pop up": body content fades in while rising into place.
+  const bodyAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0.1, 0.8], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(animProgress.value, [0, 1], [40, 0], Extrapolation.CLAMP) }],
+  }));
 
   const HORIZONTAL_PAD = 12;
   const GRID_GAP = 8;
@@ -1336,48 +1335,12 @@ export const HomeSearchView = memo(function HomeSearchView({
             flexDirection: 'row',
             alignItems: 'center',
             paddingHorizontal: 16,
-            paddingTop: 8,
+            paddingTop: 12, // = HomeHeader search marginTop, so the bar doesn't jump vertically
             paddingBottom: 8,
             gap: 10,
             borderBottomWidth: 0,
           }}
         >
-          {/* Back Button '<' (Always visible on left, matching Reference Image 2 & 3) */}
-          <Pressable
-            onPress={() => {
-              haptic();
-              if (hasSubmitted) {
-                setHasSubmitted(false);
-                inputRef.current?.focus?.();
-                setQuery('');
-                setSearchFilters(EMPTY_SEARCH_FILTERS);
-                ++searchRequestIdRef.current;
-                setSellerResults([]);
-                setListingResults([]);
-                setLoading(false);
-              } else {
-                handleClose();
-              }
-            }}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={hasSubmitted ? "Back to search" : "Close search"}
-            style={({ pressed }) => ({
-              width: 32,
-              height: 44,
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: pressed ? 0.6 : 1,
-              transform: [{ scale: pressed ? 0.94 : 1 }],
-            })}
-          >
-            <Feather
-              name="chevron-left"
-              size={28}
-              color={theme.text}
-            />
-          </Pressable>
-
           {/* Search Input Box (Pill shape matching Reference Image 2) */}
           <Animated.View
             style={[
@@ -1392,12 +1355,11 @@ export const HomeSearchView = memo(function HomeSearchView({
                 height: 44,
                 borderWidth: 0,
               },
-              searchBarAnimatedStyle,
             ]}
           >
             <Feather
               name="search"
-              size={18}
+              size={16} // = Home bar icon, so the swap is invisible
               color={isDark ? "#9CA3AF" : "#6B7280"}
               style={{ flexShrink: 0 }}
             />
@@ -1505,6 +1467,40 @@ export const HomeSearchView = memo(function HomeSearchView({
               />
             </Pressable>
           )}
+
+          {/* "Close" text (video reference): back to search after a submit, else close. */}
+          <Animated.View style={closeAnimatedStyle}>
+            <Pressable
+              onPress={() => {
+                haptic();
+                if (hasSubmitted) {
+                  setHasSubmitted(false);
+                  inputRef.current?.focus?.();
+                  setQuery('');
+                  setSearchFilters(EMPTY_SEARCH_FILTERS);
+                  ++searchRequestIdRef.current;
+                  setSellerResults([]);
+                  setListingResults([]);
+                  setLoading(false);
+                } else {
+                  handleClose();
+                }
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
+              style={({ pressed }) => ({
+                height: 44,
+                paddingHorizontal: 2,
+                justifyContent: 'center',
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Text style={{ fontFamily: typography.family.sansBold, fontSize: 15, color: theme.ink }}>
+                Close
+              </Text>
+            </Pressable>
+          </Animated.View>
         </View>
       )}
 
@@ -1614,6 +1610,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       )}
 
       {/* ── Main Content Area ── */}
+      <Animated.View style={[{ flex: 1 }, bodyAnimatedStyle]}>
       {hasSubmitted ? (
         /* Completed Search Results (Items and Members tab switcher is hidden, as shown in Reference Image 3) */
         <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -1995,6 +1992,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           </View>
         </ScrollView>
       )}
+      </Animated.View>
       </Animated.View>
   );
 });
