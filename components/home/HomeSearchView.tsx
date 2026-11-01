@@ -370,7 +370,14 @@ export const HomeSearchView = memo(function HomeSearchView({
     if (user?.id) {
       try {
         const actualQuery = query.trim() || null;
-        const existing = savedSearchesQ.data?.find((s) => {
+        // Un-saving right after saving can beat the post-save refetch, so the
+        // new row isn't in the cache yet — refetch before giving up, or the
+        // delete is skipped and the search silently comes back as saved.
+        let savedList = savedSearchesQ.data;
+        if (currentlySaved) {
+          savedList = (await savedSearchesQ.refetch()).data ?? savedList;
+        }
+        const existing = savedList?.find((s) => {
           if (actualQuery) {
             const qNorm = actualQuery.toLowerCase();
             return (
@@ -404,7 +411,7 @@ export const HomeSearchView = memo(function HomeSearchView({
         console.warn('[saved-searches] sync error', err);
       }
     }
-  }, [effectiveSearchInfo, isSaved, user, savedSearchesQ.data, query, searchFilters, toast, storageKey]);
+  }, [effectiveSearchInfo, isSaved, user, savedSearchesQ.data, savedSearchesQ.refetch, query, searchFilters, toast, storageKey]);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
