@@ -354,12 +354,16 @@ function SheetShell({
   );
 }
 
-function DiscoverSheetBody({
+// Also rendered as the Browse tab page (app/(tabs)/discover.tsx), where
+// onClose is a no-op and contentBottom clears the floating tab bar.
+export function DiscoverSheetBody({
   onClose,
   searchInputRef,
+  contentBottom,
 }: {
   onClose: () => void;
   searchInputRef?: RefObject<TextInput | null>;
+  contentBottom?: number;
 }) {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
@@ -545,7 +549,7 @@ function DiscoverSheetBody({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
+          contentContainerStyle={{ paddingBottom: contentBottom ?? 24 + insets.bottom }}
         >
           <SearchLanding
             listings={gridQ.data ?? []}
