@@ -45,7 +45,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedListingsQuery } from '@/lib/queries';
 import { radii, type } from '@/lib/theme';
@@ -96,6 +96,12 @@ export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
   }, []);
   const close = useCallback(() => setVisible(false), []);
   const api = useMemo(() => ({ open }), [open]);
+
+  // Listing cards in the sheet navigate on their own; close when the route changes.
+  const pathname = usePathname();
+  useEffect(() => {
+    setVisible(false);
+  }, [pathname]);
   const isDesktop = useIsDesktop();
 
   // Keep the viewport and document pinned to top (0, 0) when the soft keyboard

@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
 import { AnimatedTabBar } from '../../components/AnimatedTabBar';
 import { useSellSheet } from '@/components/sell/SellSheet';
+import { useDiscoverSheet } from '@/components/discover/DiscoverSheet';
 import { useIsDesktop } from '@/lib/responsive';
 
 export default function TabsLayout() {
   const { open: openSellSheet } = useSellSheet();
+  const { open: openDiscoverSheet } = useDiscoverSheet();
   // Desktop web navigates from DesktopTopNav (mounted in app/_layout.tsx).
   const isDesktop = useIsDesktop();
 
@@ -18,7 +20,17 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
-      <Tabs.Screen name="discover" options={{ title: 'Browse' }} />
+      <Tabs.Screen
+        name="discover"
+        options={{ title: 'Browse' }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            (e as any)?.stopPropagation?.();
+            openDiscoverSheet();
+          },
+        }}
+      />
       {/* Wardrobe tab hidden 2026-07-04. Route file app/(tabs)/wardrobe.tsx is untouched.
           To restore: swap options back to { title: 'Wardrobe' }. */}
       <Tabs.Screen name="wardrobe" options={{ href: null }} />
