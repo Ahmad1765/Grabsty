@@ -267,104 +267,6 @@ h1, h2, h3, h4, h5, h6 {
   background-size: 120px 120px;
 }
 
-.cursor-glow {
-  position: fixed;
-  width: 600px;
-  height: 600px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(90, 89, 238, 0.14) 0%, rgba(90, 89, 238, 0.03) 45%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
-  transform: translate(-50%, -50%);
-  transition: opacity 300ms ease;
-  will-change: transform;
-}
-
-/* Lahore Architectural Floating Accents Stage */
-.heritage-stage,
-.memphis-stage {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 2;
-}
-
-.heritage-shape,
-.memphis-shape {
-  position: absolute;
-  will-change: transform;
-  filter: drop-shadow(0 0 18px rgba(90, 89, 238, 0.18));
-}
-
-@media (max-width: 1180px) {
-  .heritage-stage,
-  .memphis-stage {
-    opacity: 0.2;
-  }
-}
-
-@media (max-width: 860px) {
-  .heritage-stage,
-  .memphis-stage {
-    display: none !important;
-  }
-}
-
-.shape-arch {
-  top: 13%;
-  left: 5%;
-  animation: float-slow 8s ease-in-out infinite alternate;
-}
-
-.shape-jharokha {
-  top: 23%;
-  right: 6%;
-  animation: float-rev 9s ease-in-out infinite alternate;
-}
-
-.shape-jaali {
-  top: 48%;
-  left: 4%;
-  animation: spin-slow 50s linear infinite;
-}
-
-.shape-meridian {
-  top: 38%;
-  right: 5%;
-  animation: float-slow 11s ease-in-out infinite alternate;
-}
-
-.shape-dome {
-  top: 68%;
-  left: 7%;
-  animation: float-rev 10s ease-in-out infinite alternate;
-}
-
-.shape-muqarnas {
-  top: 80%;
-  right: 8%;
-  animation: float-slow 9s ease-in-out infinite alternate;
-}
-
-@keyframes float-slow {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(-20px) rotate(6deg); }
-}
-
-@keyframes float-rev {
-  0% { transform: translateY(0px) rotate(0deg); }
-  100% { transform: translateY(20px) rotate(-6deg); }
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -1541,7 +1443,7 @@ h1, h2, h3, h4, h5, h6 {
   border-top: 4px solid var(--paper);
   border-bottom: 4px solid var(--paper);
   transform: rotate(-2deg);
-  margin-top: 4.5rem;
+  margin-top: 2rem;
   margin-bottom: 4.5rem;
   box-shadow: 0 8px 0 var(--ink);
   user-select: none;
@@ -2767,12 +2669,6 @@ h1, h2, h3, h4, h5, h6 {
     transform: none !important;
   }
 
-  .cursor-glow,
-  .heritage-shape,
-  .memphis-shape {
-    display: none !important;
-  }
-
   .marquee-track {
     transform: none !important;
   }
@@ -2793,7 +2689,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* The WebGL objects take over from the flat heritage SVG accents. */
-body.has-3d .heritage-stage { display: none; }
 
 .tilt-3d {
   transition: transform 180ms ease-out;

@@ -59,33 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateScrollProgress();
 
   // ---------------------------------------------------------------------------
-  // 3. Cursor Ambient Glow
-  // ---------------------------------------------------------------------------
-  const cursorGlow = document.getElementById('cursor-glow');
-  if (cursorGlow && isFinePointer && !isReducedMotion) {
-    let mouseX = window.innerWidth / 2;
-    let mouseY = window.innerHeight / 2;
-    let currentX = mouseX;
-    let currentY = mouseY;
-
-    window.addEventListener('pointermove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    }, { passive: true });
-
-    function renderGlow() {
-      // Smooth lerp for buttery lag
-      currentX += (mouseX - currentX) * 0.12;
-      currentY += (mouseY - currentY) * 0.12;
-      cursorGlow.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
-      requestAnimationFrame(renderGlow);
-    }
-    requestAnimationFrame(renderGlow);
-  } else if (cursorGlow) {
-    cursorGlow.style.display = 'none';
-  }
-
-  // ---------------------------------------------------------------------------
   // 4. Native Intersection Observer for Scroll Reveals
   // ---------------------------------------------------------------------------
   const revealElements = document.querySelectorAll('.animate-on-scroll');
@@ -116,35 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
   } else {
     revealElements.forEach(el => el.classList.add('in-view'));
-  }
-
-  // ---------------------------------------------------------------------------
-  // 5. Parallax on Heritage Floating Architectural Accents
-  // ---------------------------------------------------------------------------
-  const shapes = document.querySelectorAll('.heritage-shape, .memphis-shape');
-  if (shapes.length > 0 && !isReducedMotion) {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    function updateParallax() {
-      const scrollY = window.scrollY;
-      shapes.forEach((shape) => {
-        const speed = parseFloat(shape.getAttribute('data-speed') || '0.15');
-        const rotation = shape.getAttribute('data-rot') || '0';
-        const yOffset = scrollY * speed;
-        shape.style.transform = `translate3d(0, ${yOffset}px, 0) rotate(${rotation}deg)`;
-      });
-      ticking = false;
-    }
-
-    window.addEventListener('scroll', () => {
-      lastScrollY = window.scrollY;
-      if (!ticking) {
-        window.requestAnimationFrame(updateParallax);
-        ticking = true;
-      }
-    }, { passive: true });
-    updateParallax();
   }
 
   // ---------------------------------------------------------------------------
@@ -464,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (ticketNumber) ticketNumber.textContent = `#${cleanCode}`;
     if (successQueueTag) successQueueTag.textContent = isReturning ? 'WELCOME BACK' : 'WAITLIST SPOT CONFIRMED';
-    if (successTitle) successTitle.textContent = isReturning ? "You're Already On The Waitlist" : "You're On The Waitlist!";
+    if (successTitle) successTitle.textContent = isReturning ? "You're Already On The Waitlist" : "You're On The Waitlist";
 
     if (shareWaBtn) {
       const waText = encodeURIComponent(`Join me on the Grabsty waitlist: buy and sell pre-loved clothes, sneakers and bags with escrow protection. ${uniqueRefUrl}`);
