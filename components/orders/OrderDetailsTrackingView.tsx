@@ -432,15 +432,6 @@ export function OrderDetailsTrackingView({
     statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Needs Label' : 'Paid') : (isSeller ? 'Needs Label' : 'Preparing Order'));
   }
 
-  if (order?.payment_method === 'cod' && currentFulfillment !== 'completed' && currentFulfillment !== 'canceled' && currentFulfillment !== 'disputed') {
-    if (order?.cod_seller_confirmed_at && !order?.cod_buyer_confirmed_at) {
-      statusBadge = isSeller ? 'Awaiting Buyer COD' : 'Confirm COD Payment';
-      itemStatusBadgeText = isSeller ? 'Awaiting Buyer COD' : 'Confirm COD Payment';
-    } else if (order?.cod_buyer_confirmed_at && !order?.cod_seller_confirmed_at) {
-      statusBadge = isSeller ? 'Confirm COD Payment' : 'Awaiting Seller COD';
-      itemStatusBadgeText = isSeller ? 'Confirm COD Payment' : 'Awaiting Seller COD';
-    }
-  }
 
   const addr = (order?.shipping_address as any) || {};
   const recipient =

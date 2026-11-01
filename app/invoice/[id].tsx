@@ -488,79 +488,38 @@ export default function InvoiceScreen() {
     }
   };
 
-  // Dual COD Payment Confirmation Handler (Both Buyer & Seller must confirm)
-  const handleConfirmCodPayment = async (role: 'seller' | 'buyer') => {
+  // COD: only the buyer confirms. Confirming completes the order and releases payment.
+  const handleConfirmCodPayment = async (_role: 'buyer' = 'buyer') => {
     if (!order?.id || completingCod) return;
     tap('medium');
 
-    const counterpartyConfirmed =
-      role === 'seller'
-        ? Boolean(order.cod_buyer_confirmed_at)
-        : Boolean(order.cod_seller_confirmed_at);
-
-    const title = 'Confirm COD Payment?';
-    const message =
-      role === 'seller'
-        ? counterpartyConfirmed
-          ? `The buyer has already confirmed COD payment. Confirm that you have delivered the package and received ${formatPrice(total)} in cash to finalize the sale.`
-          : `Confirm that you have delivered the package and collected ${formatPrice(total)} in cash from the buyer. Both you and the buyer must select Confirm COD Payment to finalize.`
-        : counterpartyConfirmed
-          ? `The seller has already confirmed COD payment. Confirm that you have received your order and handed over ${formatPrice(total)} in cash to finalize the purchase.`
-          : `Confirm that you have received your order and paid ${formatPrice(total)} in cash upon delivery. Both you and the seller must select Confirm COD Payment to finalize.`;
-
     const confirmed = await confirm({
-      title,
-      message,
-      confirmLabel: 'Confirm COD Payment',
+      title: 'Confirm order received?',
+      message: `Confirm that your order arrived as described and you paid ${formatPrice(total)} in cash. This completes the order and releases payment to the seller. If something is wrong, report a problem instead.`,
+      confirmLabel: 'Confirm received',
     });
-
     if (!confirmed) return;
 
     const previousOrder = order;
     const nowIso = new Date().toISOString();
-
-    // Optimistic local state update
     setOrder((prev) =>
       prev
-        ? {
-            ...prev,
-            ...(role === 'seller'
-              ? { cod_seller_confirmed_at: nowIso }
-              : { cod_buyer_confirmed_at: nowIso }),
-            ...(counterpartyConfirmed
-              ? { status: 'completed', fulfillment_status: 'completed', payment_status: 'paid', cod_paid_at: nowIso }
-              : {}),
-          }
+        ? { ...prev, cod_buyer_confirmed_at: nowIso, status: 'completed', fulfillment_status: 'completed', payment_status: 'paid', cod_paid_at: nowIso }
         : null,
     );
     setCompletingCod(true);
 
     try {
-      const updated = await paymentService.markCodOrderPaid(order.id, role);
+      const updated = await paymentService.markCodOrderPaid(order.id);
       setOrder(updated);
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
         queryClient.invalidateQueries({ queryKey: ['myOrders'] });
       }
-      if (updated.status === 'completed' || (updated.cod_buyer_confirmed_at && updated.cod_seller_confirmed_at)) {
-        toast.show('COD Payment confirmed by both! Order finalized.', {
-          variant: 'default',
-          icon: 'check',
-        });
-      } else {
-        toast.show(
-          role === 'seller'
-            ? 'COD payment confirmed. Waiting for Buyer to confirm COD Payment.'
-            : 'COD payment confirmed. Waiting for Seller to confirm COD Payment.',
-          {
-            variant: 'default',
-            icon: 'check',
-          },
-        );
-      }
+      toast.show('Order completed. Thanks for confirming.', { variant: 'default', icon: 'check' });
     } catch (e: any) {
       setOrder(previousOrder);
-      toast.show(e?.message ?? 'Failed to confirm COD payment', {
+      toast.show(e?.message ?? 'Could not confirm the order', {
         variant: 'default',
         icon: 'alert-triangle',
       });
@@ -688,74 +647,27 @@ export default function InvoiceScreen() {
               </Text>
             </View>
           ) : isSeller && order?.payment_method === 'cod' && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
-            order?.cod_seller_confirmed_at ? (
-              <View
-                style={{
-                  height: 48,
-                  borderRadius: radii.pill,
-                  backgroundColor: theme.surface,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 16,
-                }}
-              >
-                <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
-                <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
-                  COD Payment Confirmed · Waiting for Buyer
-                </Text>
-              </View>
-            ) : (
-              <View style={{ gap: 8, width: '100%' }}>
-                {order?.cod_buyer_confirmed_at ? (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      backgroundColor: isDark ? 'rgba(83, 86, 238, 0.15)' : '#F2F3FE',
-                      borderRadius: 10,
-                      paddingHorizontal: 12,
-                      paddingVertical: 8,
-                      gap: 6,
-                    }}
-                  >
-                    <Feather name="info" size={14} color="#5356EE" />
-                    <Text style={{ fontSize: 12, color: theme.ink, fontFamily: typography.family.sansMedium, flex: 1 }}>
-                      Buyer has confirmed COD payment. Please confirm to finalize.
-                    </Text>
-                  </View>
-                ) : null}
-                <Pressable
-                  testID="seller-confirm-cod-button"
-                  onPress={() => handleConfirmCodPayment('seller')}
-                  disabled={completingCod}
-                  style={({ pressed }) => [
-                    {
-                      height: 48,
-                      borderRadius: radii.pill,
-                      backgroundColor: theme.primary,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    },
-                    pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
-                  ]}
-                >
-                  {completingCod ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Feather name="check-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                      <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', fontFamily: typography.family.sansBold }}>
-                        Confirm COD Payment
-                      </Text>
-                    </>
-                  )}
-                </Pressable>
-              </View>
-            )
+            // Only the buyer confirms COD; the seller waits. Server auto-completes 24h after delivery.
+            <View
+              style={{
+                height: 48,
+                borderRadius: radii.pill,
+                backgroundColor: theme.surface,
+                borderWidth: 1,
+                borderColor: theme.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: 16,
+              }}
+            >
+              <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
+              <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
+                {order?.delivered_at
+                  ? `Waiting for buyer · auto-completes in ${Math.max(1, Math.ceil(24 - (Date.now() - new Date(order.delivered_at).getTime()) / 3_600_000))}h`
+                  : 'Waiting for buyer to confirm delivery'}
+              </Text>
+            </View>
           ) : isBuyer && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
             <View style={{ gap: 8, width: '100%' }}>
               {order?.payment_method === 'cod' ? (
@@ -775,29 +687,11 @@ export default function InvoiceScreen() {
                   >
                     <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
                     <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
-                      COD Payment Confirmed · Waiting for Seller
+                      Confirmed · completing order
                     </Text>
                   </View>
                 ) : (
                   <>
-                    {order?.cod_seller_confirmed_at ? (
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          backgroundColor: isDark ? 'rgba(83, 86, 238, 0.15)' : '#F2F3FE',
-                          borderRadius: 10,
-                          paddingHorizontal: 12,
-                          paddingVertical: 8,
-                          gap: 6,
-                        }}
-                      >
-                        <Feather name="info" size={14} color="#5356EE" />
-                        <Text style={{ fontSize: 12, color: theme.ink, fontFamily: typography.family.sansMedium, flex: 1 }}>
-                          Seller has confirmed COD payment. Please confirm to finalize.
-                        </Text>
-                      </View>
-                    ) : null}
                     <Pressable
                       testID="confirm-delivery-button"
                       onPress={() => handleConfirmCodPayment('buyer')}
@@ -820,7 +714,7 @@ export default function InvoiceScreen() {
                         <>
                           <Feather name="check-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
                           <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', fontFamily: typography.family.sansBold }}>
-                            Confirm COD Payment
+                            Confirm order received
                           </Text>
                         </>
                       )}
