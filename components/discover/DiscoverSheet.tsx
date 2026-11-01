@@ -415,6 +415,11 @@ function DiscoverSheetBody({
   const onTab = useCallback(
     (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => {
       onClose();
+      // Home has no `tab=users` feed; sellers live on search's Members tab.
+      if (tab === 'users') {
+        router.push(withNonce('/?searchOpen=1&searchTab=seller') as any);
+        return;
+      }
       router.push(withNonce(`/?tab=${tab}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
     },
     [onClose],
