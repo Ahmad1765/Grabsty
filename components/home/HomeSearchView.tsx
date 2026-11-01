@@ -54,6 +54,8 @@ import { radii, type as typography } from '@/lib/theme';
 import type { Category, Listing } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { formatPrice } from '@/lib/currency';
+import { CONDITION_LABELS } from '@/components/product/shared';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function haptic() {
   if (Platform.OS !== 'web') {
@@ -117,6 +119,9 @@ export const HomeSearchView = memo(function HomeSearchView({
   // Desktop: the overlay is the centred feed frame, so its pager pages are too.
   const { width: windowWidth } = useWindowDimensions();
   const isDesktop = useIsDesktop();
+  const insets = useSafeAreaInsets();
+  // The floating tab bar stays visible over search on phones.
+  const tabBarClearance = isDesktop ? 40 : insets.bottom + 80;
   const screenWidth = isDesktop ? Math.min(windowWidth, DESKTOP_FEED_MAX) : windowWidth;
   const inputRef = useRef<any>(null);
   const pagerRef = useRef<ScrollView>(null);
@@ -171,6 +176,8 @@ export const HomeSearchView = memo(function HomeSearchView({
   const savedSearchesQ = useSavedSearchesQuery(user?.id ?? null);
 
   const [localSavedKeys, setLocalSavedKeys] = useState<Set<string>>(new Set());
+  // Last tap wins over server data so the star flips instantly in both directions.
+  const [savedOverride, setSavedOverride] = useState<Record<string, boolean>>({});
 
   const storageKey = user?.id
     ? `@ceranix_saved_searches_local:${user.id}`
@@ -310,6 +317,7 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   const isSaved = useMemo(() => {
     const { key, label } = effectiveSearchInfo;
+    if (key in savedOverride) return savedOverride[key];
     if (localSavedKeys.has(key)) return true;
     if (savedSearchesQ.data) {
       const actualQuery = query.trim() || null;
@@ -331,7 +339,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       );
     }
     return false;
-  }, [effectiveSearchInfo, localSavedKeys, query, savedSearchesQ.data, searchFilters.category]);
+  }, [effectiveSearchInfo, savedOverride, localSavedKeys, query, savedSearchesQ.data, searchFilters.category]);
 
   const handleToggleSaveSearch = useCallback(async () => {
     haptic();
@@ -340,6 +348,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     const nextSaved = !currentlySaved;
 
     // Optimistic toggle locally
+    setSavedOverride((prev) => ({ ...prev, [key]: nextSaved }));
     setLocalSavedKeys((prev) => {
       const next = new Set(prev);
       if (nextSaved) {
@@ -961,7 +970,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: tabBarClearance }}
     >
       {/* ── Your Recent Searches ── */}
       {historyItems.length > 0 && (
@@ -971,16 +980,14 @@ export const HomeSearchView = memo(function HomeSearchView({
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: 14,
+              marginBottom: 12,
             }}
           >
             <Text
               style={{
-                fontSize: 15,
-                fontWeight: '700',
-                fontFamily: typography.family.sansBold,
-                color: theme.text,
-                letterSpacing: -0.2,
+                fontSize: 17,
+                fontFamily: typography.family.sansSemibold,
+                color: theme.ink,
               }}
             >
               Recent searches
@@ -998,12 +1005,12 @@ export const HomeSearchView = memo(function HomeSearchView({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
+              <Feather name="search" size={14} color={theme.mute} />
               <Text
                 style={{
-                  fontSize: 14.5,
-                  fontWeight: '600',
-                  fontFamily: typography.family.sansBold,
-                  color: theme.purple,
+                  fontSize: 13,
+                  fontFamily: typography.family.sansMedium,
+                  color: theme.mute,
                 }}
               >
                 Clear all
@@ -1017,9 +1024,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 key={item.term}
                 style={{
                   height: 30,
-                  backgroundColor: isDark ? theme.surface : theme.panel,
-                  borderWidth: 1,
-                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
                   borderRadius: 15,
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -1031,7 +1036,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                   accessibilityRole="button"
                   accessibilityLabel={`Search for ${item.term}`}
                   style={({ pressed }) => ({
-                    paddingLeft: 12,
+                    paddingLeft: 14,
                     paddingRight: 4,
                     height: '100%',
                     justifyContent: 'center',
@@ -1040,10 +1045,9 @@ export const HomeSearchView = memo(function HomeSearchView({
                 >
                   <Text
                     style={{
-                      fontSize: 12.5,
-                      fontWeight: '500',
+                      fontSize: 13,
                       fontFamily: typography.family.sansMedium,
-                      color: theme.text,
+                      color: theme.ink,
                     }}
                     numberOfLines={1}
                   >
@@ -1068,7 +1072,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                     opacity: pressed ? 0.5 : 0.8,
                   })}
                 >
-                  <Feather name="x" size={13} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                  <Feather name="x" size={14} color={theme.mute} />
                 </Pressable>
               </View>
             ))}
@@ -1077,13 +1081,12 @@ export const HomeSearchView = memo(function HomeSearchView({
       )}
 
       {/* Popular searches Section */}
-      <View style={{ marginTop: 24 }}>
+      <View style={{ marginTop: historyItems.length > 0 ? 28 : 4 }}>
         <Text
           style={{
-            fontSize: 15,
-            fontWeight: '700',
-            fontFamily: typography.family.sansBold,
-            color: theme.text,
+            fontSize: 17,
+            fontFamily: typography.family.sansSemibold,
+            color: theme.ink,
             marginBottom: 12,
           }}
         >
@@ -1097,22 +1100,22 @@ export const HomeSearchView = memo(function HomeSearchView({
               onPress={() => handleSelectTag(term, 'listings')}
               style={({ pressed }) => ({
                 height: 30,
-                backgroundColor: isDark ? theme.surface : theme.panel,
-                borderWidth: 1,
-                borderColor: theme.border,
+                backgroundColor: theme.surface,
                 borderRadius: 15,
-                paddingHorizontal: 12,
+                paddingHorizontal: 14,
+                flexDirection: 'row',
+                gap: 6,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.75 : 1,
               })}
             >
+              <Feather name="search" size={14} color={theme.mute} />
               <Text
                 style={{
-                  fontSize: 12.5,
-                  fontWeight: '500',
+                  fontSize: 13,
                   fontFamily: typography.family.sansMedium,
-                  color: theme.text,
+                  color: theme.ink,
                 }}
               >
                 {term}
@@ -1130,7 +1133,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingTop: 16, paddingBottom: tabBarClearance }}
     >
       <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
         <Text
@@ -1337,11 +1340,44 @@ export const HomeSearchView = memo(function HomeSearchView({
             paddingHorizontal: 16,
             paddingTop: 12, // = HomeHeader search marginTop, so the bar doesn't jump vertically
             paddingBottom: 8,
-            gap: 10,
+            gap: 12,
             borderBottomWidth: 0,
           }}
         >
-          {/* Search Input Box (Pill shape matching Reference Image 2) */}
+          {/* Back: returns to the search landing after a submit, else closes search. */}
+          <Animated.View style={closeAnimatedStyle}>
+            <Pressable
+              onPress={() => {
+                haptic();
+                if (hasSubmitted) {
+                  setHasSubmitted(false);
+                  inputRef.current?.focus?.();
+                  setQuery('');
+                  setSearchFilters(EMPTY_SEARCH_FILTERS);
+                  ++searchRequestIdRef.current;
+                  setSellerResults([]);
+                  setListingResults([]);
+                  setLoading(false);
+                } else {
+                  handleClose();
+                }
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
+              style={({ pressed }) => ({
+                width: 32,
+                height: 40,
+                alignItems: 'flex-start',
+                justifyContent: 'center',
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Feather name="arrow-left" size={22} color={theme.ink} />
+            </Pressable>
+          </Animated.View>
+
+          {/* Search field */}
           <Animated.View
             style={[
               {
@@ -1349,10 +1385,10 @@ export const HomeSearchView = memo(function HomeSearchView({
                 flexDirection: 'row',
                 alignItems: 'center',
                 backgroundColor: isDark ? theme.surface : '#F4F4F5',
-                borderRadius: radii.pill,
-                paddingLeft: 14,
-                paddingRight: query.length > 0 ? 8 : 14,
-                height: 44,
+                borderRadius: 10,
+                paddingLeft: 12,
+                paddingRight: query.length > 0 ? 8 : 12,
+                height: 40,
                 borderWidth: 0,
               },
             ]}
@@ -1431,76 +1467,30 @@ export const HomeSearchView = memo(function HomeSearchView({
             )}
           </Animated.View>
 
-          {/* After Searching: Save Your Search Star / Favourite Button (Reference Image 3) */}
+          {/* Save search (bookmark) */}
           {hasSubmitted && (
             <Pressable
               onPress={handleToggleSaveSearch}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={isSaved ? "Saved search active" : "Save this search"}
+              accessibilityLabel={isSaved ? 'Saved search active' : 'Save this search'}
+              accessibilityState={{ selected: isSaved }}
               style={({ pressed }) => ({
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                backgroundColor: isSaved
-                  ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
-                  : (isDark ? theme.panel : theme.surface),
-                borderWidth: 1,
-                borderColor: isSaved
-                  ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
-                  : theme.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.75 : 1,
-                transform: [{ scale: pressed ? 0.92 : 1 }],
-                shadowColor: isSaved ? theme.purple : '#000000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: isSaved ? 0.16 : 0.05,
-                shadowRadius: 6,
-                elevation: isSaved ? 3 : 1,
-              })}
-            >
-              <Ionicons
-                name={isSaved ? "star" : "star-outline"}
-                size={21}
-                color={isSaved ? theme.purple : theme.mute}
-              />
-            </Pressable>
-          )}
-
-          {/* "Close" text (video reference): back to search after a submit, else close. */}
-          <Animated.View style={closeAnimatedStyle}>
-            <Pressable
-              onPress={() => {
-                haptic();
-                if (hasSubmitted) {
-                  setHasSubmitted(false);
-                  inputRef.current?.focus?.();
-                  setQuery('');
-                  setSearchFilters(EMPTY_SEARCH_FILTERS);
-                  ++searchRequestIdRef.current;
-                  setSellerResults([]);
-                  setListingResults([]);
-                  setLoading(false);
-                } else {
-                  handleClose();
-                }
-              }}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
-              style={({ pressed }) => ({
-                height: 44,
-                paddingHorizontal: 2,
+                width: 32,
+                height: 40,
+                alignItems: 'flex-end',
                 justifyContent: 'center',
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Text style={{ fontFamily: typography.family.sansBold, fontSize: 15, color: theme.ink }}>
-                Close
-              </Text>
+              <Ionicons
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                size={22}
+                color={isSaved ? theme.purple : theme.ink}
+              />
             </Pressable>
-          </Animated.View>
+          )}
+
         </View>
       )}
 
@@ -1625,7 +1615,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
                 contentContainerStyle={{
-                  paddingBottom: 40,
+                  paddingBottom: tabBarClearance,
                 }}
               >
                 <SearchFilterChips
@@ -1676,7 +1666,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 renderItem={renderSellerItem}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
                 ListHeaderComponent={
                   <View
                     style={{
@@ -1752,7 +1742,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
               >
                 {/* Horizontal suggestion chips (Universal 30px standard) */}
                 {suggestions.length > 0 && (
@@ -1776,27 +1766,19 @@ export const HomeSearchView = memo(function HomeSearchView({
                         onPress={() => handleSelectSuggestion(sugg.text)}
                         style={({ pressed }) => ({
                           height: 30,
-                          borderRadius: 8,
-                          paddingHorizontal: 12,
+                          borderRadius: 15,
+                          paddingHorizontal: 14,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: pressed
-                            ? isDark
-                              ? '#27343A'
-                              : '#F4F4F5'
-                            : isDark
-                            ? '#1C2428'
-                            : '#FFFFFF',
-                          borderWidth: 1,
-                          borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#E5E7EB',
+                          backgroundColor: theme.surface,
+                          opacity: pressed ? 0.7 : 1,
                         })}
                       >
                         <Text
                           style={{
                             fontSize: 13,
-                            fontWeight: '500',
                             fontFamily: typography.family.sansMedium,
-                            color: theme.text,
+                            color: theme.ink,
                           }}
                         >
                           {sugg.text}
@@ -1907,7 +1889,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                             }}
                             numberOfLines={1}
                           >
-                            {item.condition || (item.size ? `Size ${item.size}` : '')}
+                            {(item.condition && (CONDITION_LABELS[item.condition] ?? item.condition)) || (item.size ? `Size ${item.size}` : '')}
                           </Text>
                         </View>
                       </Pressable>
@@ -1978,7 +1960,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 renderItem={renderSellerItem}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
               />
             ) : (
               <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: 'center' }}>

@@ -88,11 +88,27 @@ export default function HomeScreen() {
 
   const navigation = useNavigation();
 
+  const closeSearch = () => {
+    setSearchModeOpen(false);
+    setInitialSearchCategory(null);
+    setInitialSearchQuery('');
+    if (params.searchOpen || params.searchCategory || params.searchQuery || params.searchTab || params.category || params.q) {
+      router.setParams({
+        searchOpen: undefined,
+        searchCategory: undefined,
+        searchQuery: undefined,
+        searchTab: undefined,
+        category: undefined,
+        q: undefined,
+      });
+    }
+  };
+
+  // The tab bar stays visible over search, so tapping Home closes search.
   useEffect(() => {
-    navigation.setOptions({
-      tabBarStyle: searchModeOpen ? { display: 'none' } : undefined,
-    });
-  }, [navigation, searchModeOpen]);
+    if (!searchModeOpen) return;
+    return navigation.addListener('tabPress' as any, () => closeSearch());
+  });
 
   useEffect(() => {
     const cat = params.searchCategory || (params.searchOpen === '1' ? params.category : undefined);
@@ -346,21 +362,7 @@ export default function HomeScreen() {
             // Desktop: a new header search remounts results with fresh state.
             key={isDesktop ? `${initialSearchCategory ?? ''}|${initialSearchQuery}|${params.searchTab ?? ''}` : undefined}
             initialTab={params.searchTab === 'seller' ? 'seller' : 'listings'}
-            onClose={() => {
-              setSearchModeOpen(false);
-              setInitialSearchCategory(null);
-              setInitialSearchQuery('');
-              if (params.searchOpen || params.searchCategory || params.searchQuery || params.searchTab || params.category || params.q) {
-                router.setParams({
-                  searchOpen: undefined,
-                  searchCategory: undefined,
-                  searchQuery: undefined,
-                  searchTab: undefined,
-                  category: undefined,
-                  q: undefined,
-                });
-              }
-            }}
+            onClose={closeSearch}
             initialCategory={initialSearchCategory}
             initialQuery={initialSearchQuery}
             onOpenSavedAlerts={() => {

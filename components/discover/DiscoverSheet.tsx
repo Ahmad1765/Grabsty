@@ -445,11 +445,11 @@ function DiscoverSheetBody({
   const searchBar = (
     <View
       style={{
-        height: 44,
+        height: 40,
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: radii.pill,
-        paddingLeft: 14,
+        borderRadius: 10,
+        paddingLeft: 12,
         paddingRight: 10,
         borderWidth: 0,
         backgroundColor: searchBg,
@@ -461,7 +461,7 @@ function DiscoverSheetBody({
         value={query}
         onChangeText={setQuery}
         onSubmitEditing={submit}
-        placeholder={`Search ${BRAND}...`}
+        placeholder={`Search ${BRAND}`}
         placeholderTextColor={theme.muteSoft}
         autoCorrect={false}
         autoCapitalize="none"
