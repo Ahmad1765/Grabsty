@@ -1,9 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 // Tests run against the static web export (`expo export -p web` → `dist/`),
-// served by `serve -s dist`. Every backend call (Supabase REST/RPC/auth,
-// edge functions, realtime, Stripe) is intercepted in tests/e2e/helpers/
-// supabase-mock.ts — no live backend is touched.
+// served by `serve -s dist`. Specs talk to the REAL Supabase project the
+// bundle was built against (.env.local / CI secrets) and sign in as the
+// E2E_USER_EMAIL test account; only a few specs mock individual routes with
+// page.route. Assertions must therefore be data-agnostic.
 
 const envPort = Number(process.env.PLAYWRIGHT_PORT);
 const PORT = Number.isFinite(envPort) && envPort > 0 ? envPort : 8081;
@@ -71,7 +72,8 @@ export default defineConfig({
       },
       // Signed-out / read-only project. Skip the authenticated specs (those
       // run under `signed-in-desktop` with the storage state loaded).
-      testIgnore: [/auth\.setup\.ts$/, /signed-in\//],
+      // discover-search-focus needs the phone tab bar — it runs under chromium-mobile.
+      testIgnore: [/auth\.setup\.ts$/, /signed-in\//, /discover-search-focus\.spec\.ts$/],
     },
     {
       // Authenticated runs reuse the storage state captured by the setup
@@ -90,7 +92,7 @@ export default defineConfig({
       name: 'chromium-mobile',
       use: { ...devices['Pixel 7'], channel: 'chromium' },
       // Mobile-specific smoke run — the responsive layout switches columns.
-      testMatch: /(tab-navigation|discover|product-detail|responsive)\.spec\.ts$/,
+      testMatch: /(tab-navigation|discover|discover-search-focus|product-detail|responsive)\.spec\.ts$/,
     },
     // Small phone — catches narrow-column overflow on iPhone SE / older Androids.
     //

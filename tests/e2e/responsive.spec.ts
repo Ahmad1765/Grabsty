@@ -16,7 +16,8 @@ import {
   waitForAppReady,
   scrollFeedToBottom,
   priceText,
-  discoverSearch,
+  homeSearch,
+  hasTopNav,
 } from './helpers/page';
 
 test.describe('Responsive layout', () => {
@@ -37,7 +38,7 @@ test.describe('Responsive layout', () => {
   });
 
   test('search header and at least one tab pill are visible', async ({ page }) => {
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     await expect(page.getByText('For you', { exact: true })).toBeVisible();
   });
 
@@ -49,8 +50,9 @@ test.describe('Responsive layout', () => {
   test('bottom tab bar exposes all five tabs', async ({ page }) => {
     // The dock renders icon + label for each tab. Each tab carries
     // accessibilityRole="button" + accessibilityLabel={title}.
-    for (const label of ['Home', 'Categories', 'Sell', 'Activity', 'Account']) {
-      await expect(page.getByRole('button', { name: label }).or(page.getByRole('button', { name: 'Inbox' })).first()).toBeVisible();
+    test.skip(await hasTopNav(page), 'desktop top nav replaces the tab bar');
+    for (const label of ['Home', 'Browse', 'Sell', 'Activity', 'Account']) {
+      await expect(page.getByRole('button', { name: label, exact: true }).first()).toBeVisible();
     }
   });
 
@@ -94,13 +96,12 @@ test.describe('Responsive layout', () => {
     expect(overflow).toBeLessThanOrEqual(2);
   });
 
-  test('discover screen category grid stays within viewport width', async ({ page }) => {
-    // Deep-link a category so the screen lands on the Items grid — Discover
-    // opens on Aesthetics and the Items chip is hidden, so a bare /discover
-    // never reaches the category grid this test is named for.
-    await page.goto('/discover?category=clothing');
+  test('category search results stay within viewport width', async ({ page }) => {
+    // Discover was folded into Home search; a category deep link opens the
+    // filtered results grid with its filter chip row (the widest content).
+    await page.goto('/?searchOpen=1&searchCategory=clothing');
     await waitForAppReady(page);
-    await expect(discoverSearch(page)).toBeVisible();
+    await expect(page.getByText('Clothing', { exact: true }).first()).toBeVisible();
     const overflow = await page.evaluate(() => {
       const d = document.documentElement;
       return d.scrollWidth - d.clientWidth;

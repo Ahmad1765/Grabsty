@@ -1,15 +1,32 @@
 // Sell form (components/sell/SellSheet.tsx) — for a signed-in user, tapping
-// the Sell tab opens it as a full-screen Modal over whatever screen is
-// active, the same way the product page's "Offer" button opens OfferSheet.
-// It is not a route: there's no `/sell` URL to `page.goto()`, so every spec
-// here opens it via openSellSheet() (lands on Home, taps the Sell tab).
+// Sell opens it as a full-screen Modal over whatever screen is active.
+// openSellSheet() lands on Home and taps Sell, like a real user. (/upload
+// also still opens it, as a fallback route.)
 // The flow is a single continuous scroll (Photos → About your item → Item
-// details → Pricing → Shipping) with row pickers, not a multi-step wizard,
-// so every section should be visible without navigating.
-// We do NOT drive a full publish because the web image picker isn't testable
-// headlessly and we don't want to insert real listings into the account.
+// details → Pricing & Shipping) with row pickers, not a multi-step wizard.
+//
+// The Upload CTA is deliberately NOT disabled while incomplete: it stays
+// tappable and toasts the first missing requirement ("Add a title",
+// "Choose a category", …) so the seller learns why. Specs assert that.
+// We never complete a publish — no real listings are inserted.
 
-import { test, expect, openSellSheet } from '../helpers/page';
+import { test, expect, openSellSheet, homeSearch } from '../helpers/page';
+import type { Page } from '@playwright/test';
+
+async function addPhoto(page: Page) {
+  const [chooser] = await Promise.all([
+    page.waitForEvent('filechooser'),
+    page.getByRole('button', { name: 'Upload photos' }).click(),
+  ]);
+  await chooser.setFiles('tests/e2e/fixtures/portrait.jpg');
+  await expect(page.getByText('COVER', { exact: true })).toBeVisible({ timeout: 20_000 });
+}
+
+/** Tap Upload and expect the toast naming the first missing requirement. */
+async function expectBlockedBy(page: Page, reason: string) {
+  await page.getByRole('button', { name: 'Upload listing' }).click();
+  await expect(page.getByText(reason, { exact: true }).last()).toBeVisible();
+}
 
 test.describe('Upload listing (signed in)', () => {
   test('the old /upload tab route opens the same sell sheet as a fallback', async ({ page }) => {
@@ -17,77 +34,55 @@ test.describe('Upload listing (signed in)', () => {
     await expect(page.getByText('Sell an item')).toBeVisible({ timeout: 20_000 });
   });
 
-  test('sell form renders every section as one scroll, with Upload gated until required fields are filled', async ({ page }) => {
+  test('sell form renders every section as one scroll, and Upload explains what is missing', async ({ page }) => {
     await openSellSheet(page);
     await expect(page.getByText('Sell an item')).toBeVisible({ timeout: 20_000 });
 
-    // Photos — empty state offers the pill upload affordance.
     await expect(page.getByText('Photos', { exact: true })).toBeVisible();
-    await expect(page.getByText('Upload photos', { exact: true })).toBeVisible();
+    await expect(page.getByText('Select photos', { exact: true })).toBeVisible();
 
-    // About your item — plain underline fields, no boxed inputs.
     await expect(page.getByText('About your item')).toBeVisible();
-    await expect(page.getByPlaceholder("Tell buyers what you're selling")).toBeVisible();
-    await expect(page.getByPlaceholder('Tell buyers more about it')).toBeVisible();
+    await expect(page.getByPlaceholder('e.g. Vintage denim jacket')).toBeVisible();
+    await expect(page.getByPlaceholder(/^Describe fit, condition/)).toBeVisible();
 
-    // Item details — row pickers, all present on the same page. Material was
-    // removed from the form (2026-07-27) so it must NOT be here.
     await expect(page.getByText('Item details')).toBeVisible();
-    await expect(page.getByText('Category', { exact: true })).toBeVisible();
-    await expect(page.getByText('Brand', { exact: true })).toBeVisible();
-    await expect(page.getByText('Size', { exact: true })).toBeVisible();
-    await expect(page.getByText('Condition', { exact: true })).toBeVisible();
+    for (const row of ['Category', 'Brand', 'Size', 'Condition', 'Color', 'Gender']) {
+      await expect(page.getByText(row, { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    }
+    // Material was removed from the form (2026-07-27) so it must NOT be here.
     await expect(page.getByText('Material (recommended)')).toHaveCount(0);
 
-    // Pricing / Shipping.
-    await expect(page.getByText('Pricing', { exact: true })).toBeVisible();
-    await expect(page.getByText('Shipping', { exact: true })).toBeVisible();
+    await expect(page.getByText('Pricing & Shipping', { exact: true })).toBeVisible();
     await expect(page.getByText('Parcel size', { exact: true })).toBeVisible();
-    await expect(page.getByText('The buyer always pays for shipping')).toBeVisible();
+    await expect(page.getByText(/The buyer pays for shipping/)).toBeVisible();
 
-    // Upload CTA (scrolls with the form, right after the safety banner — not
-    // a sticky footer) is disabled until photos/title/price/category are filled.
-    const uploadCta = page.getByRole('button', { name: 'Upload listing' });
-    await expect(uploadCta).toBeVisible();
-    await expect(uploadCta).toBeDisabled();
+    await expectBlockedBy(page, 'Add at least one photo');
   });
 
-  test('Category row falls back to the placeholder — not the top-level label — until a subcategory is actually picked, and Upload only enables once it is', async ({ page }) => {
-    // Regression test: Clothing (the default category) requires a
-    // subcategory before canPublish is true, but the row used to show
-    // "Clothing" regardless — looking already-set — so sellers filled in
-    // everything else and Upload silently stayed disabled with no visible
-    // reason why. See project_sell_upload_redesign memory, 2026-07-27.
+  test('Category stays unset until a subcategory is actually picked', async ({ page }) => {
+    // Regression test: Clothing requires a subcategory before canPublish is
+    // true, but the row used to show "Clothing" regardless — looking
+    // already-set — so sellers filled in everything else and Upload silently
+    // refused with no visible reason.
     await openSellSheet(page);
     await expect(page.getByText('Sell an item')).toBeVisible({ timeout: 20_000 });
 
-    const [chooser] = await Promise.all([
-      page.waitForEvent('filechooser'),
-      page.getByText('Upload photos', { exact: true }).click(),
-    ]);
-    await chooser.setFiles('tests/e2e/fixtures/portrait.jpg');
-    await expect(page.getByText('COVER', { exact: true })).toBeVisible({ timeout: 20_000 });
+    await addPhoto(page);
+    await page.getByPlaceholder('e.g. Vintage denim jacket').fill('Vintage denim jacket');
 
-    await page.getByPlaceholder("Tell buyers what you're selling").fill('Vintage denim jacket');
+    // Nothing picked yet — the row says so, and Upload names the category.
+    await expect(page.getByText('Select category', { exact: true })).toBeVisible();
+    await expectBlockedBy(page, 'Choose a category');
 
-    await page.getByText('Price', { exact: true }).click();
-    await page.locator('input[placeholder="0"]').first().fill('2500');
-    await page.getByText('Save', { exact: true }).click();
+    await page.getByText('Select category', { exact: true }).click();
+    await page.getByText('Clothing', { exact: true }).last().click();
+    await expect(page.getByText('Choose sub-category')).toBeVisible();
+    await page.getByText('Jeans', { exact: true }).last().click();
 
-    const uploadCta = page.getByRole('button', { name: 'Upload listing' });
-    const categoryRow = page.getByRole('button', { name: /^Category/ });
-
-    // Category defaults to Clothing internally, but nothing has been picked
-    // yet — the row must say so, and Upload must stay disabled.
-    await expect(categoryRow).toContainText('Add category');
-    await expect(uploadCta).toBeDisabled();
-
-    await categoryRow.click();
-    await page.getByText('Jeans', { exact: true }).click();
-
-    // Now the row reflects the real pick, and every requirement is met.
-    await expect(categoryRow).toContainText('Jeans');
-    await expect(uploadCta).toBeEnabled();
+    // The row reflects the real pick and the blocker moves on to the next field.
+    await expect(page.getByText('Select category', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Jeans', { exact: true }).first()).toBeVisible();
+    await expectBlockedBy(page, 'Choose the condition');
   });
 
   test('the X button closes the sheet back to the screen underneath', async ({ page }) => {
@@ -96,20 +91,6 @@ test.describe('Upload listing (signed in)', () => {
 
     await page.getByLabel('Close').click();
     await expect(page.getByText('Sell an item')).toHaveCount(0);
-    // The Home screen underneath is still there — the tab bar never actually
-    // switched to Sell, so we land right back on it.
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
-  });
-
-  test('Category row opens a picker sheet and writes the chosen value back to the row', async ({ page }) => {
-    await openSellSheet(page);
-    await expect(page.getByText('Sell an item')).toBeVisible({ timeout: 20_000 });
-
-    await page.getByText('Category', { exact: true }).click();
-    await expect(page.getByText('Hoodies & Sweats', { exact: true })).toBeVisible();
-    await page.getByText('Hoodies & Sweats', { exact: true }).click();
-
-    // Sheet closes and the row now shows the picked subcategory.
-    await expect(page.getByRole('button', { name: /^Category\s+Hoodies & Sweats/ })).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
   });
 });

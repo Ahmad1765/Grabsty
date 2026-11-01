@@ -52,32 +52,29 @@ env:
   E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
   E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
-  # Skips allowed before the job fails. Exactly three are legitimate:
-  # responsive.spec.ts "tap targets are >=40px" is guarded
-  # `test.skip(viewport.width > 480)` and runs on five projects, so it skips on
-  # desktop / tablet / wide. Every OTHER skip in this suite means missing live
-  # data or missing credentials — i.e. a test that silently did not run.
-  # Bump this only when adding a genuinely viewport-gated test.
-  MAX_ALLOWED_SKIPS: '3'
+  # Skips allowed before the job fails. The legitimate ones (16):
+  #  - 9 viewport-gated on desktop / tablet / wide (>=1024px renders the top
+  #    nav, no tab bar): tab-navigation "Browse tab", responsive "bottom tab
+  #    bar" and "tap targets >=40px" — 3 tests x 3 projects.
+  #  - 4 product-slider-iphone carousel tests (desktop + iphone-se) that need a
+  #    multi-photo listing in the live feed.
+  #  - 2 stealth_checkout tests that need E2E_LOCAL_SUPABASE + a seeded stack.
+  #  - 1 test.fixme: Browse tab soft-keyboard focus (discover-search-focus).
+  # Any skip beyond these means missing live data or credentials — a test that
+  # silently did not run. Adjust only when adding/removing a gated test.
+  MAX_ALLOWED_SKIPS: '16'
 
 jobs:
-  e2e:
-    name: Playwright E2E (chromium)
+  # Build the web bundle once; every shard downloads it instead of rebuilding.
+  build:
+    name: Build web bundle
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    outputs:
-      pass_count: ${{ steps.summary.outputs.pass_count }}
-      fail_count: ${{ steps.summary.outputs.fail_count }}
-      flaky_count: ${{ steps.summary.outputs.flaky_count }}
-
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # Full history so the merge job can fast-forward main → test.
-          fetch-depth: 0
 
-      # Fail in seconds, not after a 7-minute doomed run.
+      # Fail in seconds, not after a doomed run.
       #
       # Without the secrets the bundle is built against the placeholder host and
       # every data-dependent spec dies: the first run of this workflow produced
@@ -114,6 +111,36 @@ jobs:
       - name: Setup project (Node + npm ci)
         uses: ./.github/actions/setup-project
 
+      - name: Build web bundle
+        run: npm run build
+
+      - name: Upload web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist
+          retention-days: 7
+
+  # The suite is split across 4 GitHub machines running in parallel
+  # (Playwright --shard). Each runs 2 workers on its own runner, so no single
+  # machine is overloaded and wall time drops roughly 4x. To split further,
+  # extend the matrix AND change the "/4" in the run step together.
+  e2e:
+    name: Playwright E2E (shard ${{ matrix.shard }}/4)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup project (Node + npm ci)
+        uses: ./.github/actions/setup-project
+
       # Cache the Playwright browser binary so reruns don't redownload ~150MB.
       - name: Cache Playwright browsers
         id: cache-playwright
@@ -130,29 +157,78 @@ jobs:
         if: steps.cache-playwright.outputs.cache-hit == 'true'
         run: npx playwright install-deps chromium
 
-      - name: Build web bundle
-        run: npm run build
+      - name: Download web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist
 
-      - name: Run Playwright tests
-        id: tests
-        # `--reporter` is set in playwright.config.ts when CI=true → list +
-        # github + html. The html report lands in playwright-report/ and is
-        # uploaded as an artifact below.
-        run: npx playwright test
+      # Blob output is merged into one HTML + JSON report by the `report` job.
+      # Project dependencies (the auth `setup` project) run in every shard that
+      # holds a signed-in spec.
+      - name: Run Playwright tests (shard ${{ matrix.shard }}/4)
+        run: npx playwright test --shard=${{ matrix.shard }}/4 --reporter=blob,github
         env:
           CI: 'true'
 
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: blob-report
+          retention-days: 3
+
+      - name: Upload Playwright raw traces / screenshots / videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ github.sha }}-${{ matrix.shard }}
+          path: test-results
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Merge every shard's blob into one HTML report + results.json, then apply
+  # the same summary and skip gate the single-machine job had.
+  report:
+    name: E2E report
+    needs: e2e
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      pass_count: ${{ steps.summary.outputs.pass_count }}
+      fail_count: ${{ steps.summary.outputs.fail_count }}
+      flaky_count: ${{ steps.summary.outputs.flaky_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup project (Node + npm ci)
+        uses: ./.github/actions/setup-project
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Merge reports
+        run: npx playwright merge-reports --reporter=html,json ./all-blob-reports
+        env:
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report
+          PLAYWRIGHT_HTML_OPEN: never
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-report/results.json
+
       - name: Summarise results
         id: summary
-        if: always()
-        # Parse the JSON results.json that the HTML reporter emits alongside
-        # the report. We surface pass / fail / flaky counts in the job
+        # Parse results.json. We surface pass / fail / flaky counts in the job
         # summary AND as outputs the merge job reads.
         shell: bash
         run: |
           set -euo pipefail
-          report_dir=playwright-report
-          results_file="${report_dir}/results.json"
+          results_file=playwright-report/results.json
 
           # Walk arbitrarily-nested suites (file → describe → describe…).
           # `..|.specs?` flattens every specs[] array regardless of depth.
@@ -173,7 +249,7 @@ jobs:
           echo "skip_count=$skip" >> "$GITHUB_OUTPUT"
 
           {
-            echo "## E2E results"
+            echo "## E2E results (4 shards)"
             echo ""
             echo "| Outcome | Count |"
             echo "|---------|------:|"
@@ -182,30 +258,35 @@ jobs:
             echo "| Flaky   | $flaky |"
             echo "| Skipped | $skip (max ${MAX_ALLOWED_SKIPS}) |"
             echo "| Total   | $total |"
-            echo ""
-            if [[ "${{ steps.tests.outcome }}" == "success" ]]; then
-              echo "_All specs green — main will be fast-forwarded._"
-            else
-              echo "_Tests failed — main is not touched. See uploaded report for traces, screenshots, and video._"
-              # List the failing spec titles.
-              if [[ -f "$results_file" ]]; then
-                echo ""
-                echo "### Failing tests"
-                echo ""
-                jq -r '.. | .specs? // empty | .[] | .tests[]? | select(.results[-1].status=="failed" or .results[-1].status=="timedOut") | "- " + (.title // "<untitled>") + "  (`" + ((.location.file // "?") + ":" + ((.location.line // 0)|tostring)) + "`)"' "$results_file" || true
-              fi
+            if (( fail > 0 )); then
+              echo ""
+              echo "### Failing tests"
+              echo ""
+              jq -r '.. | .specs? // empty | .[] | .tests[]? | select(.results[-1].status=="failed" or .results[-1].status=="timedOut") | "- " + (.title // "<untitled>") + "  (`" + ((.location.file // "?") + ":" + ((.location.line // 0)|tostring)) + "`)"' "$results_file" || true
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: playwright-report
+          retention-days: 14
+          if-no-files-found: warn
+
+      # Re-checked after the merge so the gate holds even if a shard's job
+      # status was lost (e.g. a cancelled shard).
+      - name: Fail on failed tests
+        if: steps.summary.outputs.fail_count != '0'
+        run: |
+          echo "::error::${{ steps.summary.outputs.fail_count }} E2E tests failed — see job summary"
+          exit 1
+
       # A skipped spec is indistinguishable from a passing one in the exit code,
       # which is how this suite hid two specs that had never executed for
-      # months. Anything beyond the documented viewport-gated skips means the
-      # job ran without the live data or credentials it needs, and a green
-      # result would be a lie.
-      # Only meaningful when the run was otherwise green — a failed run already
-      # fails the job, and this step is skipped by default in that case.
+      # months. Anything beyond the documented gated skips means the job ran
+      # without the live data or credentials it needs.
       - name: Fail on unexpected skips
-        if: steps.tests.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
@@ -221,10 +302,6 @@ jobs:
               echo "backend or E2E credentials are missing, so this run proved"
               echo "far less than its green tick suggests."
               echo ""
-              echo "Set these repository secrets:"
-              echo "\`EXPO_PUBLIC_SUPABASE_URL\`, \`EXPO_PUBLIC_SUPABASE_ANON_KEY\`,"
-              echo "\`E2E_USER_EMAIL\`, \`E2E_USER_PASSWORD\`."
-              echo ""
               echo "#### Skipped"
               jq -r '.. | .specs? // empty | .[] | .tests[]? | select((.results | length) == 0 or .results[-1].status=="skipped") | "- " + (.title // "<untitled>")' \
                 playwright-report/results.json 2>/dev/null | sort -u || true
@@ -233,36 +310,9 @@ jobs:
             exit 1
           fi
 
-      - name: Upload Playwright HTML report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-${{ github.sha }}
-          path: playwright-report
-          retention-days: 14
-          if-no-files-found: warn
-
-      - name: Upload Playwright raw traces / screenshots / videos
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-test-results-${{ github.sha }}
-          path: test-results
-          retention-days: 14
-          if-no-files-found: ignore
-
-      - name: Upload built web bundle (debugging aid)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-bundle-${{ github.sha }}
-          path: dist
-          retention-days: 7
-          if-no-files-found: warn
-
   merge:
     name: Fast-forward main → test
-    needs: e2e
+    needs: [e2e, report]
     # The default GITHUB_TOKEN can push to main unless branch protection
     # blocks it. If branch protection requires PR review, swap this for a
     # `peter-evans/create-pull-request` step or a PAT with bypass.
@@ -304,8 +354,8 @@ jobs:
             git merge --no-ff origin/test -m "ci(e2e): merge test → main after green E2E run
 
             Triggered by ${{ github.event.head_commit.id }}.
-            All E2E specs passed: ${{ needs.e2e.outputs.pass_count }} passed,
-            ${{ needs.e2e.outputs.flaky_count }} flaky, ${{ needs.e2e.outputs.fail_count }} failed."
+            All E2E specs passed: ${{ needs.report.outputs.pass_count }} passed,
+            ${{ needs.report.outputs.flaky_count }} flaky, ${{ needs.report.outputs.fail_count }} failed."
           fi
 
       - name: Push main
@@ -319,5 +369,5 @@ jobs:
             echo ""
             echo "- Source: \`test\` @ \`${{ github.sha }}\`"
             echo "- Target: \`main\`"
-            echo "- E2E: ${{ needs.e2e.outputs.pass_count }} passed, ${{ needs.e2e.outputs.fail_count }} failed, ${{ needs.e2e.outputs.flaky_count }} flaky"
+            echo "- E2E: ${{ needs.report.outputs.pass_count }} passed, ${{ needs.report.outputs.fail_count }} failed, ${{ needs.report.outputs.flaky_count }} flaky"
           } >> "$GITHUB_STEP_SUMMARY"

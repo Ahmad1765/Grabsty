@@ -1,5 +1,4 @@
-// Owner-only actions on /product/<id> — "Mark as sold" / "Mark available" +
-// "Delete". We use a hardcoded mocked listing fixture so the test runs deterministically
+// Owner-only actions on /product/<id> — "Edit listing" + "Delete listing". We use a hardcoded mocked listing fixture so the test runs deterministically
 // in CI and doesn't rely on live Supabase endpoint configuration.
 // If the account has no valid session the test skips.
 
@@ -35,7 +34,7 @@ function readUserIdFromStorage(): string | null {
 const MOCK_LISTING_ID = 'mock-listing-123';
 
 test.describe('Product owner actions (signed in)', () => {
-  test('owner sees the Mark-as-sold and Delete CTAs (no destructive click)', async ({ page }) => {
+  test('owner sees the Edit and Delete CTAs (no destructive click)', async ({ page }) => {
     const userId = readUserIdFromStorage();
     test.skip(!userId, 'no user id in storage state — auth setup did not save a session');
 
@@ -73,8 +72,11 @@ test.describe('Product owner actions (signed in)', () => {
     await page.goto(`/product/${MOCK_LISTING_ID}`);
     await waitForAppReady(page);
 
-    await expect(page.getByText('Mark as sold')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText('Delete', { exact: true })).toBeVisible();
+    // Sold state is order-driven now (checkout marks sold, refund relists), so
+    // there is no manual Mark-as-sold toggle — the owner gets Edit + Delete.
+    await expect(page.getByText('Edit listing', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: 'Delete listing' })).toBeVisible();
+    await expect(page.getByText('Mark as sold')).toHaveCount(0);
     // Confirm the legacy "Follow / Message" CTAs are NOT shown for the owner.
     await expect(page.getByText('Message', { exact: true })).toHaveCount(0);
   });

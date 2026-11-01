@@ -18,7 +18,7 @@ test.describe('Upload has no auto-clean (signed in)', () => {
     //    up front never resolves. Catch the native file chooser instead.
     const [chooser] = await Promise.all([
       page.waitForEvent('filechooser'),
-      page.getByText('Upload photos', { exact: true }).click(),
+      page.getByRole('button', { name: 'Upload photos' }).click(),
     ]);
     await chooser.setFiles(path.resolve(process.cwd(), 'tests/e2e/fixtures/portrait.jpg'));
 

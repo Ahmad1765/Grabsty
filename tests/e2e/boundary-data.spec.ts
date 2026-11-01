@@ -12,8 +12,10 @@ import {
   expect,
   waitForAppReady,
   priceText,
-  discoverSearch,
+  searchUrl,
+  openHomeSearch,
   SUPABASE_URL,
+  homeSearch,
 } from './helpers/page';
 
 const REST_RE = SUPABASE_URL
@@ -58,7 +60,7 @@ test.describe('Boundary data', () => {
     });
     await page.goto('/');
     await waitForAppReady(page);
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     // No prices because the array is empty.
     await expect(priceText(page)).toHaveCount(0);
     // No global error.
@@ -87,7 +89,7 @@ test.describe('Boundary data', () => {
     });
     await page.goto('/');
     await waitForAppReady(page);
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     // No horizontal overflow even with a 9-digit price string in a card.
     const overflow = await page.evaluate(() => {
       const d = document.documentElement;
@@ -112,7 +114,7 @@ test.describe('Boundary data', () => {
     });
     await page.goto('/');
     await waitForAppReady(page);
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     const overflow = await page.evaluate(() => {
       const d = document.documentElement;
       return d.scrollWidth - d.clientWidth;
@@ -120,26 +122,26 @@ test.describe('Boundary data', () => {
     expect(overflow).toBeLessThanOrEqual(2);
   });
 
-  test('discover zero-results query renders empty-state copy', async ({ page }) => {
-    // "Nothing matched" is the Items grid's empty state, and Discover opens on
-    // Aesthetics with no Items chip — so deep-link the query, which is what
-    // routes the screen to Items (see discover.tsx: `if (nextQ || hasCat)`).
-    await page.goto('/discover?q=zzqqxx-nonexistent-search-token-9999');
+  test('search zero-results query renders empty-state copy', async ({ page }) => {
+    // Discover was folded into Home's search; a ?searchQuery deep link opens
+    // the results view directly.
+    await page.goto(searchUrl('zzqqxx-nonexistent-search-token-9999'));
     await waitForAppReady(page);
-    await expect(page.getByText('Nothing matched')).toBeVisible();
+    await expect(page.getByText(/No listings found matching/).first()).toBeVisible();
   });
 
   test('unicode + emoji in search input is accepted and rendered back', async ({ page }) => {
-    await page.goto('/discover');
+    await page.goto('/');
     await waitForAppReady(page);
     const tricky = '🛍️ café — 北京 ​';
-    const input = discoverSearch(page);
+    await openHomeSearch(page);
+    // On phones tapping the header opens a search overlay with its own
+    // (focused) input; on desktop the top-nav field itself is the input.
+    const input = page.locator('input:focus');
     await input.fill(tricky);
     await expect(input).toHaveValue(tricky);
-    // No crash — the shell is still there. Asserted tab-agnostically: the old
-    // "Browse by category" anchor only exists on the Items grid, which this
-    // screen no longer opens on.
-    await expect(page.getByText('Discover', { exact: true }).first()).toBeVisible();
+    // No crash — the shell is still there.
+    await expect(page.getByText(/Something went wrong|Unhandled error/i)).toHaveCount(0);
   });
 
   test('product detail with missing optional fields still renders the shell', async ({ page }) => {

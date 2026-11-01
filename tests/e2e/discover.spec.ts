@@ -1,91 +1,46 @@
-// Discover screen — structural assertions only. We never type a specific
-// brand name (we don't know what data exists); we type junk and confirm the
-// empty state appears.
-//
-// Discover lands on the Aesthetics tab and the Items chip is hidden
-// (SearchTabs.tsx HIDDEN_TABS), so the item grid — which owns the search
-// landing, the category tiles and the "Nothing matched" state — is only
-// reachable via a ?q= / ?category= deep link or by tapping a brand. Specs that
-// exercise the grid deep-link into it; that is the real user path, not a
-// shortcut around one.
+// Search (formerly the Discover screen). Discover was folded into Home's
+// search — app/(tabs)/discover.tsx now redirects to "/" keeping its query
+// params. Structural assertions only: we never type a real brand (we don't
+// know what data exists); we type junk and confirm the empty state.
 
-import { test, expect, waitForAppReady, discoverSearch } from './helpers/page';
+import { test, expect, waitForAppReady, homeSearch, openHomeSearch, searchUrl } from './helpers/page';
 
-const TOPIC_LABELS = [
-  'Clothing',
-  'Shoes',
-  'Bags',
-  'Accessories',
-  'Beauty',
-  'Other',
-  'All items',
-];
-
-test.describe('Discover', () => {
-  test('lands on the Aesthetics tab', async ({ page }) => {
-    await page.goto('/discover');
-    await waitForAppReady(page);
-    // "Discover" is rendered both as the page title AND as the bottom tab
-    // label — use .first() to skip strict mode.
-    await expect(page.getByText('Discover', { exact: true }).first()).toBeVisible();
-    await expect(page.getByPlaceholder('Search aesthetics')).toBeVisible();
-    for (const pill of ['Aesthetics', 'Brands', 'Users']) {
-      await expect(page.getByText(pill, { exact: true }).first()).toBeVisible();
-    }
+test.describe('Search (formerly Discover)', () => {
+  test('/discover redirects to Home and keeps its query params', async ({ page }) => {
+    await page.goto('/discover?foo=bar');
+    await page.waitForURL(/127\.0\.0\.1:\d+\/\?foo=bar$/);
+    await expect(homeSearch(page)).toBeVisible();
   });
 
-  test('focusing search opens the browse landing with its Browse chips and Topics tiles', async ({ page }) => {
-    await page.goto('/discover?category=clothing');
+  test('focusing search opens the landing with popular searches', async ({ page }) => {
+    await page.goto('/');
     await waitForAppReady(page);
-    const search = discoverSearch(page);
-    await expect(search).toBeVisible();
-    // Browse / Topics live in the search-focus landing, not the idle feed.
-    await search.click();
-    await expect(page.getByText('Browse', { exact: true })).toBeVisible();
-    await expect(page.getByText('Topics', { exact: true })).toBeVisible();
-    // Browse chips: three grid sorts + the three hub tabs + saved searches.
-    for (const label of ['New', 'Trending', 'Lowest price', 'Aesthetics', 'Brands', 'Sellers', 'Saved']) {
-      await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
-    }
-    // Topics tiles (lib/categories.ts, plus the "All items" tile).
-    for (const label of TOPIC_LABELS) {
-      await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
-    }
+    await openHomeSearch(page);
+    // Both layouts list popular searches (phone overlay: "Popular searches";
+    // desktop dropdown: "POPULAR" + category browse).
+    await expect(page.getByText(/^Popular( searches)?$/i).first()).toBeVisible();
+    await expect(page.getByText('Vintage', { exact: true }).first()).toBeVisible();
   });
 
-  test('typing junk into search renders the "Nothing matched" empty state', async ({ page }) => {
-    await page.goto('/discover?category=clothing');
+  test('a junk query renders the "No listings found" empty state', async ({ page }) => {
+    await page.goto(searchUrl('quantumprocessorrandomtokenxyz'));
     await waitForAppReady(page);
-    await discoverSearch(page).fill('quantumprocessorrandomtokenxyz');
-    await expect(page.getByText('Nothing matched')).toBeVisible();
-    await expect(page.getByText('Try a different word, brand, or category.')).toBeVisible();
+    await expect(
+      page.getByText('No listings found matching "quantumprocessorrandomtokenxyz"').first(),
+    ).toBeVisible();
   });
 
-  test('selecting a category from the landing surfaces the Clear action', async ({ page }) => {
-    await page.goto('/discover?category=clothing');
+  test('a category deep link opens filtered results without crashing', async ({ page }) => {
+    await page.goto('/?searchOpen=1&searchCategory=bags');
     await waitForAppReady(page);
-    // Drop the deep-linked category first, so the Clear we assert on below is
-    // the one selecting "Bags" produced — not the one we arrived with.
-    await page.getByText('Clear', { exact: true }).first().click();
-    await expect(page.getByText('Clear', { exact: true })).toHaveCount(0);
-
-    await discoverSearch(page).click();
-    await page.getByText('Bags', { exact: true }).first().click();
-    // Landing closes; the category grid header owns the Clear.
-    await expect(page.getByText('Clear', { exact: true }).first()).toBeVisible();
-    await page.getByText('Clear', { exact: true }).first().click();
-    // After clearing, the idle Trending grid header is back.
-    await expect(page.getByText(/Trending|Results/i).first()).toBeVisible();
+    await expect(page.getByText('Bags', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
   });
 
-  test('clicking brand on product page navigates to discover without crash', async ({ page }) => {
-    page.on('console', (msg) => console.log(`[PAGE LOG ${msg.type()}]:`, msg.text()));
-    page.on('pageerror', (err) => console.log('[PAGE ERROR]:', err.message, err.stack));
-
+  test('legacy /discover?q= brand link does not crash', async ({ page }) => {
     await page.goto('/discover?q=Khaadi');
     await waitForAppReady(page);
-    await page.waitForTimeout(4000);
-    const errorBoundary = await page.getByText(/Something went wrong/i).count();
-    expect(errorBoundary).toBe(0);
+    await page.waitForTimeout(2000);
+    await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);
   });
 });

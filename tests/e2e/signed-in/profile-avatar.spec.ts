@@ -1,10 +1,13 @@
-// Picking a banner on WEB must mark the form dirty.
+// Picking a profile photo on WEB must register as a new image.
 //
 // Regression guard: expo-image-picker returns `URL.createObjectURL(file)` on
 // web — a `blob:` URI. The edit screen's "is this a newly picked image" check
-// originally recognised only file:/content:/data:, so on web a picked photo
-// never counted as a change: the save CTA stayed disabled and the upload branch
-// never ran. Avatars were silently broken on web the same way.
+// (isLocalImage in app/profile/edit.tsx) originally recognised only
+// file:/content:/data:, so on web a picked photo never counted as a change and
+// the upload branch never ran. (This spec used to cover the banner picker,
+// which has since been removed from the edit screen.)
+//
+// We never press Save — the account is not mutated.
 
 import { test, expect } from '@playwright/test';
 import { waitForAppReady } from '../helpers/page';
@@ -15,54 +18,28 @@ const PNG_1X1 = Buffer.from(
   'base64',
 );
 
-test.describe('Profile banner picker (web)', () => {
-  test('picking a banner enables Save', async ({ page }) => {
+test.describe('Profile photo picker (web)', () => {
+  test('picking a photo previews it from a blob: URI', async ({ page }) => {
     await page.goto('/profile/edit');
     await waitForAppReady(page);
 
-    const save = page.getByText('All saved', { exact: true });
-    await expect(save).toBeVisible({ timeout: 20_000 });
+    const avatar = page.getByRole('button', { name: 'Change profile picture' });
+    await expect(avatar).toBeVisible({ timeout: 20_000 });
 
     // expo-image-picker clicks a hidden <input type="file"> on web, which the
     // browser surfaces as a file chooser.
     const chooser = page.waitForEvent('filechooser');
-    // Regex, not the placeholder copy: the control reads "Add a profile banner"
-    // on an account with no banner and "Change profile banner" once one is set.
-    await page.getByLabel(/profile banner/i).click();
-    await (await chooser).setFiles({
-      name: 'banner.png',
-      mimeType: 'image/png',
-      buffer: PNG_1X1,
-    });
+    await avatar.click();
+    await (await chooser).setFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: PNG_1X1 });
 
-    // Web has no OS crop UI, so the pick routes through our own cropper.
-    await expect(page.getByText('Position your banner', { exact: true })).toBeVisible();
-    await page.getByText('Use photo', { exact: true }).click();
+    // allowsEditing routes web picks through a crop step on some versions;
+    // accept it if it appears.
+    const usePhoto = page.getByText(/^(Use photo|Done|Crop)$/);
+    if (await usePhoto.first().isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await usePhoto.first().click();
+    }
 
-    // The CTA flips out of its "nothing to save" state once the crop registers.
-    await expect(page.getByText('Save changes', { exact: true })).toBeVisible();
-  });
-
-  test('the cropper can be dismissed without changing anything', async ({ page }) => {
-    await page.goto('/profile/edit');
-    await waitForAppReady(page);
-    await expect(page.getByText('All saved', { exact: true })).toBeVisible({ timeout: 20_000 });
-
-    const chooser = page.waitForEvent('filechooser');
-    // Regex, not the placeholder copy: the control reads "Add a profile banner"
-    // on an account with no banner and "Change profile banner" once one is set.
-    await page.getByLabel(/profile banner/i).click();
-    await (await chooser).setFiles({
-      name: 'banner.png',
-      mimeType: 'image/png',
-      buffer: PNG_1X1,
-    });
-
-    await expect(page.getByText('Position your banner', { exact: true })).toBeVisible();
-    await page.getByLabel('Close').click();
-
-    await expect(page.getByText('Position your banner', { exact: true })).toBeHidden();
-    // Backing out of the cropper must not count as an edit.
-    await expect(page.getByText('All saved', { exact: true })).toBeVisible();
+    // The avatar now renders the picked image, not the initial letter.
+    await expect(avatar.locator('img').first()).toBeVisible();
   });
 });

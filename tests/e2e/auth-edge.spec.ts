@@ -7,7 +7,7 @@
 // We don't drive a real auth roundtrip here — auth.setup.ts covers that.
 // These tests only exercise the client-side guards and resilience paths.
 
-import { test, expect, waitForAppReady, passwordField, SUPABASE_URL } from './helpers/page';
+import { test, expect, waitForAppReady, passwordField, SUPABASE_URL, homeSearch } from './helpers/page';
 
 const AUTH_USER_RE = SUPABASE_URL
   ? new RegExp(`${SUPABASE_URL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/auth/v1/user.*`)
@@ -17,10 +17,9 @@ test.describe('Auth edges', () => {
   test('deep link to /upload while signed out lands on the auth prompt', async ({ page }) => {
     await page.goto('/upload');
     await waitForAppReady(page);
-    // The RequireAuth gate surfaces the welcome modal. Any of these phrases
-    // means the gate did its job.
+    // /upload opens the Sell sheet, whose signed-out state is a sign-in gate.
     await expect(
-      page.getByText(/Continue as guest|Sign up with email|Your story[\s\S]*starts\s+now\./i).first(),
+      page.getByText(/Sign in to sell|Continue as guest|Sign up with email|Your story[\s\S]*starts\s+now\./i).first(),
     ).toBeVisible();
   });
 
@@ -68,7 +67,7 @@ test.describe('Auth edges', () => {
     await page.goto('/');
     await waitForAppReady(page);
     // The home shell still rendered.
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     // And no error overlay was raised.
     await expect(page.getByText(/Something went wrong|Unhandled error/i)).toHaveCount(0);
   });

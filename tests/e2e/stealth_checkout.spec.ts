@@ -9,7 +9,10 @@ import { test, expect } from '@playwright/test';
 // which Playwright's page.getByTestId('foo') targets directly.
 
 test.describe('Adversarial UI Kinetics', () => {
-  
+  // Needs a local Supabase stack (`supabase start`, :54321) seeded with the
+  // test_buyer@grabsty.internal account and the fixed listing/order ids below.
+  test.skip(!process.env.E2E_LOCAL_SUPABASE, 'set E2E_LOCAL_SUPABASE=1 with a seeded local stack');
+
   test.beforeEach(async ({ page }) => {
     const LOCAL_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 

@@ -22,7 +22,11 @@ test.describe('Profile edit (signed in)', () => {
     await expect(page.getByPlaceholder('Username')).toBeVisible();
     await expect(page.getByPlaceholder('Full name')).toBeVisible();
     await expect(page.getByPlaceholder('Bio')).toBeVisible();
-    await expect(page.getByDisplayValue('Lahore')).toBeVisible();
+    // Location is a fixed, read-only field prefilled with Lahore.
+    const values = await page
+      .locator('input')
+      .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
+    expect(values).toContain('Lahore');
   });
 
   test('Save CTA is rendered in-flow', async ({ page }) => {
