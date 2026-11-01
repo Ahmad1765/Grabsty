@@ -120,7 +120,6 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
                 fontSize: 15,
                 fontWeight: '600',
                 color: theme.ink,
-                letterSpacing: -0.2,
               }}
               numberOfLines={1}
             >
@@ -128,9 +127,9 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
             </Text>
             <Text
               style={{
-                fontSize: 12.5,
+                fontSize: 13,
                 color: theme.mute,
-                marginTop: 1.5,
+                marginTop: 2,
                 fontWeight: '400',
               }}
               numberOfLines={1}

@@ -104,11 +104,10 @@ export function SafetyBanner({ context = 'shop', title, body, style, onLinkPress
       <View style={{ flex: 1 }}>
         <Text
           style={{
-            fontFamily: typography.family.sansBold,
+            fontFamily: typography.family.sansSemibold,
             fontSize: typography.size.md,
             color: theme.ink,
             marginBottom: 2,
-            letterSpacing: -0.2,
           }}
         >
           {title ?? preset.title}

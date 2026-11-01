@@ -192,7 +192,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                     opacity: pressed ? 0.6 : 1,
                   })}
                 >
-                  <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: BRAND_PURPLE, letterSpacing: 0.2 }}>
+                  <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: BRAND_PURPLE }}>
                     {descExpanded ? 'Show less' : 'Read more'}
                   </Text>
                   <Feather
@@ -219,10 +219,9 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
             <Text
               style={{
                 width: LABEL_W,
-                fontFamily: 'Inter_600SemiBold',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 15,
-                color: theme.ink,
-                letterSpacing: 0.1,
+                color: theme.mute,
               }}
             >
               Category
@@ -235,7 +234,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 }}
                 style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
               >
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: theme.mute }}>
+                <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: theme.ink }}>
                   {categoryLabel(listing.category)}
                 </Text>
               </Pressable>
@@ -256,7 +255,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                     }}
                     style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
                   >
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: theme.mute }}>
+                    <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: theme.ink }}>
                       {catSubLabel}
                     </Text>
                   </Pressable>
@@ -291,9 +290,8 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 style={{
                   width: LABEL_W,
                   fontSize: 15,
-                  fontFamily: 'Inter_600SemiBold',
-                  color: theme.ink,
-                  letterSpacing: 0.1,
+                  fontFamily: 'Inter_400Regular',
+                  color: theme.mute,
                 }}
               >
                 {row.label}
@@ -302,8 +300,8 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 style={{
                   flex: 1,
                   fontSize: 15,
-                  fontFamily: 'Inter_400Regular',
-                  color: row.link ? BRAND_PURPLE : theme.mute,
+                  fontFamily: 'Inter_500Medium',
+                  color: theme.ink,
                 }}
                 numberOfLines={1}
               >

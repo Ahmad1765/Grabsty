@@ -142,11 +142,13 @@ export const ProductHeroSection = memo(function ProductHeroSection({
             activeColor={BRAND_PURPLE}
             inactiveColor={theme.ink}
           />
-          <AnimatedNumber
-            value={heartCount}
-            height={13}
-            style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', color: theme.mute, marginTop: 1 }}
-          />
+          {heartCount > 0 && (
+            <AnimatedNumber
+              value={heartCount}
+              height={13}
+              style={{ fontSize: 11, fontFamily: 'Inter_600SemiBold', color: theme.mute, marginTop: 1 }}
+            />
+          )}
         </Pressable>
 
         {/* Bookmark / Save Button */}

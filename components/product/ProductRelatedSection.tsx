@@ -10,7 +10,7 @@
 import { memo } from 'react';
 import { View, Pressable, type LayoutChangeEvent } from 'react-native';
 import { Text } from '@/lib/rnText';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleSection } from '@/components/product/BundleSection';
 import { ListingCard } from '@/components/ListingCard';
@@ -85,8 +85,8 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}
             >
-              <Ionicons
-                name={tab === 'members' ? 'person' : 'sparkles'}
+              <Feather
+                name={tab === 'members' ? 'user' : 'grid'}
                 size={13}
                 color={theme.ink}
                 style={{ marginRight: 6 }}
@@ -94,7 +94,7 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
               <Text
                 style={{
                   fontSize: 13,
-                  fontWeight: '700',
+                  fontWeight: '600',
                   color: theme.ink,
                 }}
               >

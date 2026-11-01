@@ -17,7 +17,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { formatPrice } from '@/lib/currency';
 import { categoryLabel } from '@/lib/categories';
 import {
-  BRAND_PURPLE,
   conditionLabel,
   tap,
   timeAgo,
@@ -127,13 +126,12 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
 
       <Text
         style={{
-          fontSize: 28,
-          fontFamily: 'Inter_700Bold',
+          fontSize: 24,
+          fontFamily: 'Inter_600SemiBold',
           color: theme.ink,
-          lineHeight: 33,
-          letterSpacing: -0.7,
+          lineHeight: 30,
+          letterSpacing: -0.3,
         }}
-        numberOfLines={2}
       >
         {listing.title}
       </Text>
@@ -149,8 +147,8 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
               {s.link ? (
                 <Text
                   style={{
-                    color: BRAND_PURPLE,
-                    fontFamily: 'Inter_600SemiBold',
+                    color: theme.ink,
+                    fontFamily: 'Inter_500Medium',
                     textDecorationLine: 'underline',
                   }}
                   accessibilityRole="link"
@@ -178,10 +176,11 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
         <Text
           style={{
             fontSize: 28,
-            fontFamily: 'Inter_700Bold',
+            fontFamily: 'Inter_600SemiBold',
             color: theme.ink,
             lineHeight: 34,
-            letterSpacing: -0.6,
+            letterSpacing: -0.4,
+            fontVariant: ['tabular-nums'],
           }}
         >
           {formatPrice(itemPrice, { whole: true })}
