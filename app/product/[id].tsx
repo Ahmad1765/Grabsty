@@ -392,10 +392,19 @@ export default function ProductScreen() {
       toast.show("That's your own listing", { variant: 'default', icon: 'info' });
       return;
     }
-    router.push({
-      pathname: '/conversation/new',
-      params: { listing: listing.id, mode },
-    } as any);
+    if (mode === 'offer') {
+      router.push({ pathname: '/conversation/new', params: { listing: listing.id, mode } } as any);
+      return;
+    }
+    // Message goes straight to the thread; the old compose step was an extra screen before chatting.
+    getOrCreateConversation({ buyerId: user.id, sellerId: listing.seller_id, listingId: listing.id })
+      .then((conv) => {
+        if (conv?.id) router.push(`/conversation/${conv.id}` as any);
+        else toast.show('Could not open conversation', { variant: 'default', icon: 'alert-triangle' });
+      })
+      .catch((e: any) =>
+        toast.show(e?.message ?? 'Could not open conversation', { variant: 'default', icon: 'alert-triangle' }),
+      );
   }, [user, listing, guestGate, toast]);
 
   const canOffer = useCallback(() => {
