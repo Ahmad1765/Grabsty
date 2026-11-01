@@ -40,7 +40,7 @@ export const SUPPORT_TOPICS: SupportTopic[] = [
     id: 'payouts_fees',
     icon: 'credit-card',
     title: 'Payments & payouts',
-    description: 'Withdraw balance, payment methods & fees',
+    description: 'Withdraw balance, methods & fees',
     prompt: 'How do seller payouts and wallet withdrawals work?',
   },
   {

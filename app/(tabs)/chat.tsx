@@ -31,7 +31,6 @@ import {
   generateSupportResponse,
   SUPPORT_TOPICS,
   SUPPORT_BOT_NAME,
-  SUPPORT_BOT_AVATAR,
 } from '@/lib/support';
 import { useInboxQuery } from '@/lib/queries';
 import { markActivitySeen } from '@/hooks/useActivityDot';
@@ -156,10 +155,9 @@ function UnderlineTabs({
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontFamily: active ? typography.family.sansBold : typography.family.sansMedium,
-                    fontSize: 14.5,
+                    fontFamily: active ? typography.family.sansSemibold : typography.family.sansMedium,
+                    fontSize: 15,
                     color: active ? theme.ink : theme.muteSoft,
-                    letterSpacing: -0.1,
                   }}
                 >
                   {t.label}
@@ -177,10 +175,10 @@ function UnderlineTabs({
             position: 'absolute',
             bottom: 0,
             left: 0,
-            height: 2.5,
+            height: 2,
             width: underlineWidth,
             backgroundColor: theme.ink,
-            borderRadius: 2,
+            borderRadius: 1,
             transform: [{ translateX }],
           }}
         />
@@ -403,15 +401,13 @@ function SupportPage({
     overflow: 'hidden' as const,
   };
   const sectionLabel = {
-    fontFamily: typography.family.sansSemibold,
-    fontSize: 12,
-    letterSpacing: 0.2,
-    textTransform: 'uppercase' as const,
+    fontFamily: typography.family.sansMedium,
+    fontSize: 13,
     color: theme.mute,
-    marginLeft: 12,
+    marginLeft: 16,
     marginBottom: 8,
   };
-  const divider = isDark ? '#262626' : '#F0F0F0';
+  const divider = theme.hairline;
 
   return (
     <View style={{ width: pageWidth, height: pageHeight }}>
@@ -419,7 +415,7 @@ function SupportPage({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
           paddingHorizontal: 16,
-          paddingTop: 18,
+          paddingTop: 16,
           paddingBottom: bottomInset + 100,
         }}
         refreshControl={
@@ -428,42 +424,22 @@ function SupportPage({
       >
         {/* Contact header: flat, like a profile row */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <View>
-            <Image
-              source={{ uri: SUPPORT_BOT_AVATAR }}
-              style={{
-                width: 54,
-                height: 54,
-                borderRadius: 27,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-              contentFit="cover"
-            />
-            <View
-              style={{
-                position: 'absolute',
-                bottom: 1,
-                right: 1,
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: theme.purple,
-                borderWidth: 2,
-                borderColor: theme.background,
-              }}
-            />
-          </View>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={{ width: 56, height: 56, borderRadius: 28 }}
+            contentFit="cover"
+            accessibilityIgnoresInvertColors
+          />
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text
               numberOfLines={1}
-              style={{ fontFamily: typography.family.sansBold, fontSize: 17, letterSpacing: -0.3, color: theme.ink }}
+              style={{ fontFamily: typography.family.sansSemibold, fontSize: 17, color: theme.ink }}
             >
               {SUPPORT_BOT_NAME}
             </Text>
             <Text
               numberOfLines={1}
-              style={{ fontFamily: typography.family.sans, fontSize: 13.5, color: theme.mute, marginTop: 2 }}
+              style={{ fontFamily: typography.family.sans, fontSize: 14, color: theme.mute, marginTop: 2 }}
             >
               Customer care and disputes
             </Text>
@@ -476,7 +452,7 @@ function SupportPage({
             fontSize: 14,
             lineHeight: 20,
             color: theme.mute,
-            marginTop: 14,
+            marginTop: 16,
           }}
         >
           Disputing an order opens a support chat automatically. For anything else, message the team directly.
@@ -491,7 +467,7 @@ function SupportPage({
           testID="support-message-button"
           style={{
             height: 44,
-            marginTop: 14,
+            marginTop: 16,
             borderRadius: radii.pill,
             backgroundColor: theme.ink,
             flexDirection: 'row',
@@ -502,7 +478,7 @@ function SupportPage({
           }}
         >
           <Feather name="message-circle" size={16} color={theme.background} />
-          <Text style={{ fontFamily: typography.family.sansBold, fontSize: 14, color: theme.background }}>
+          <Text style={{ fontFamily: typography.family.sansSemibold, fontSize: 15, color: theme.background }}>
             {opening ? 'Opening chat…' : 'Message support'}
           </Text>
         </PressableScale>
@@ -545,7 +521,7 @@ function SupportPage({
                       flexDirection: 'row',
                       alignItems: 'center',
                       paddingHorizontal: 16,
-                      paddingVertical: 13,
+                      paddingVertical: 12,
                       minHeight: 56,
                       backgroundColor: pressed
                         ? isDark
@@ -566,7 +542,6 @@ function SupportPage({
                         style={{
                           fontFamily: typography.family.sansMedium,
                           fontSize: 15,
-                          letterSpacing: -0.1,
                           color: theme.ink,
                         }}
                       >
@@ -574,7 +549,7 @@ function SupportPage({
                       </Text>
                       <Text
                         numberOfLines={1}
-                        style={{ fontFamily: typography.family.sans, fontSize: 12.5, color: theme.mute, marginTop: 2 }}
+                        style={{ fontFamily: typography.family.sans, fontSize: 13, color: theme.mute, marginTop: 2 }}
                       >
                         {topic.description}
                       </Text>
@@ -582,15 +557,15 @@ function SupportPage({
                     <Feather
                       name={isExpanded ? 'chevron-up' : 'chevron-down'}
                       size={16}
-                      color={isDark ? '#555555' : '#C7C7CC'}
+                      color={theme.muteSoft}
                       style={{ marginLeft: 8 }}
                     />
                   </Pressable>
 
                   {isExpanded && (
-                    <View style={{ paddingLeft: 54, paddingRight: 16, paddingBottom: 14 }}>
+                    <View style={{ paddingLeft: 54, paddingRight: 16, paddingBottom: 16 }}>
                       <Text
-                        style={{ fontFamily: typography.family.sans, fontSize: 13.5, lineHeight: 20, color: theme.mute }}
+                        style={{ fontFamily: typography.family.sans, fontSize: 14, lineHeight: 20, color: theme.mute }}
                       >
                         {withBold(generateSupportResponse(topic.prompt))}
                       </Text>

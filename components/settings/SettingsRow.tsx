@@ -474,13 +474,11 @@ export function ChatGPTGroup({
       {title && (
         <Text
           style={{
-            fontSize: 12,
-            fontWeight: '600',
+            fontSize: 13,
+            fontWeight: '500',
             color: theme.textMuted,
-            letterSpacing: 0.2,
             marginLeft: 12,
             marginBottom: 8,
-            textTransform: 'uppercase',
           }}
         >
           {title}

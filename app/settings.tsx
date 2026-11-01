@@ -1054,7 +1054,7 @@ export default function SettingsScreen() {
         </ChatGPTGroup>
 
         {/* Group 4: Support & Legal */}
-        <ChatGPTGroup title="Support & Legal">
+        <ChatGPTGroup title="Support & legal">
           <ChatGPTItem
             icon="message-square"
             label="Customer Support"
