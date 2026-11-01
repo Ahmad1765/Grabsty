@@ -919,19 +919,22 @@ export default function InboxScreen() {
     }
   }, [params.tab, params.side, goToTab]);
 
+  // The pager only exists once signed in and loaded. Whenever it (re)mounts it
+  // starts at initialScrollIndex, so re-align it, and the underline, with the
+  // selected tab. Otherwise a tab picked while signed out or during the skeleton
+  // stays highlighted while the pager shows Messages.
+  const pagerMounted = !!user && !authLoading && !(loading && conversations.length === 0);
   useEffect(() => {
-    const target = params.tab && INBOX_TABS.some((t) => t.value === params.tab)
-      ? (params.tab as InboxTab)
-      : activeTabRef.current;
-    const index = INBOX_TABS.findIndex((t) => t.value === target);
+    if (!pagerMounted || pageWidth <= 0) return;
+    // activeTabRef already reflects ?tab= (initial state + the params effect).
+    const index = INBOX_TABS.findIndex((t) => t.value === activeTabRef.current);
     if (index < 0) return;
+    ignoreListenerUntilRef.current = Date.now() + 450;
+    scrollX.setValue(index * pageWidth);
     pagerRef.current?.scrollToOffset({ offset: index * pageWidth, animated: false });
-  }, [pageWidth, params.tab]);
+  }, [pagerMounted, pageWidth, params.tab, scrollX]);
 
-  const [initialScrollIndex] = useState(() => {
-    const idx = INBOX_TABS.findIndex((t) => t.value === requestedTab);
-    return idx >= 0 ? idx : 0;
-  });
+  const initialScrollIndex = Math.max(0, INBOX_TABS.findIndex((t) => t.value === activeTab));
 
   return (
     <SafeAreaView
