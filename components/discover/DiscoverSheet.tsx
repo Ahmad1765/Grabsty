@@ -47,8 +47,6 @@ import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-g
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BRAND } from '@/lib/brand';
-import { buildTopicCovers } from '@/lib/discover';
 import { useFeedListingsQuery } from '@/lib/queries';
 import { radii, type } from '@/lib/theme';
 import { HIT_SLOP_8, isDesktopWidth, useIsDesktop } from '@/lib/responsive';
@@ -385,7 +383,6 @@ function DiscoverSheetBody({
   }, []);
 
   const gridQ = useFeedListingsQuery({ tab: 'popular', limit: 60, enabled: settled });
-  const covers = useMemo(() => buildTopicCovers(gridQ.data ?? []), [gridQ.data]);
 
   const submit = useCallback(() => {
     const q = query.trim();
@@ -450,11 +447,12 @@ function DiscoverSheetBody({
   const searchBar = (
     <View
       style={{
-        height: 40,
+        // Same field as the Home bar (HomeHeader).
+        height: 44,
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 10,
-        paddingLeft: 12,
+        borderRadius: radii.pill,
+        paddingLeft: 14,
         paddingRight: 10,
         borderWidth: 0,
         backgroundColor: searchBg,
@@ -466,12 +464,12 @@ function DiscoverSheetBody({
         value={query}
         onChangeText={setQuery}
         onSubmitEditing={submit}
-        placeholder={`Search ${BRAND}`}
+        placeholder="What are you looking for?"
         placeholderTextColor={theme.muteSoft}
         autoCorrect={false}
         autoCapitalize="none"
         returnKeyType="search"
-        accessibilityLabel={`Search ${BRAND}`}
+        accessibilityLabel="What are you looking for?"
         onFocus={() => {
           if (Platform.OS === 'web' && typeof window !== 'undefined') {
             window.scrollTo(0, 0);
@@ -484,8 +482,9 @@ function DiscoverSheetBody({
             flex: 1,
             marginLeft: 8,
             marginRight: 6,
-            fontSize: 15,
-            fontFamily: type.family.sans,
+            fontSize: 16,
+            letterSpacing: -0.15,
+            fontFamily: type.family.sansMedium,
             color: theme.ink,
             padding: 0,
           },
@@ -543,7 +542,6 @@ function DiscoverSheetBody({
           contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
         >
           <SearchLanding
-            covers={covers}
             listings={gridQ.data ?? []}
             userId={user?.id ?? null}
             onTopic={onTopic}

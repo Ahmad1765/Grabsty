@@ -17,6 +17,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { formatPrice } from '@/lib/currency';
 import { categoryLabel } from '@/lib/categories';
 import {
+  BRAND_PURPLE,
   conditionLabel,
   tap,
   timeAgo,
@@ -147,8 +148,8 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
               {s.link ? (
                 <Text
                   style={{
-                    color: theme.ink,
-                    fontFamily: 'Inter_500Medium',
+                    color: BRAND_PURPLE,
+                    fontFamily: 'Inter_600SemiBold',
                     textDecorationLine: 'underline',
                   }}
                   accessibilityRole="link"

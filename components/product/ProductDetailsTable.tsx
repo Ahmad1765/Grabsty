@@ -301,7 +301,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                   flex: 1,
                   fontSize: 15,
                   fontFamily: 'Inter_500Medium',
-                  color: theme.ink,
+                  color: row.link ? BRAND_PURPLE : theme.ink,
                 }}
                 numberOfLines={1}
               >

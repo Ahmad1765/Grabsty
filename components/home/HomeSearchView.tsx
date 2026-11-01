@@ -1367,7 +1367,7 @@ export const HomeSearchView = memo(function HomeSearchView({
               accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
               style={({ pressed }) => ({
                 width: 32,
-                height: 40,
+                height: 44,
                 alignItems: 'flex-start',
                 justifyContent: 'center',
                 opacity: pressed ? 0.6 : 1,
@@ -1384,11 +1384,12 @@ export const HomeSearchView = memo(function HomeSearchView({
                 flex: 1,
                 flexDirection: 'row',
                 alignItems: 'center',
-                backgroundColor: isDark ? theme.surface : '#F4F4F5',
-                borderRadius: 10,
-                paddingLeft: 12,
-                paddingRight: query.length > 0 ? 8 : 12,
-                height: 40,
+                // Same field as the Home bar (HomeHeader) so opening search doesn't reshape it.
+                backgroundColor: isDark ? theme.surface : '#F0F1F5',
+                borderRadius: radii.pill,
+                paddingLeft: 14,
+                paddingRight: query.length > 0 ? 8 : 14,
+                height: 44,
                 borderWidth: 0,
               },
             ]}
@@ -1396,7 +1397,7 @@ export const HomeSearchView = memo(function HomeSearchView({
             <Feather
               name="search"
               size={16} // = Home bar icon, so the swap is invisible
-              color={isDark ? "#9CA3AF" : "#6B7280"}
+              color={theme.mute}
               style={{ flexShrink: 0 }}
             />
             <TextInput
@@ -1414,7 +1415,7 @@ export const HomeSearchView = memo(function HomeSearchView({
               onSubmitEditing={handleSubmitSearch}
               placeholder={searchPlaceholder}
               accessibilityLabel={searchPlaceholder}
-              placeholderTextColor={isDark ? "#9CA3AF" : "#8E8E93"}
+              placeholderTextColor={theme.muteSoft}
               autoFocus={Platform.OS === 'web'}
               returnKeyType="search"
               autoCapitalize="none"
@@ -1426,10 +1427,10 @@ export const HomeSearchView = memo(function HomeSearchView({
                   flexShrink: 1,
                   marginLeft: 8,
                   marginRight: query.length > 0 ? 4 : 0,
-                  fontFamily: typography.family.sans,
+                  fontFamily: typography.family.sansMedium,
                   fontSize: 16,
                   letterSpacing: -0.15,
-                  color: theme.text,
+                  color: theme.ink,
                   padding: 0,
                   outlineStyle: 'none',
                   outlineWidth: 0,
@@ -1462,7 +1463,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                   marginRight: 2,
                 }}
               >
-                <Feather name="x" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+                <Feather name="x" size={16} color={theme.mute} />
               </Pressable>
             )}
           </Animated.View>
@@ -1477,7 +1478,7 @@ export const HomeSearchView = memo(function HomeSearchView({
               accessibilityState={{ selected: isSaved }}
               style={({ pressed }) => ({
                 width: 32,
-                height: 40,
+                height: 44,
                 alignItems: 'flex-end',
                 justifyContent: 'center',
                 opacity: pressed ? 0.6 : 1,

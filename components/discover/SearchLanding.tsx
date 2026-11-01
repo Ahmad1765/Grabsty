@@ -1,15 +1,16 @@
-// Browse sheet body (Discover tab), top to bottom:
-//   1. Shop by category  - 30px chips for every top-level category + All
-//   2. Sellers for you   - 2-column list, ranked by the buyer's taste (get_recommendations),
-//                          falling back to feed order and then most-followed profiles
-//   3. Popular brands    - the most-listed brands in the live feed
-//   4. Quick browse      - New drops / Trending / Best deals sort shortcuts
+// Browse sheet body (Discover tab): one section, "Top sellers this week".
 //
-// Complies with UI_GUARDRAILS.md (three-hue palette, 30px chips, Inter via rnText,
-// inline styles on Pressable).
+// Sellers come from the public `top_sellers_week` RPC (sales in the last 7
+// days, then all-time, so a quiet week still has content). Laid out like the
+// reference: columns of two rows that scroll sideways, each row the same
+// avatar + @username + count design the section used before, with the rank on
+// the avatar.
+//
+// Complies with UI_GUARDRAILS.md (three-hue palette + #F2F3FE token, Inter via
+// rnText, inline styles on Pressable).
 
 import { useMemo } from 'react';
-import { View, Pressable, Platform, ScrollView } from 'react-native';
+import { View, Pressable, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
@@ -18,15 +19,12 @@ import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { IMAGE_TRANSITION } from '@/lib/images';
-import { CATEGORIES, type CategoryId } from '@/lib/categories';
+import { type CategoryId } from '@/lib/categories';
 import { type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 
-import { useRecommendationsQuery } from '@/lib/queries/useFeedQueries';
-
 import type { SortKey } from '@/lib/listings';
 import type { Listing } from '@/types';
-import type { RecommendedListing } from '@/lib/recommendations';
 import type { DiscoverTab } from './SearchTabs';
 
 function haptic() {
@@ -36,6 +34,7 @@ function haptic() {
 }
 
 const PAD = 16;
+const DESKTOP_SHEET_MAX = 560;
 
 // ── Actions ─────────────────────────────────────────────────────────────────
 export type BrowseAction =
@@ -45,281 +44,175 @@ export type BrowseAction =
 
 export type TopicAction = { kind: 'category'; category: CategoryId } | { kind: 'all' };
 
-export type RecommendedUser = {
+type TopSeller = {
   id: string;
-  name: string;
   username: string;
-  avatar: string;
-  photos: [string | null, string | null, string | null, string | null];
-  /** Live listings of theirs in the feed sample (0 for profile-only fallbacks). */
-  count: number;
+  full_name: string | null;
+  avatar_url: string | null;
+  sold_week: number;
+  sold_total: number;
 };
 
-// ── Main SearchLanding Component ────────────────────────────────────────────
+export function useTopSellersWeek(enabled = true) {
+  return useQuery({
+    queryKey: ['topSellersWeek'],
+    enabled,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<TopSeller[]> => {
+      const { data, error } = await supabase.rpc('top_sellers_week', { p_limit: 12 });
+      if (error) throw error;
+      return (data ?? []) as TopSeller[];
+    },
+  });
+}
+
+function soldLabel(s: TopSeller) {
+  if (s.sold_week > 0) return `${s.sold_week} sold this week`;
+  return `${s.sold_total} sold`;
+}
+
 export function SearchLanding({
-  listings = [],
-  userId,
-  onTopic,
-  onSort,
   onTab,
-  onSearch,
   onSelectSeller,
 }: {
   covers?: Partial<Record<string, string>>;
   listings?: Listing[];
   userId?: string | null;
-  onTopic: (action: TopicAction) => void;
-  onSort: (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => void;
+  onTopic?: (action: TopicAction) => void;
+  onSort?: (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onTab: (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onSearch?: (query: string) => void;
   onSelectSeller?: (sellerIdOrUsername: string) => void;
 }) {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
+  const { width } = useWindowDimensions();
+  const { data: sellers = [], isLoading } = useTopSellersWeek();
 
-  // Query real platform profiles from Supabase to guarantee 100% real sellers and functional follow mutations
-  const { data: realProfiles = [] } = useQuery({
-    queryKey: ['discoverTopProfiles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url, followers_count, is_verified')
-        .order('followers_count', { ascending: false, nullsFirst: false })
-        .limit(10);
-      if (error || !data) return [];
-      return data;
-    },
-    staleTime: 5 * 60_000,
-  });
+  // Two rows per column; a column is a bit under half the width so the next
+  // one peeks in and reads as scrollable.
+  const columnWidth = Math.round((Math.min(width, DESKTOP_SHEET_MAX) - PAD) * 0.46);
+  const columns = useMemo(() => {
+    const out: { seller: TopSeller; rank: number }[][] = [];
+    sellers.forEach((seller, i) => {
+      if (i % 2 === 0) out.push([]);
+      out[out.length - 1].push({ seller, rank: i + 1 });
+    });
+    return out;
+  }, [sellers]);
 
-  // Listings ranked for this buyer by get_recommendations (likes, saves, purchases, views →
-  // category/brand/price affinity). Signed-out users get [] and fall back to feed order.
-  const { data: recs = [] } = useRecommendationsQuery(userId ?? null, 48);
-
-  // 2. DYNAMIC RECOMMENDED SELLERS — ranked by how much of the buyer's taste they stock:
-  // a sneakerhead's recs are mostly sneakers, so sneaker-heavy sellers score highest.
-  const recommendedUsers = useMemo<RecommendedUser[]>(() => {
-    const sellersMap = new Map<string, { seller: any; listings: Listing[]; score: number }>();
-
-    // Recs first so a seller's collage shows the items that matched the buyer's taste.
-    for (const l of [...recs, ...listings] as RecommendedListing[]) {
-      if (l.seller && l.seller.id && (!userId || l.seller.id !== userId)) {
-        const entry = sellersMap.get(l.seller.id) ?? { seller: l.seller, listings: [], score: 0 };
-        if (!entry.listings.some((x) => x.id === l.id)) {
-          entry.listings.push(l);
-          if (recs.includes(l)) entry.score += Math.max(l.rec_score ?? 0, 0.1);
-        }
-        sellersMap.set(l.seller.id, entry);
-      }
-    }
-
-    const list: RecommendedUser[] = [];
-    const addedIds = new Set<string>();
-    // Stable sort: unscored (feed-only) sellers keep feed order after the matched ones.
-    const ranked = [...sellersMap.entries()].sort((a, b) => b[1].score - a[1].score);
-
-    for (const [sId, { seller, listings: sListings }] of ranked) {
-      // Only use this seller's own listing photos — never borrow from others
-      const photos: (string | null)[] = [];
-      for (const item of sListings) {
-        const img = item.thumbnails?.[0] || item.images?.[0];
-        if (img && !photos.includes(img)) photos.push(img);
-        if (photos.length === 4) break;
-      }
-      while (photos.length < 4) photos.push(null);
-
-      addedIds.add(sId);
-      list.push({
-        id: sId,
-        name: seller.full_name || seller.username || 'Seller',
-        username: seller.username || 'seller',
-        avatar: seller.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80`,
-        photos: photos as [string | null, string | null, string | null, string | null],
-        count: sListings.length,
-      });
-
-      if (list.length >= 8) break;
-    }
-
-    // Supplement with real Supabase profiles if live sellers in active feed < 4
-    if (list.length < 4 && realProfiles.length > 0) {
-      for (const profile of realProfiles) {
-        if (!profile.id || addedIds.has(profile.id) || (userId && profile.id === userId)) continue;
-        addedIds.add(profile.id);
-
-        // Profile-only users have no listings here — all slots are empty placeholders
-        const photos: (string | null)[] = [null, null, null, null];
-
-        list.push({
-          id: profile.id,
-          name: profile.full_name || profile.username || 'Member',
-          username: profile.username || 'member',
-          avatar: profile.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80`,
-          photos: photos as [string | null, string | null, string | null, string | null],
-          count: 0,
-        });
-
-        if (list.length >= 8) break;
-      }
-    }
-
-    return list;
-  }, [recs, listings, userId, realProfiles]);
-
-  // Most-listed brands in the live feed sample.
-  const popularBrands = useMemo(() => {
-    const counts = new Map<string, { label: string; n: number }>();
-    for (const l of listings) {
-      const raw = l.brand?.trim();
-      if (!raw) continue;
-      const key = raw.toLowerCase();
-      if (key === 'other' || key === 'unbranded' || key === 'no brand') continue;
-      const e = counts.get(key) ?? { label: raw, n: 0 };
-      e.n += 1;
-      counts.set(key, e);
-    }
-    return [...counts.values()].sort((a, b) => b.n - a.n).slice(0, 10).map((e) => e.label);
-  }, [listings]);
-
-  const openSeller = (user: RecommendedUser) => {
+  const openSeller = (s: TopSeller) => {
     haptic();
-    if (onSelectSeller) onSelectSeller(user.username || user.id);
-    else router.push(`/user/${user.username || user.id}` as any);
+    if (onSelectSeller) onSelectSeller(s.username || s.id);
+    else router.push(`/user/${s.username || s.id}` as any);
   };
 
-  const chip = (key: string, label: string, onPress: () => void, icon?: keyof typeof Feather.glyphMap) => (
-    <Pressable
-      key={key}
-      onPress={() => {
-        haptic();
-        onPress();
-      }}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => ({
-        height: 30,
-        borderRadius: 15,
-        paddingHorizontal: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: theme.surface,
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      {icon ? <Feather name={icon} size={14} color={theme.mute} /> : null}
-      <Text style={{ fontSize: 13, fontFamily: type.family.sansMedium, color: theme.ink }}>{label}</Text>
-    </Pressable>
-  );
-
-  const chipRow = (children: React.ReactNode) => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-      contentContainerStyle={{ paddingHorizontal: PAD, gap: 8 }}
-    >
-      {children}
-    </ScrollView>
-  );
-
-  const sellers = recommendedUsers.slice(0, 4);
+  if (!isLoading && sellers.length === 0) return null;
 
   return (
-    <View style={{ paddingTop: 20, gap: 28 }}>
-      <View>
-        <SectionTitle>Shop by category</SectionTitle>
-        {chipRow([
-          ...CATEGORIES.map((c) => chip(c.id, c.label, () => onTopic({ kind: 'category', category: c.id }))),
-          chip('all', 'All categories', () => onTopic({ kind: 'all' })),
-        ])}
+    <View style={{ paddingTop: 20 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          paddingHorizontal: PAD,
+          marginBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 17, fontFamily: type.family.sansSemibold, color: theme.ink }}>
+          Top sellers this week
+        </Text>
+        <Pressable
+          onPress={() => {
+            haptic();
+            onTab('users', 'Top closets', 'users');
+          }}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="See all sellers"
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Text style={{ fontSize: 13, fontFamily: type.family.sansMedium, color: theme.mute }}>See all</Text>
+        </Pressable>
       </View>
 
-      {sellers.length > 0 && (
-        <View>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingRight: PAD }}>
-            <SectionTitle>Sellers for you</SectionTitle>
-            <Pressable
-              onPress={() => {
-                haptic();
-                onTab('users', 'Top closets', 'users');
-              }}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="See all sellers"
-              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
-            >
-              <Text style={{ fontSize: 13, fontFamily: type.family.sansMedium, color: theme.mute }}>See all</Text>
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, rowGap: 16 }}>
-            {sellers.map((u) => (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: PAD, gap: 8 }}
+      >
+        {columns.map((col, ci) => (
+          <View key={ci} style={{ width: columnWidth, gap: 16 }}>
+            {col.map(({ seller, rank }) => (
               <Pressable
-                key={u.id}
-                onPress={() => openSeller(u)}
+                key={seller.id}
+                onPress={() => openSeller(seller)}
                 accessibilityRole="button"
-                accessibilityLabel={`Open @${u.username}`}
+                accessibilityLabel={`Number ${rank}, @${seller.username}, ${soldLabel(seller)}`}
                 style={({ pressed }) => ({
-                  width: '50%',
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 12,
-                  paddingRight: 8,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Image
-                  source={{ uri: u.avatar }}
-                  style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.surface }}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={IMAGE_TRANSITION}
-                />
+                <View>
+                  {seller.avatar_url ? (
+                    <Image
+                      source={{ uri: seller.avatar_url }}
+                      style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: theme.surface }}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      transition={IMAGE_TRANSITION}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 24,
+                        backgroundColor: theme.surface,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Feather name="user" size={20} color={theme.mute} />
+                    </View>
+                  )}
+                  <View
+                    style={{
+                      position: 'absolute',
+                      right: -4,
+                      bottom: -2,
+                      minWidth: 22,
+                      height: 16,
+                      paddingHorizontal: 4,
+                      borderRadius: 8,
+                      backgroundColor: isDark ? theme.surface : '#F2F3FE',
+                      borderWidth: 1.5,
+                      borderColor: theme.background,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 9, fontFamily: type.family.sansSemibold, color: theme.purple }}>
+                      #{rank}
+                    </Text>
+                  </View>
+                </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text numberOfLines={1} style={{ fontSize: 14, fontFamily: type.family.sansSemibold, color: theme.ink }}>
-                    @{u.username}
+                    @{seller.username}
                   </Text>
                   <Text numberOfLines={1} style={{ fontSize: 12, fontFamily: type.family.sans, color: theme.mute, marginTop: 2 }}>
-                    {u.count > 0 ? `${u.count} ${u.count === 1 ? 'listing' : 'listings'}` : 'New seller'}
+                    {soldLabel(seller)}
                   </Text>
                 </View>
               </Pressable>
             ))}
           </View>
-        </View>
-      )}
-
-      {popularBrands.length >= 2 && onSearch && (
-        <View>
-          <SectionTitle>Popular brands</SectionTitle>
-          {chipRow(popularBrands.map((b) => chip(`brand-${b}`, b, () => onSearch(b))))}
-        </View>
-      )}
-
-      <View>
-        <SectionTitle>Quick browse</SectionTitle>
-        {chipRow([
-          chip('new', 'New drops', () => onSort('newest', 'New drops', 'clock'), 'clock'),
-          chip('trending', 'Trending', () => onSort('popular', 'Trending', 'trending-up'), 'trending-up'),
-          chip('deals', 'Best deals', () => onSort('price_asc', 'Deals', 'tag'), 'tag'),
-        ])}
-      </View>
+        ))}
+      </ScrollView>
     </View>
-  );
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  const { theme } = useTheme();
-  return (
-    <Text
-      style={{
-        fontSize: 17,
-        fontFamily: type.family.sansSemibold,
-        color: theme.ink,
-        paddingHorizontal: PAD,
-        marginBottom: 12,
-      }}
-    >
-      {children}
-    </Text>
   );
 }
