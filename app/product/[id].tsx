@@ -638,6 +638,7 @@ export default function ProductScreen() {
       }}
       onShare={shareListing}
       onReport={handleReport}
+      onOpenBpSheet={() => engagement.setBpVisible(true)}
     />
   );
 

@@ -43,6 +43,7 @@ type ProductDetailsTableProps = {
   onToggleDescExpanded: () => void;
   onShare: () => void;
   onReport: () => void;
+  onOpenBpSheet?: () => void;
 };
 
 export const ProductDetailsTable = memo(function ProductDetailsTable({
@@ -51,6 +52,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
   onToggleDescExpanded,
   onShare,
   onReport,
+  onOpenBpSheet,
 }: ProductDetailsTableProps) {
   const { theme } = useTheme();
   const catSubLabel = listing.subcategory
@@ -436,9 +438,9 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
         </View>
       </View>
 
-      {/* Safety & Trust Banner */}
+      {/* Safety & Trust Banner: "How you're covered" opens the buyer protection sheet */}
       <View style={{ paddingHorizontal: 16, paddingTop: 22, paddingBottom: 6 }}>
-        <SafetyBanner />
+        <SafetyBanner onLinkPress={onOpenBpSheet} />
       </View>
     </>
   );

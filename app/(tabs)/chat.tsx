@@ -50,6 +50,7 @@ import {
 } from '@/lib/responsive';
 import { PressableScale } from '@/components/PressableScale';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { BuyerProtectionSheet } from '@/components/product/BuyerProtectionSheet';
 
 type InboxTab = 'orders' | 'messages' | 'support';
 type MessageChip = 'all' | 'buying' | 'selling' | 'socials';
@@ -376,9 +377,15 @@ function SupportPage({
   const { theme, isDark } = useTheme();
   const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
   const [opening, setOpening] = useState(false);
+  const [bpVisible, setBpVisible] = useState(false);
 
   const toggleTopic = (id: string) => {
     haptic();
+    // Buyer protection gets the same explainer sheet as product and checkout.
+    if (id === 'buyer_protection') {
+      setBpVisible(true);
+      return;
+    }
     setExpandedTopicId((prev) => (prev === id ? null : id));
   };
 
@@ -506,6 +513,7 @@ function SupportPage({
           <View style={groupStyle}>
             {SUPPORT_TOPICS.map((topic, i) => {
               const isExpanded = expandedTopicId === topic.id;
+              const opensSheet = topic.id === 'buyer_protection';
               return (
                 <View key={topic.id}>
                   {i > 0 && (
@@ -514,7 +522,7 @@ function SupportPage({
                   <Pressable
                     onPress={() => toggleTopic(topic.id)}
                     accessibilityRole="button"
-                    accessibilityState={{ expanded: isExpanded }}
+                    accessibilityState={opensSheet ? undefined : { expanded: isExpanded }}
                     accessibilityLabel={topic.title}
                     accessibilityHint={topic.description}
                     style={({ pressed }) => ({
@@ -555,7 +563,7 @@ function SupportPage({
                       </Text>
                     </View>
                     <Feather
-                      name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                      name={opensSheet ? 'chevron-right' : isExpanded ? 'chevron-up' : 'chevron-down'}
                       size={16}
                       color={theme.muteSoft}
                       style={{ marginLeft: 8 }}
@@ -577,6 +585,7 @@ function SupportPage({
           </View>
         </View>
       </ScrollView>
+      <BuyerProtectionSheet visible={bpVisible} onClose={() => setBpVisible(false)} />
     </View>
   );
 }

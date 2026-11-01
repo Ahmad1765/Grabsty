@@ -1,18 +1,97 @@
-import { View, Pressable, Modal, StyleSheet } from 'react-native';
+import { View, Pressable, Modal, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
+import Svg, { Path, Rect, Circle } from 'react-native-svg';
 import { BlurView } from 'expo-blur';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { priceBreakdown, formatPrice } from '@/lib/fees';
 import { useTheme } from '@/context/ThemeContext';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { IS_IOS, tap, BRAND_PURPLE } from './shared';
+import { IS_IOS, tap } from './shared';
 
+// Thin 1.5px line icons (Feather geometry) so the rows read light, like a
+// printed guarantee card, instead of the heavier icon-font glyphs.
+function LineIcon({ kind, color }: { kind: 'package' | 'lock' | 'support'; color: string }) {
+  const common = { stroke: color, strokeWidth: 1.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, fill: 'none' };
+  return (
+    <Svg width={30} height={30} viewBox="0 0 24 24">
+      {kind === 'package' && (
+        <>
+          <Path {...common} d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          <Path {...common} d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12" />
+        </>
+      )}
+      {kind === 'lock' && (
+        <>
+          <Rect {...common} x={4} y={11} width={16} height={10} rx={2} />
+          <Path {...common} d="M8 11V7a4 4 0 0 1 8 0v4" />
+          <Circle {...common} cx={12} cy={16} r={1.25} />
+        </>
+      )}
+      {kind === 'support' && (
+        <Path
+          {...common}
+          d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+        />
+      )}
+    </Svg>
+  );
+}
+
+// Claims mirror the Terms ("Buyer Protection and disputes"); keep them in sync.
 const COVERAGE = [
-  { icon: 'refresh-ccw' as const, text: 'A refund if your item never arrives or isn’t as described' },
-  { icon: 'lock' as const, text: 'Secure payments, held until you get your order' },
-  { icon: 'message-circle' as const, text: 'Dedicated support if anything goes wrong' },
+  {
+    icon: 'package' as const,
+    title: 'Worry-free shopping',
+    text: 'Get what you ordered, or a refund if it never arrives or isn’t as described.',
+  },
+  {
+    icon: 'lock' as const,
+    title: 'Secure payments',
+    text: 'Your payment is held until you confirm your order arrived.',
+  },
+  {
+    icon: 'support' as const,
+    title: 'Help when you need it',
+    text: 'Report a problem from your order and our team steps in.',
+  },
 ];
+
+// The three coverage rows. Claims mirror the Terms.
+function BuyerProtectionPoints({ style }: { style?: StyleProp<ViewStyle> }) {
+  const { theme } = useTheme();
+  return (
+    <View style={[{ gap: 24 }, style]}>
+      {COVERAGE.map((c) => (
+        <View key={c.icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <View style={{ width: 32, alignItems: 'center' }}>
+            <LineIcon kind={c.icon} color={theme.ink} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: theme.ink }}>{c.title}</Text>
+            <Text
+              style={{
+                fontSize: 15,
+                fontFamily: 'Inter_400Regular',
+                color: theme.mute,
+                lineHeight: 21,
+                marginTop: 2,
+              }}
+            >
+              {c.text}
+            </Text>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function openTerms() {
+  tap('selection');
+  router.push('/legal/terms' as any);
+}
 
 export function BuyerProtectionSheet({
   visible,
@@ -20,12 +99,18 @@ export function BuyerProtectionSheet({
   onClose,
 }: {
   visible: boolean;
-  itemPrice: number;
+  /** Omit outside a listing (e.g. Support): the per-order fee line is hidden. */
+  itemPrice?: number;
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
-  const { item, protection, total } = priceBreakdown(itemPrice);
+  const { protection, total } = priceBreakdown(itemPrice ?? 0);
+
+  const learnMore = () => {
+    onClose();
+    openTerms();
+  };
 
   return (
     <Modal
@@ -47,118 +132,74 @@ export function BuyerProtectionSheet({
         <Pressable
           onPress={() => {}}
           style={{
-            backgroundColor: theme.surface,
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
-            borderTopWidth: 1,
-            borderColor: theme.border,
+            backgroundColor: theme.panel,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
             paddingHorizontal: 24,
-            paddingTop: 10,
-            paddingBottom: (insets.bottom || 16) + 12,
+            paddingTop: 8,
+            paddingBottom: (insets.bottom || 16) + 8,
           }}
         >
           {/* Grab handle */}
           <View
             style={{
               alignSelf: 'center',
-              width: 40,
-              height: 5,
-              borderRadius: 3,
+              width: 36,
+              height: 4,
+              borderRadius: 2,
               backgroundColor: theme.border,
-              marginBottom: 20,
             }}
           />
 
-          {/* Shield badge */}
-          <ShieldCheckIcon
-            size={64}
+          {/* Close */}
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            hitSlop={8}
             style={{
-              alignSelf: 'center',
-              marginBottom: 16,
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              width: 40,
+              height: 40,
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
-          />
+          >
+            <Feather name="x" size={24} color={theme.ink} />
+          </Pressable>
 
+          <ShieldCheckIcon size={80} style={{ alignSelf: 'center', marginTop: 32 }} />
 
           <Text
+            accessibilityRole="header"
             style={{
-              fontSize: 24,
-              fontFamily: 'Inter_700Bold',
+              fontSize: 22,
+              fontFamily: 'Inter_600SemiBold',
               color: theme.ink,
               textAlign: 'center',
-              letterSpacing: -0.4,
-              marginBottom: 8,
+              marginTop: 16,
             }}
           >
-            Buyer Protection
+            Buyer protection
           </Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontFamily: 'Inter_400Regular',
-              color: theme.mute,
-              textAlign: 'center',
-              lineHeight: 21,
-              marginBottom: 22,
-              paddingHorizontal: 6,
-            }}
-          >
-            {protection > 0
-              ? 'Every order is covered for a small fee, so you can buy with confidence.'
-              : 'Buyer protection is included on every order, so you can buy with confidence.'}
-          </Text>
+          {itemPrice != null && protection > 0 && (
+            <Text
+              style={{
+                fontSize: 13,
+                fontFamily: 'Inter_400Regular',
+                color: theme.mute,
+                textAlign: 'center',
+                marginTop: 4,
+                fontVariant: ['tabular-nums'],
+              }}
+            >
+              {`${formatPrice(protection)} on this order · ${formatPrice(total)} total`}
+            </Text>
+          )}
 
-          {/* Breakdown card */}
-          <View
-            style={{
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: theme.border,
-              backgroundColor: theme.panel,
-              paddingHorizontal: 16,
-              paddingVertical: 4,
-              marginBottom: 20,
-            }}
-          >
-            <BreakdownRow label="Item price" value={formatPrice(item)} />
-            <View style={{ height: 1, backgroundColor: theme.border }} />
-            <BreakdownRow
-              label="Buyer Protection"
-              value={protection > 0 ? formatPrice(protection) : 'Free'}
-            />
-            <View style={{ height: 1, backgroundColor: theme.border }} />
-            <BreakdownRow label="Total" value={formatPrice(total)} emphasize />
-          </View>
-
-          {/* What it covers */}
-          <View style={{ gap: 14, marginBottom: 24, paddingHorizontal: 2 }}>
-            {COVERAGE.map((c) => (
-              <View key={c.icon} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                <View
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 12,
-                    backgroundColor: theme.purpleSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Feather name={c.icon} size={15} color={BRAND_PURPLE} />
-                </View>
-                <Text
-                  style={{
-                    flex: 1,
-                    fontSize: 14,
-                    fontFamily: 'Inter_500Medium',
-                    color: theme.mute,
-                    lineHeight: 20,
-                  }}
-                >
-                  {c.text}
-                </Text>
-              </View>
-            ))}
-          </View>
+          <BuyerProtectionPoints style={{ marginTop: 28 }} />
 
           <Pressable
             onPress={() => {
@@ -167,56 +208,31 @@ export function BuyerProtectionSheet({
             }}
             accessibilityRole="button"
             accessibilityLabel="Got it"
+            testID="buyer-protection-got-it"
             style={({ pressed }) => ({
-              height: 54,
-              borderRadius: 16,
-              backgroundColor: theme.ink,
+              height: 48,
+              marginTop: 32,
+              borderRadius: 10,
+              backgroundColor: theme.purple,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.9 : 1,
-              transform: [{ scale: pressed ? 0.99 : 1 }],
             })}
           >
-            <Text style={{ fontSize: 16, fontFamily: 'Inter_700Bold', color: theme.background, letterSpacing: 0.2 }}>
-              Got it
-            </Text>
+            <Text style={{ fontSize: 16, fontFamily: 'Inter_600SemiBold', color: '#FFFFFF' }}>Got it</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={learnMore}
+            accessibilityRole="link"
+            accessibilityLabel="Learn more about buyer protection"
+            testID="buyer-protection-learn-more"
+            style={{ alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 16, marginTop: 8 }}
+          >
+            <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: theme.purple }}>Learn more</Text>
           </Pressable>
         </Pressable>
       </Pressable>
     </Modal>
-  );
-}
-
-function BreakdownRow({ label, value, emphasize }: { label: string; value: string; emphasize?: boolean }) {
-  const { theme } = useTheme();
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 14,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: emphasize ? 15 : 14,
-          fontFamily: emphasize ? 'Inter_700Bold' : 'Inter_500Medium',
-          color: emphasize ? theme.ink : theme.mute,
-        }}
-      >
-        {label}
-      </Text>
-      <Text
-        style={{
-          fontSize: emphasize ? 17 : 14,
-          fontFamily: 'Inter_700Bold',
-          color: theme.ink,
-          letterSpacing: emphasize ? -0.3 : 0,
-        }}
-      >
-        {value}
-      </Text>
-    </View>
   );
 }
