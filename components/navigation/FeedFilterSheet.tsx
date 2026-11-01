@@ -65,9 +65,9 @@ export const FEED_CONDITIONS: { id: Condition; label: string }[] = [
 export const FEED_SORTS: { id: FeedSort; label: string; icon: keyof typeof Feather.glyphMap }[] = [
   { id: 'relevance', label: 'Recommended', icon: 'star' },
   { id: 'newest', label: 'Newest', icon: 'clock' },
-  { id: 'price_asc', label: 'Price: Low to High', icon: 'trending-up' },
-  { id: 'price_desc', label: 'Price: High to Low', icon: 'trending-down' },
-  { id: 'popular', label: 'Most Liked', icon: 'heart' },
+  { id: 'price_asc', label: 'Price: low to high', icon: 'trending-up' },
+  { id: 'price_desc', label: 'Price: high to low', icon: 'trending-down' },
+  { id: 'popular', label: 'Most liked', icon: 'heart' },
 ];
 
 // Listing prices are whole rupees (Rs 2,000-5,000 is typical), so the bands

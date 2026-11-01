@@ -59,7 +59,7 @@ export const FeedSearch = memo(function FeedSearch({
   unreadNotificationsCount,
   onPressNotifications,
   onOpenShareProfile,
-  placeholder = 'What are you looking for today?',
+  placeholder = 'Search items and brands',
 }: FeedSearchProps) {
   const { theme, isDark } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
@@ -68,15 +68,8 @@ export const FeedSearch = memo(function FeedSearch({
   const searchBg = isDark ? theme.surface : '#F0F1F5';
 
   const resolvedPlaceholder = useMemo(() => {
-    if (placeholder !== 'What are you looking for today?') {
-      return placeholder;
-    }
-    if (screenWidth < 380) {
-      return 'Search items, brands…';
-    }
-    if (screenWidth < 420) {
-      return 'What are you looking for?';
-    }
+    // One short label at every width; the old copy was trimmed per width.
+    if (screenWidth < 340) return 'Search items';
     return placeholder;
   }, [placeholder, screenWidth]);
 
@@ -334,13 +327,12 @@ export const ChipRow = memo(function ChipRow({
           transform: [{ scale: pressed ? 0.96 : 1 }],
         })}
       >
-        <Ionicons name="sparkles" size={13} color={theme.ink} />
+        <Feather name="user" size={13} color={theme.ink} />
         <Text
           style={{
-            fontFamily: typography.family.sansBold,
+            fontFamily: typography.family.sansSemibold,
             fontSize: 13,
             lineHeight: 18,
-            letterSpacing: -0.2,
             color: theme.ink,
           }}
         >
@@ -377,10 +369,9 @@ export const ChipRow = memo(function ChipRow({
         />
         <Text
           style={{
-            fontFamily: typography.family.sansBold,
+            fontFamily: typography.family.sansSemibold,
             fontSize: 13,
             lineHeight: 18,
-            letterSpacing: -0.2,
             color: theme.ink,
           }}
         >
@@ -443,7 +434,6 @@ export const ChipRow = memo(function ChipRow({
                 fontFamily: typography.family.sansMedium,
                 fontSize: 13,
                 lineHeight: 18,
-                letterSpacing: -0.2,
                 color: theme.ink,
               }}
             >

@@ -153,15 +153,12 @@ export const HomeSearchView = memo(function HomeSearchView({
       return `Search in ${cat.charAt(0).toUpperCase() + cat.slice(1)}`;
     }
     if (activeTab === 'seller') {
-      return 'Search members...';
+      return 'Search members';
     }
-    if (screenWidth < 375) {
-      return 'Search items...';
+    if (screenWidth < 340) {
+      return 'Search items';
     }
-    if (screenWidth < 415) {
-      return 'What are you looking for?';
-    }
-    return 'What are you looking for today?';
+    return 'Search items and brands';
   }, [searchFilters.category, activeTab, screenWidth]);
 
   const scrollX = useRef(new RNAnimated.Value(initialTab === 'listings' ? 0 : screenWidth)).current;

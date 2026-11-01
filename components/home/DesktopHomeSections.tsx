@@ -85,7 +85,7 @@ export function DesktopFooter() {
         <View style={{ flex: 1.4, gap: 12 }}>
           <GrabstyLogo size={26} variant="full" />
           <Text style={{ fontSize: 14, lineHeight: 21, color: theme.textMuted, maxWidth: 300 }}>
-            Buy and sell preloved fashion. Locally, beautifully, in a minute.
+            Buy and sell preloved fashion near you.
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <ShieldCheckIcon size={18} />

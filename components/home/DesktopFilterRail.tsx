@@ -47,7 +47,7 @@ export const DesktopFilterRail = memo(function DesktopFilterRail({
       accessibilityLabel="Filters"
     >
       <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingHorizontal: 10 }}>
-        <Text style={{ fontSize: 17, fontWeight: '700', letterSpacing: -0.3, color: theme.ink }}>Filters</Text>
+        <Text style={{ fontSize: 17, fontWeight: '600', color: theme.ink }}>Filters</Text>
         {active > 0 && (
           <Pressable accessibilityRole="button" onPress={() => onChange(EMPTY_FEED_FILTERS)}>
             {(s: HoverState) => (
@@ -167,13 +167,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     >
       <Text
         style={{
-          fontSize: 11,
-          fontWeight: '700',
-          letterSpacing: 1.4,
-          textTransform: 'uppercase',
+          fontSize: 13,
+          fontWeight: '500',
           color: theme.textMuted,
           paddingHorizontal: 10,
-          marginBottom: 6,
+          marginBottom: 8,
         }}
       >
         {title}

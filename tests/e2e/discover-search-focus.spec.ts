@@ -34,7 +34,7 @@ test.describe('Browse search focus', () => {
   });
 
   test('the Home search header focuses its input immediately on tap', async ({ page }) => {
-    await page.getByRole('button', { name: 'What are you looking for?' }).first().click();
+    await page.getByRole('button', { name: 'Search items and brands' }).first().click();
     const activeTag = await page.evaluate(() => document.activeElement?.tagName ?? 'none');
     expect(activeTag).toBe('INPUT');
   });

@@ -79,14 +79,13 @@ export function discoverSearch(page: Page) {
   return page.getByPlaceholder(/^Search (items, brands, sellers|aesthetics|brands|people)$/);
 }
 
-// Home's search field. Phones/narrow web render HomeHeader ("Search items,
-// brands…" under 380px, "What are you
-// looking for?", "…today?" on wide phones); >=1024px renders DesktopTopNav
+// Home's search field. Phones/narrow web render HomeHeader ("Search items
+// and brands", "Search items" under 340px); >=1024px renders DesktopTopNav
 // ("Search for items, brands or members"). Discover was folded into this
 // search (app/(tabs)/discover.tsx now redirects to /).
 export function homeSearch(page: Page) {
   return page
-    .getByPlaceholder(/^(What are you looking for( today)?\?|Search items, brands…|Search for items, brands or members)$/)
+    .getByPlaceholder(/^(Search items( and brands)?|Search for items, brands or members)$/)
     .first();
 }
 
@@ -99,7 +98,7 @@ export async function openHomeSearch(page: Page) {
   if (await hasTopNav(page)) {
     await homeSearch(page).click();
   } else {
-    await page.getByRole('button', { name: /^(What are you looking for( today)?\?|Search items, brands…)$/ }).first().click();
+    await page.getByRole('button', { name: /^Search items( and brands)?$/ }).first().click();
   }
 }
 

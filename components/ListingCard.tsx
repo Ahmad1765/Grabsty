@@ -1032,12 +1032,11 @@ export const ListingCard = memo(function ListingCard({ listing, width }: Props) 
             borderColor: colors.border,
             borderRadius: 999,
             paddingVertical: 6,
-            paddingHorizontal: 11,
+            paddingHorizontal: likeCount > 0 ? 10 : 6,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 5,
+            gap: 4,
             opacity: pressed ? 0.85 : 1,
-            ...shadow.sm,
           })}
         >
           <PopIcon
@@ -1048,9 +1047,11 @@ export const ListingCard = memo(function ListingCard({ listing, width }: Props) 
             activeColor={BRAND_PURPLE}
             inactiveColor={colors.ink}
           />
-          <Text style={{ fontSize: 12, fontWeight: '700', color: colors.ink }}>
-            {likeCount}
-          </Text>
+          {likeCount > 0 && (
+            <Text style={{ fontSize: 12, fontFamily: 'Inter_500Medium', color: colors.ink, fontVariant: ['tabular-nums'] }}>
+              {likeCount}
+            </Text>
+          )}
         </Pressable>
 
         {listing.is_sold && (
@@ -1074,19 +1075,19 @@ export const ListingCard = memo(function ListingCard({ listing, width }: Props) 
       </View>
 
       <View className="mt-1.5 w-full">
-        <Text className="text-[13px] font-bold" style={{ color: colors.text }} numberOfLines={1}>
+        <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.text }} numberOfLines={1}>
           {listing.brand || listing.title}
         </Text>
         {!!meta && (
-          <Text className="text-[11px] mt-0.5" style={{ color: colors.text }} numberOfLines={1}>
+          <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.textMuted, marginTop: 2 }} numberOfLines={1}>
             {meta}
           </Text>
         )}
-        <Text className="text-[11px] mt-1" style={{ color: colors.text }}>
+        <Text style={{ fontSize: 12, fontFamily: 'Inter_400Regular', color: colors.textMuted, marginTop: 4, fontVariant: ['tabular-nums'] }}>
           {formatPrice(itemPrice, { whole: true })}
         </Text>
-        <View className="flex-row items-center mt-0.5" style={{ gap: 4 }}>
-          <Text className="text-[12px] font-bold" style={{ color: colors.text }}>
+        <View className="flex-row items-center" style={{ gap: 4, marginTop: 2 }}>
+          <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: colors.text, fontVariant: ['tabular-nums'] }}>
             {formatPrice(totalPrice, { whole: true })} incl.
           </Text>
           <ShieldCheckIcon size={13} />
