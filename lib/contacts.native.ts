@@ -14,16 +14,10 @@
 
 import { Platform } from 'react-native';
 import * as Contacts from 'expo-contacts';
-import * as Crypto from 'expo-crypto';
-import * as Localization from 'expo-localization';
 import { supabase } from '@/lib/supabase';
-import { getContactPepper } from '@/lib/cryptoPepper';
-import {
-  normalizePhoneNumber,
-  normalizeEmail,
-  type CountryCode,
-} from '@/lib/contactNormalization';
+import { normalizePhoneNumber, normalizeEmail } from '@/lib/contactNormalization';
 import { BRAND } from '@/lib/brand';
+import { getDeviceCountry, hashContactValue } from '@/lib/contactHashes';
 import type {
   MatchedFriend,
   UnmatchedContact,
@@ -39,32 +33,7 @@ export const isContactsSyncSupported = true;
 const BATCH_HASH_SIZE = 100;
 const RPC_CHUNK_SIZE = 500;
 
-/**
- * Resolves the device's native country code (e.g. 'US', 'PK', 'GB').
- */
-export function getDeviceCountry(): CountryCode {
-  try {
-    const locales = Localization.getLocales();
-    const region = locales[0]?.regionCode;
-    if (region && region.length === 2) {
-      return region.toUpperCase() as CountryCode;
-    }
-  } catch {
-    // fallback
-  }
-  return 'US';
-}
-
 export { normalizePhoneNumber, normalizeEmail };
-
-/**
- * Hashes a normalized contact value with the application Global Pepper.
- */
-export async function hashContactValue(value: string): Promise<string> {
-  const pepper = getContactPepper();
-  const payload = `${value.trim()}:${pepper}`;
-  return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, payload);
-}
 
 /**
  * Checks current native address book permissions without prompting.
@@ -300,42 +269,4 @@ export async function syncContacts(
     unmatchedContacts: filteredUnmatchedContacts,
     accessPrivileges: perm.accessPrivileges,
   };
-}
-
-/**
- * Registers the current user's phone and email hashes with the backend
- * so friends can reciprocal-match them.
- */
-export async function registerMyHashes(
-  rawPhone?: string | null,
-  rawEmail?: string | null,
-): Promise<void> {
-  const defaultCountry = getDeviceCountry();
-  const phoneHashes: string[] = [];
-  const emailHashes: string[] = [];
-
-  if (rawPhone) {
-    const e164 = normalizePhoneNumber(rawPhone, defaultCountry);
-    if (e164) {
-      phoneHashes.push(await hashContactValue(e164));
-    }
-  }
-
-  if (rawEmail) {
-    const norm = normalizeEmail(rawEmail);
-    if (norm) {
-      emailHashes.push(await hashContactValue(norm));
-    }
-  }
-
-  if (phoneHashes.length > 0 || emailHashes.length > 0) {
-    try {
-      await supabase.rpc('register_my_contact_hashes', {
-        p_phone_hashes: phoneHashes.length > 0 ? phoneHashes : null,
-        p_email_hashes: emailHashes.length > 0 ? emailHashes : null,
-      });
-    } catch (e) {
-      console.warn('[contacts.native] registerMyHashes error:', e);
-    }
-  }
 }

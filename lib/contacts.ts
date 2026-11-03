@@ -29,7 +29,7 @@ export type SyncProgress = {
   totalCount: number;
   message: string;
 };
-
+// Consumed by contacts.native.ts.
 export type ContactsPermissionStatus = {
   granted: boolean;
   canAskAgain: boolean;
@@ -53,11 +53,4 @@ export async function syncContacts(
   _onProgress?: (progress: SyncProgress) => void,
 ): Promise<ContactSyncResult> {
   throw new Error('Contact sync is only supported in the mobile iOS & Android apps. Use the share options to invite friends.');
-}
-
-export async function registerMyHashes(
-  _phone?: string | null,
-  _email?: string | null,
-): Promise<void> {
-  // No-op on unsupported platforms
 }

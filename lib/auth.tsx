@@ -15,6 +15,7 @@ import { clearQueryCache } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { identify, resetIdentity } from '@/lib/analytics';
 import { registerForPush, unregisterThisDevice } from '@/lib/notifications';
+import { registerMyHashes } from '@/lib/contactHashes';
 import type { User as Profile } from '@/types';
 
 type AuthState = {
@@ -68,6 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetIdentity();
     }
   }, [session?.user?.id, profile?.username, profile?.is_verified]);
+
+  // Publish this user's own phone/email hashes so friends' contact syncs can
+  // find them. Re-runs only when the account or its phone/email changes.
+  const myPhone = profile?.phone ?? session?.user?.phone ?? null;
+  const myEmail = session?.user?.email ?? null;
+  useEffect(() => {
+    if (!profile?.id) return;
+    registerMyHashes(myPhone, myEmail).catch(() => {});
+  }, [profile?.id, myPhone, myEmail]);
 
   // getSession() and the INITIAL_SESSION event both load the profile at startup;
   // concurrent loads for the same user share one request instead of two.
