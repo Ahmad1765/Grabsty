@@ -505,7 +505,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   const HORIZONTAL_PAD = 12;
   const GRID_GAP = 8;
 
-  const { cardWidth } = useGridDimensions({
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useGridDimensions({
     min: 2,
     max: isDesktop ? 5 : 4,
     thresholds: isDesktop ? [560, 900, 1150] : [560, 900, 1200],
@@ -1606,6 +1606,8 @@ export const HomeSearchView = memo(function HomeSearchView({
 
                 {displayListings.length > 0 ? (
                   <View
+                    ref={gridRef}
+                    onLayout={onGridLayout}
                     style={{
                       flexDirection: 'row',
                       flexWrap: 'wrap',

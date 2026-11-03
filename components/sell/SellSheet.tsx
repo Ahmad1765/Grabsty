@@ -14,6 +14,7 @@ import {
   Platform, useWindowDimensions,
 } from 'react-native';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { useFittedCardWidth } from '@/lib/responsive';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -474,13 +475,17 @@ export function SellForm({
     toast.show('Cover photo updated', { variant: 'default', icon: 'check' });
   };
 
-  const tile = useMemo(() => {
+  const estimatedTile = useMemo(() => {
     const pagePad = 16 * 2;
     const cardPad = 14 * 2 + 2; // + 1px border each side
     const gaps = 10 * 2;
     const usable = Math.min(width, CONTENT_MAX_WIDTH) - pagePad - cardPad;
     return Math.floor((usable - gaps) / 3);
   }, [width]);
+  const { cardWidth: tile, onLayout: onPhotoGridLayout, ref: photoGridRef } = useFittedCardWidth(estimatedTile, {
+    gap: 10,
+    columns: 3,
+  });
 
   const pickImages = async () => {
     try {
@@ -992,7 +997,7 @@ export function SellForm({
               </Pressable>
             ) : (
               <View>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+                <View ref={photoGridRef} onLayout={onPhotoGridLayout} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {(slots as PhotoSlot[]).map((slot, i) => (
                     <View
                       key={slot.id}

@@ -95,7 +95,7 @@ function ProfileScreenInner() {
 
   const isDesktop = useIsDesktop();
   const gutter = useDesktopGutter(DESKTOP_PROFILE_MAX);
-  const { columns, cardWidth: cardW } = useGridDimensions({
+  const { columns, cardWidth: cardW, onLayout: onGridLayout } = useGridDimensions({
     min: 2,
     max: 4,
     thresholds: isDesktop ? [560, 760, 960] : [560, 900, 1200],
@@ -331,6 +331,7 @@ function ProfileScreenInner() {
   return (
     <SafeContainer edges={['top', 'left', 'right']} backgroundColor={colors.background} style={{ flex: 1 }}>
       <FlashList
+        onLayout={onGridLayout}
         data={gridRows}
         renderItem={renderRow}
         keyExtractor={rowKey}

@@ -5,7 +5,8 @@
 // viewport, and `cardWidth` to compute exact pixel widths when you can't
 // rely on FlatList's numColumns + columnWrapperStyle.
 
-import { Platform, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform, useWindowDimensions, type LayoutChangeEvent, type View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const bp = {
@@ -103,7 +104,13 @@ export function useGridDimensions(opts: {
   // Desktop: the grid sits in a centred frame this wide at most. Columns and
   // card widths are computed against the frame, not the full content area.
   maxWidth?: number;
-} = {}): { columns: number; cardWidth: number; viewportWidth: number } {
+} = {}): {
+  columns: number;
+  cardWidth: number;
+  viewportWidth: number;
+  onLayout: (e: LayoutChangeEvent) => void;
+  ref: React.RefObject<View | null>;
+} {
   const contentWidth = useContentWidth();
   const width = opts.maxWidth ? Math.min(contentWidth, opts.maxWidth) : contentWidth;
   const columns = columnsFor(width, opts);
@@ -113,7 +120,48 @@ export function useGridDimensions(opts: {
     horizontalPadding: opts.horizontalPadding ?? 0,
     gap: opts.gap ?? 0,
   });
-  return { columns, cardWidth: w, viewportWidth: width };
+  const fitted = useFittedCardWidth(w, {
+    horizontalPadding: opts.horizontalPadding,
+    gap: opts.gap,
+    columns,
+  });
+  return { columns, cardWidth: fitted.cardWidth, viewportWidth: width, onLayout: fitted.onLayout, ref: fitted.ref };
+}
+
+// Every grid estimates card width from the window, but the grid itself is
+// often narrower: a web scrollbar, a sheet's margins, a device frame. Then
+// N cards + gaps overshoot and a wrap grid drops to one card per row (a row
+// grid runs off the edge). Attach `onLayout` to the grid container; once it
+// reports its real width the card is shrunk to fit. Never grows past the
+// estimate, so desktop caps still hold. `columns` defaults to what the
+// estimate implies for the measured width.
+export function fitCardWidth(
+  rowWidth: number,
+  estimate: number,
+  opts: { horizontalPadding?: number; gap?: number; columns?: number } = {},
+): number {
+  if (!rowWidth) return estimate;
+  const gap = opts.gap ?? 0;
+  const inner = rowWidth - (opts.horizontalPadding ?? 0) * 2;
+  const columns = opts.columns ?? Math.max(1, Math.round((inner + gap) / (estimate + gap)));
+  return Math.min(estimate, Math.floor((inner - gap * (columns - 1)) / columns));
+}
+
+export function useFittedCardWidth(
+  estimate: number,
+  opts: { horizontalPadding?: number; gap?: number; columns?: number } = {},
+) {
+  const [rowWidth, setRowWidth] = useState(0);
+  const ref = useRef<View>(null);
+  const onLayout = useCallback((e: LayoutChangeEvent) => setRowWidth(e.nativeEvent.layout.width), []);
+  // react-native-web doesn't reliably re-fire onLayout when the window
+  // resizes, so re-measure whenever the window-based estimate moves.
+  useEffect(() => {
+    ref.current?.measure?.((_x, _y, w) => {
+      if (w) setRowWidth(w);
+    });
+  }, [estimate]);
+  return { cardWidth: fitCardWidth(rowWidth, estimate, opts), onLayout, ref };
 }
 
 // FlashList `drawDistance` for the four listing grids (home, discover, profile,

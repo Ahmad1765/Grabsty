@@ -144,7 +144,7 @@ export default function HomeScreen() {
   const gutter = useDesktopGutter(DESKTOP_FEED_MAX);
   const contentWidth = useContentWidth();
   const railSpace = isDesktop ? FILTER_RAIL_WIDTH + RAIL_GAP : 0;
-  const { columns, cardWidth } = useGridDimensions({
+  const { columns, cardWidth, onLayout: onGridLayout } = useGridDimensions({
     min: 2,
     max: 4,
     thresholds: isDesktop ? [560, 800] : [560, 900, 1200],
@@ -313,6 +313,7 @@ export default function HomeScreen() {
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
       <FlashList
         ref={listRef}
+        onLayout={onGridLayout}
         data={feedFilter.gridRows}
         extraData={feedFilter.activeChip}
         renderItem={renderRow}

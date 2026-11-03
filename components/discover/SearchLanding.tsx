@@ -13,6 +13,7 @@
 import { useMemo } from 'react';
 import { View, Pressable, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { Text } from '@/lib/rnText';
+import { useFittedCardWidth } from '@/lib/responsive';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
@@ -65,7 +66,9 @@ export function soldLabel(s: TopSeller) {
   return s.sold_week > 0 ? `${s.sold_week} sold this week` : `${s.sold_total} sold`;
 }
 
-const SHEET_MAX = 560;
+// Width of the Browse column. DiscoverSheet caps itself to this, and the
+// card grid sizes from it, so the two must stay one number.
+export const SHEET_MAX = 600;
 const GRID_GAP = 8;
 
 // ── Main SearchLanding Component ────────────────────────────────────────────
@@ -167,7 +170,10 @@ export function SearchLanding({
     return out;
   }, [topSellers]);
 
-  const cardWidth = Math.floor((contentWidth - PAD * 2 - GRID_GAP) / 2);
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(
+    Math.floor((contentWidth - PAD * 2 - GRID_GAP) / 2),
+    { horizontalPadding: PAD, gap: GRID_GAP, columns: 2 },
+  );
   const picks = useMemo(() => {
     const seen = new Set<string>();
     const out: Listing[] = [];
@@ -302,7 +308,11 @@ export function SearchLanding({
       {picks.length > 0 && (
         <View>
           <SectionTitle>Freshly Out</SectionTitle>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, gap: GRID_GAP }}>
+          <View
+            ref={gridRef}
+            onLayout={onGridLayout}
+            style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, gap: GRID_GAP }}
+          >
             {picks.map((l) => (
               <View key={l.id} style={{ width: cardWidth }}>
                 <ListingCard listing={l} width={cardWidth} />

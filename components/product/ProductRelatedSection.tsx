@@ -14,6 +14,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleSection } from '@/components/product/BundleSection';
 import { ListingCard } from '@/components/ListingCard';
+import { useFittedCardWidth } from '@/lib/responsive';
 import {
   CARD_GAP,
   CARD_OUTER_PAD,
@@ -56,7 +57,11 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
   onLayout,
 }: ProductRelatedSectionProps) {
   const { theme } = useTheme();
-  const { cardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth } = useProductDimensions();
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
+    horizontalPadding: CARD_OUTER_PAD,
+    gap: CARD_GAP,
+  });
 
   const effectiveTab = relatedTab;
 
@@ -128,6 +133,8 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
             </View>
           ) : (
             <View
+              ref={gridRef}
+              onLayout={onGridLayout}
               style={{
                 width: '100%',
                 flexDirection: 'row',

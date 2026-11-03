@@ -8,6 +8,7 @@ import { formatPrice } from '@/lib/currency';
 import { priceBreakdown } from '@/lib/fees';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { ListingCard } from '@/components/ListingCard';
+import { useFittedCardWidth } from '@/lib/responsive';
 import type { Listing } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleProgressBar } from './BundleProgressBar';
@@ -41,7 +42,12 @@ export function BundleSection({
   onSendBundleOffer: (totalAfterDiscount: number, selectedIds: string[]) => void;
 }) {
   const { theme } = useTheme();
-  const { cardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth } = useProductDimensions();
+  // All four grids below span the same width, so one measurement sizes them.
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
+    horizontalPadding: CARD_OUTER_PAD,
+    gap: CARD_GAP,
+  });
   const username = listing.seller.username;
   const isSold = listing.is_sold;
 
@@ -55,6 +61,8 @@ export function BundleSection({
         {activeSellerItems.length === 0 ? (
           <View>
             <View
+              ref={gridRef}
+              onLayout={onGridLayout}
               style={{
                 width: '100%',
                 flexDirection: 'row',
@@ -85,6 +93,8 @@ export function BundleSection({
           </View>
         ) : (
           <View
+            ref={gridRef}
+            onLayout={onGridLayout}
             style={{
               width: '100%',
               flexDirection: 'row',
@@ -122,6 +132,8 @@ export function BundleSection({
       {activeSellerItems.length === 0 ? (
         <View>
           <View
+            ref={gridRef}
+            onLayout={onGridLayout}
             style={{
               width: '100%',
               flexDirection: 'row',
@@ -132,7 +144,7 @@ export function BundleSection({
             }}
           >
             {/* The item being viewed is the seller's available listing */}
-            <BaseItemCard item={listing} />
+            <BaseItemCard item={listing} width={cardWidth} />
           </View>
           <View style={{ paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center' }}>
             <Feather name="package" size={20} color={theme.mute} />
@@ -151,6 +163,8 @@ export function BundleSection({
         </View>
       ) : (
         <View
+          ref={gridRef}
+          onLayout={onGridLayout}
           style={{
             width: '100%',
             flexDirection: 'row',
@@ -161,13 +175,14 @@ export function BundleSection({
           }}
         >
           {/* The item being viewed is always part of the bundle — pin it first */}
-          <BaseItemCard item={listing} />
+          <BaseItemCard item={listing} width={cardWidth} />
           {activeSellerItems.map((item) => {
             const isSelected = selectedIds.has(item.id);
             return (
               <BundleSelectCard
                 key={item.id}
                 item={item}
+                width={cardWidth}
                 selected={isSelected}
                 onToggle={() => onToggle(item.id)}
                 onOpen={() => router.push(`/product/${item.id}`)}
@@ -180,9 +195,9 @@ export function BundleSection({
   );
 }
 
-function BaseItemCard({ item }: { item: Listing }) {
+function BaseItemCard({ item, width: cardWidth }: { item: Listing; width: number }) {
   const { theme } = useTheme();
-  const { cardWidth, cardImageHeight } = useProductDimensions();
+  const cardImageHeight = Math.round(cardWidth * 1.25);
   const meta = [item.size, conditionLabel(item.condition)].filter(Boolean).join(' · ');
   const itemPrice = Number(item.price ?? 0);
   const { total: totalPrice } = priceBreakdown(itemPrice);
@@ -254,17 +269,19 @@ function BaseItemCard({ item }: { item: Listing }) {
 
 function BundleSelectCard({
   item,
+  width: cardWidth,
   selected,
   onToggle,
   onOpen,
 }: {
   item: Listing;
+  width: number;
   selected: boolean;
   onToggle: () => void;
   onOpen: () => void;
 }) {
   const { theme } = useTheme();
-  const { cardWidth, cardImageHeight } = useProductDimensions();
+  const cardImageHeight = Math.round(cardWidth * 1.25);
   const meta = [item.size, conditionLabel(item.condition)].filter(Boolean).join(' · ');
   const itemPrice = Number(item.price ?? 0);
   const { total: totalPrice } = priceBreakdown(itemPrice);

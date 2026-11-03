@@ -52,7 +52,7 @@ import { radii, type } from '@/lib/theme';
 import { HIT_SLOP_8, isDesktopWidth, useIsDesktop } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
-import { SearchLanding, type TopicAction } from './SearchLanding';
+import { SearchLanding, SHEET_MAX, type TopicAction } from './SearchLanding';
 import type { SortKey } from '@/lib/listings';
 import type { DiscoverTab } from './SearchTabs';
 import { useTheme } from '@/context/ThemeContext';
@@ -510,7 +510,7 @@ export function DiscoverSheetBody({
   );
 
   return (
-    <View style={{ flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' }}>
+    <View style={{ flex: 1, width: '100%', maxWidth: SHEET_MAX, alignSelf: 'center' }}>
       {/* Search bar pinned at top of sheet, full width without remounting */}
       <View style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8 }}>
         {searchBar}
