@@ -128,19 +128,6 @@ function findByAccessibilityLabel(node: any, label: string): any {
   return null;
 }
 
-function findAllByRole(node: any, role: string, results: any[] = []): any[] {
-  if (!node) return results;
-  if (node.props?.accessibilityRole === role) results.push(node);
-  if (Array.isArray(node)) {
-    for (const child of node) {
-      findAllByRole(child, role, results);
-    }
-  } else if (node.props?.children) {
-    findAllByRole(node.props.children, role, results);
-  }
-  return results;
-}
-
 function render(element: React.ReactElement<any>) {
   const Component = element.type as any;
   const renderFn = Component.type || Component;

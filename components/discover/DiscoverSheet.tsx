@@ -34,7 +34,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
-import { Text, TextInput } from '@/lib/rnText';
+import { TextInput } from '@/lib/rnText';
 import Animated, {
   Easing,
   runOnJS,
@@ -79,11 +79,6 @@ export function useDiscoverSheet(): DiscoverSheetApi {
   if (!ctx) return { open: () => router.push('/discover') };
   return ctx;
 }
-
-export const useBrowseSheet = useDiscoverSheet;
-export const BrowseSheetProvider = DiscoverSheetProvider;
-export type BrowseSheetApi = DiscoverSheetApi;
-
 export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
@@ -444,14 +439,6 @@ export function DiscoverSheetBody({
       router.push(withNonce(`/?searchOpen=1&searchQuery=${encodeURIComponent(term)}`) as any);
     },
     [onClose],
-  );
-
-  const handlePopulateSuggestion = useCallback(
-    (term: string) => {
-      setQuery(term.trim() + ' ');
-      searchRef.current?.focus?.();
-    },
-    [],
   );
 
   const searchBar = (

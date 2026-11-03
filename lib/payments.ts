@@ -5,9 +5,6 @@ import { supabase } from "@/lib/supabase";
 import { normalizeMyOrder } from "@/lib/orders";
 import type { Order as CanonicalOrder, OrderStatus, FulfillmentStatus, FulfillmentType } from "@/types";
 
-// Server returns the hosted Stripe Checkout URL for a given listing.
-type SessionResponse = { url: string; sessionId: string };
-
 // A row of public.orders — the ONLY record of a real payment. Written solely by
 // the stripe-webhook edge function under the service role after a signature-
 // verified checkout.session.completed.
@@ -159,48 +156,10 @@ export async function fetchMyOrders(userId: string): Promise<MyOrder[]> {
 const PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 export const STRIPE_ENABLED =
   PK.startsWith("pk_test_") || PK.startsWith("pk_live_");
-
-export async function createCheckoutSession(
-  listingId: string,
-  opts: { offerAmount?: number } = {},
-): Promise<SessionResponse> {
-  const returnUrl = buildReturnUrl(listingId);
-  // offer_amount is forwarded to the edge function so an accepted offer can
-  // override the listing price. The server is responsible for verifying the
-  // amount matches a real accepted offer for (buyer, listing) — never trust
-  // the client value alone.
-  const body: Record<string, unknown> = {
-    listing_id: listingId,
-    return_url: returnUrl,
-  };
-  // offerAmount is expected to be in dollars. If cents are passed, format to 2 decimals.
-  if (typeof opts.offerAmount === 'number' && Number.isFinite(opts.offerAmount) && opts.offerAmount > 0) {
-    body.offer_amount = Number(opts.offerAmount.toFixed(2));
-  }
-  const { data, error } = await supabase.functions.invoke<SessionResponse>(
-    "create-checkout-session",
-    { body },
-  );
-  if (error) throw new Error(error.message);
-  if (!data?.url) throw new Error("No checkout URL returned");
-  return data;
-}
-
 export async function openCheckout(url: string): Promise<void> {
   if (Platform.OS === "web") {
     if (typeof window !== "undefined") window.location.href = url;
     return;
   }
   await Linking.openURL(url);
-}
-
-// Stripe redirects buyers here after a successful (or canceled) checkout.
-// On web we use the current origin so the redirect stays in the same tab.
-// On native we use the Expo dev/app scheme.
-function buildReturnUrl(listingId: string) {
-  if (Platform.OS === "web" && typeof window !== "undefined") {
-    return `${window.location.origin}/invoice/${listingId}?paid=1`;
-  }
-  // Expo deep-link scheme.
-  return `grabsty://invoice/${listingId}?paid=1`;
 }

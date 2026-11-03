@@ -22,7 +22,6 @@ import { getOptimizedImageUrl, cardImageUrl, IMAGE_TRANSITION } from '@/lib/imag
 import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import { deriveInvoiceAmounts } from '@/lib/invoiceStatus';
 import { partitionOrders, getOrderCategory, type OrderSide } from '@/lib/orders';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 import type { MyOrder } from '@/lib/payments';
 

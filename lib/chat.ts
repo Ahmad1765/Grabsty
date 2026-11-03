@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/currency';
-import type { User, Listing, Order } from '@/types';
+import type { User, Listing } from '@/types';
 
 export type MessageKind = 'text' | 'offer' | 'system';
 export type OfferStatus =
@@ -758,21 +758,6 @@ export function subscribeToInbox(
     supabase.removeChannel(channel);
   };
 }
-
-export function formatChatTime(iso: string): string {
-  const d = new Date(iso);
-  const now = Date.now();
-  const diffMs = now - d.getTime();
-  const mins = Math.floor(diffMs / 60_000);
-  if (mins < 1) return 'now';
-  if (mins < 60) return `${mins}m`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
-  const days = Math.floor(hrs / 24);
-  if (days < 7) return `${days}d`;
-  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
 /** Does this thread have something in it the viewer hasn't seen?
  *
  *  Two conditions, both required: someone else spoke last, and they spoke after

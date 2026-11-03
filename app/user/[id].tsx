@@ -69,7 +69,6 @@ export default function UserProfileScreen() {
   const toast = useToast();
   const [shopFilter, setShopFilter] = useState<'all' | 'available' | 'sold'>('all');
   const [likedFilter, setLikedFilter] = useState<'all' | 'available' | 'sold'>('all');
-  const [savedFilter, setSavedFilter] = useState<'all' | 'available' | 'sold'>('all');
   const [activeTab, setActiveTab] = useState<SellerTab>('shop');
 
   const fade = useFadeIn(0, 320);
@@ -231,30 +230,13 @@ export default function UserProfileScreen() {
     [likedListings, likedFilter],
   );
 
-  const savedAvailableCount = useMemo(
-    () => visibleSavedListings.filter((l) => !l.is_sold).length,
-    [visibleSavedListings],
-  );
-  const savedSoldCount = useMemo(
-    () => visibleSavedListings.length - savedAvailableCount,
-    [visibleSavedListings, savedAvailableCount],
-  );
-  const visibleFilteredSavedListings = useMemo(
-    () =>
-      savedFilter === 'available'
-        ? visibleSavedListings.filter((l) => !l.is_sold)
-        : savedFilter === 'sold'
-          ? visibleSavedListings.filter((l) => l.is_sold)
-          : visibleSavedListings,
-    [visibleSavedListings, savedFilter],
-  );
 
   const gridRows = useMemo(() => {
     let list: Listing[] = [];
     if (activeTab === 'shop') list = visibleListings;
     else if (activeTab === 'liked') list = visibleLikedListings;
     else if (activeTab === 'collections') {
-      list = isCollectionsPublic ? visibleFilteredSavedListings : [];
+      list = isCollectionsPublic ? visibleSavedListings : [];
     }
     if (list.length === 0) return [] as Listing[][];
     const out: Listing[][] = [];
@@ -262,7 +244,7 @@ export default function UserProfileScreen() {
       out.push(list.slice(i, i + columns));
     }
     return out;
-  }, [activeTab, visibleListings, visibleLikedListings, isCollectionsPublic, visibleFilteredSavedListings, columns]);
+  }, [activeTab, visibleListings, visibleLikedListings, isCollectionsPublic, visibleSavedListings, columns]);
 
   const renderRow = useCallback(
     ({ item }: { item: Listing[] }) => <GridRow row={item} columns={columns} cardW={cardW} />,
@@ -909,20 +891,8 @@ export default function UserProfileScreen() {
               <View style={{ paddingVertical: 40, alignItems: 'center' }}>
                 <EmptyState
                   icon="bookmark"
-                  title={
-                    savedFilter === 'sold'
-                      ? 'Nothing sold yet'
-                      : savedFilter === 'available' && visibleSavedListings.length > 0
-                        ? 'No available items'
-                        : 'No saved items yet'
-                  }
-                  description={
-                    savedFilter === 'sold'
-                      ? 'Sold items will show up here.'
-                      : savedFilter === 'available' && visibleSavedListings.length > 0
-                        ? 'All saved items have been sold.'
-                        : `${displayName} hasn't added any items to their collection yet.`
-                  }
+                  title="No saved items yet"
+                  description={`${displayName} hasn't added any items to their collection yet.`}
                 />
               </View>
             )}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { BUNDLE_TIERS, computeBundlePricing } from '@/lib/bundle';
+import { computeBundlePricing } from '@/lib/bundle';
 
 describe('Money Movement Security & State Machine Invariants', () => {
   describe('Dispute Window Enforcements (48-hour Rule)', () => {

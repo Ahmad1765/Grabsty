@@ -107,7 +107,6 @@ export default function AdminConsoleScreen() {
   const isDesktop = width >= 960;
 
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Logistics & Escrow State
@@ -178,7 +177,6 @@ export default function AdminConsoleScreen() {
         icon: 'alert-triangle',
       });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, [profile?.is_admin, toast]);
@@ -188,7 +186,6 @@ export default function AdminConsoleScreen() {
 
   useEffect(() => {
     if (profile?.is_admin) {
-      setLoading(true);
       loadAllData();
     }
   }, [profile?.is_admin, loadAllData]);

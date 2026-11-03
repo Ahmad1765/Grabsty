@@ -274,7 +274,6 @@ export default function PaymentScreen() {
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
 
   // Delivery Notes state (optional, defaults to empty)
-  const [deliveryNotes, setDeliveryNotes] = useState<string>('');
 
   // Payment method selection state
   const initialMethod: PaymentMethodOption =
@@ -648,7 +647,6 @@ export default function PaymentScreen() {
         offerAmount: itemPrice,
         shippingAddress,
         shippingMethod: fulfillment === 'handshake' ? 'self_ship' : 'managed',
-        deliveryNotes: deliveryNotes.trim() || undefined,
         // The server recomputes the total and refuses to charge anything else.
         expectedTotal: finalTotal,
       });

@@ -37,9 +37,6 @@ export function serializeBundleIds(ids: string[] | Iterable<string>): string {
   const arr = Array.isArray(ids) ? ids : Array.from(ids);
   return arr.join(',');
 }
-
-export const serializeBundleItemIds = serializeBundleIds;
-
 export function useProductBundle({
   listing,
   sellerItems,

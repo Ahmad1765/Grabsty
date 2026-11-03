@@ -38,10 +38,6 @@ export const PARCEL_DELIVERY_RATES = {
   medium: 130,
   large: 180,
 } as const;
-
-/** Default delivery fee for standard small/medium parcel in PKR. */
-export const DEFAULT_PARCEL_DELIVERY_FEE = 130;
-
 /**
  * Returns the courier delivery fee in PKR based on parcel size.
  * Small & Medium: 130 PKR.

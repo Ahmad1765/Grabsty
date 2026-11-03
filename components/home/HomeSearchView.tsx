@@ -270,14 +270,6 @@ export const HomeSearchView = memo(function HomeSearchView({
     };
   }, [user?.id]);
 
-  const [tabLayouts, setTabLayouts] = useState<{
-    listings: { x: number; width: number };
-    seller: { x: number; width: number };
-  }>({
-    listings: { x: 16, width: 44 },
-    seller: { x: 84, width: 72 },
-  });
-
   const handleSelectMember = useCallback((member: RecentMemberItem | SellerResult) => {
     const nextMember: RecentMemberItem = {
       id: member.id,
@@ -523,19 +515,6 @@ export const HomeSearchView = memo(function HomeSearchView({
   });
 
   const hasQuery = query.trim().length > 0;
-
-  // Real-time interpolated translation and width for sliding indicator bar matching Image 1
-  const indicatorTranslateX = scrollX.interpolate({
-    inputRange: [0, screenWidth],
-    outputRange: [tabLayouts.listings.x, tabLayouts.seller.x],
-    extrapolate: 'clamp',
-  });
-
-  const indicatorWidth = scrollX.interpolate({
-    inputRange: [0, screenWidth],
-    outputRange: [tabLayouts.listings.width, tabLayouts.seller.width],
-    extrapolate: 'clamp',
-  });
 
   // Real-time multi-criteria filtering on listingResults
   const displayListings = useMemo(() => {
@@ -854,16 +833,6 @@ export const HomeSearchView = memo(function HomeSearchView({
     [addSearch],
   );
 
-  // Arrow click to populate search bar for query refinement
-  const handlePopulateSuggestion = useCallback(
-    (term: string) => {
-      haptic();
-      setQuery(term.trim() + ' ');
-      setHasSubmitted(false);
-      inputRef.current?.focus?.();
-    },
-    [],
-  );
 
   // Tag selection from Previous searches / Popular searches with tab routing
   const handleSelectTag = useCallback(

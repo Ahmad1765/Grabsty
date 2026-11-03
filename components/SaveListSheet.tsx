@@ -4,7 +4,7 @@
 //
 // Mounting is cheap — the heavy fetch only runs when `visible` flips on.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';

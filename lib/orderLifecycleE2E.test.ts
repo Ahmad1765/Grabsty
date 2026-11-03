@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { orderTotal, buyerProtectionFee, getParcelDeliveryFee } from '@/lib/fees';
+import { buyerProtectionFee, getParcelDeliveryFee } from '@/lib/fees';
 import { computeCheckoutItemPrice } from '@/lib/bundle';
-import { canAdvanceEscrow, ESCROW_TRANSITION_MAP, getEscrowStatusStyle } from './escrowService';
+import { canAdvanceEscrow, getEscrowStatusStyle } from './escrowService';
 import type { EscrowStatus, Order, Transaction } from '@/types';
 
 vi.mock('react-native', () => ({

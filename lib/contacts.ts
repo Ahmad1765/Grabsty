@@ -45,14 +45,6 @@ export type ContactSyncResult = {
 
 export const isContactsSyncSupported = false;
 
-export async function getContactsPermissionStatus(): Promise<ContactsPermissionStatus> {
-  return { granted: false, canAskAgain: false, accessPrivileges: 'none', status: 'denied' };
-}
-
-export async function requestContactsPermission(): Promise<ContactsPermissionStatus> {
-  return { granted: false, canAskAgain: false, accessPrivileges: 'none', status: 'denied' };
-}
-
 export async function presentAccessPicker(): Promise<string[] | null> {
   return null;
 }

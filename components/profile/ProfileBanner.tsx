@@ -11,13 +11,6 @@ import { getOptimizedImageUrl } from '@/lib/images';
 import { useTheme } from '@/context/ThemeContext';
 export const AVATAR_SIZE = 96;
 
-export const BANNER_ASPECT = 16 / 9;
-
-export function bannerSizeFor(viewportWidth: number): { width: number; height: number } {
-  const width = Math.min(viewportWidth, CONTENT_MAX_WIDTH);
-  return { width, height: Math.round(width / BANNER_ASPECT) };
-}
-
 export type BannerAction = {
   icon: string;
   family?: 'feather' | 'ionicons';

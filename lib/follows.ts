@@ -49,11 +49,6 @@ function putCachedFollowState(
 ): void {
   followCache.set(cacheKey(followerId, followeeId), state);
 }
-
-export function clearFollowCache(): void {
-  followCache.clear();
-}
-
 // One round trip: get_follow_state returns target's counts + whether the
 // current auth.uid() follows them. Replaces the previous two-table fanout
 // which paid two latencies for what is conceptually one read.

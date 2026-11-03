@@ -1,8 +1,4 @@
 export {
-  SectionCard,
-  Row,
-  ToggleRow,
-  Divider,
   ChatGPTRow,
   ChatGPTButton,
   ChatGPTSwitchRow,
@@ -10,7 +6,6 @@ export {
   ChatGPTGroup,
   ChatGPTItem,
 } from './SettingsRow';
-export { SettingsHero } from './SettingsHero';
 export { BundleDiscountSheet } from './BundleDiscountSheet';
 export { AddressSheet, type AddressForm } from './AddressSheet';
 export { PayoutSheet, type PayoutForm } from './PayoutSheet';
@@ -20,8 +15,6 @@ export { PhoneSheet } from './PhoneSheet';
 export {
   useSettingsManager,
   SUPPORT_EMAIL,
-  TERMS_URL,
-  PRIVACY_URL,
   type Section,
 } from './useSettingsManager';
 export {

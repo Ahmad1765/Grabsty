@@ -65,7 +65,7 @@ export default function InvoiceScreen() {
   const [showConfetti, setShowConfetti] = useState(placed === '1' || paid === '1');
   const { profile, user } = useAuth();
   const toast = useToast();
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
 
   const queryClient = useQueryClient();
 

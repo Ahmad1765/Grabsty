@@ -954,7 +954,7 @@ function ReactionChip({ reactions, mine }: { reactions: string[]; mine: boolean 
 // ── Row ───────────────────────────────────────────────────────────────────
 
 function MessageRowImpl(props: MessageRowProps) {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { msg, mine, grouped, lastOfGroup, senderName, senderAvatar, reactions, onRetry, onLongPress } = props;
   const bubbleRef = useRef<View>(null);
 

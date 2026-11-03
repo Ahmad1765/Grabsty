@@ -10,7 +10,6 @@ import {
   NativeScrollEvent,
   LayoutChangeEvent,
   ScrollView,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { Text } from '@/lib/rnText';
@@ -36,7 +35,7 @@ import { useInboxQuery } from '@/lib/queries';
 import { markActivitySeen } from '@/hooks/useActivityDot';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 import { isThisDeviceRegistered, pushSupported } from '@/lib/notifications';
-import { colors, radii, shadow, type as typography } from '@/lib/theme';
+import { radii, shadow, type as typography } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { EmptyState, BellIcon } from '@/components/ui';
 import { InboxRow, InboxSkeleton, OrdersInboxPage } from '@/components/chat';
@@ -215,11 +214,6 @@ function emptyStateFor(chip: MessageChip) {
         description: 'Connect with sellers and other collectors directly from their profiles.',
       };
   }
-}
-
-function InboxSeparator() {
-  const { theme } = useTheme();
-  return <View style={{ height: 1, backgroundColor: theme.hairline }} />;
 }
 
 const InboxListRow = memo(function InboxListRow({

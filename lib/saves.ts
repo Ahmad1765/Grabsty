@@ -13,7 +13,7 @@
 import { supabase } from '@/lib/supabase';
 import type { Listing } from '@/types';
 import {
-  getSavedIds,
+  
   invalidateSavedCache,
   updateSavedCache,
 } from '@/lib/engagementCache';
@@ -219,15 +219,6 @@ export async function removeFromList(
   invalidateSavedCache();
   return true;
 }
-
-// "Is this listing saved by the user in *any* list?" — drives the
-// bookmark icon's filled/empty state on cards. Answered from the batched
-// engagement cache (one query per user per 30s, not one per card).
-export async function isSaved(listingId: string, userId: string): Promise<boolean> {
-  const ids = await getSavedIds(userId);
-  return ids.has(listingId);
-}
-
 // Returns or lazily creates the user's default list ID. The DB seed
 // function is idempotent so this safe-creates on first save.
 export async function getOrCreateDefaultList(userId: string): Promise<DefaultListResult> {

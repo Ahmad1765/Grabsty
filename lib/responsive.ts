@@ -16,22 +16,6 @@ export const bp = {
   xl: 1024, // tablet landscape / web
 } as const;
 
-export type Breakpoint = keyof typeof bp;
-
-export function useBreakpoint(): Breakpoint {
-  const { width } = useWindowDimensions();
-  if (width >= bp.xl) return 'xl';
-  if (width >= bp.lg) return 'lg';
-  if (width >= bp.md) return 'md';
-  if (width >= bp.sm) return 'sm';
-  return 'xs';
-}
-
-export function useIsTablet(): boolean {
-  const { width } = useWindowDimensions();
-  return width >= bp.lg;
-}
-
 // ── Desktop web ─────────────────────────────────────────────────────────────
 // From bp.xl up, the web build swaps the bottom tab bar for a top header
 // (components/navigation/DesktopTopNav) and centres content in capped frames.
@@ -63,12 +47,6 @@ export const DESKTOP_FEED_MAX = 1320;
 export const DESKTOP_READING_MAX = 760;
 // Shop grids (own profile, other users' profiles).
 export const DESKTOP_PROFILE_MAX = 1080;
-
-export function useIsCompact(): boolean {
-  const { width, height } = useWindowDimensions();
-  return width < bp.sm || height < 700;
-}
-
 // Pick a column count that scales with screen width. The defaults work for
 // 4:5 listing tiles: 2 cols on phones, 3 on big phones, 4 on tablets,
 // 5 on wide tablets/web. Pass `min` to raise the floor (e.g. 3 for the home
@@ -179,4 +157,3 @@ export function useTabBarClearance(extra = 12): number {
 
 // Hit-slop preset for small icon buttons (improves touch target on phones).
 export const HIT_SLOP_8 = { top: 8, bottom: 8, left: 8, right: 8 } as const;
-export const HIT_SLOP_12 = { top: 12, bottom: 12, left: 12, right: 12 } as const;

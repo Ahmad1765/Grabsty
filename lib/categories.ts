@@ -116,9 +116,6 @@ export const CATEGORIES: CategoryDef[] = [
     subs: [],
   },
 ];
-
-export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
-
 const CATEGORY_BY_ID = new Map(CATEGORIES.map((c) => [c.id, c]));
 
 export function getCategory(id: string | null | undefined): CategoryDef | undefined {
@@ -148,30 +145,4 @@ export function subcategoryLabel(
 /** True when a category defines subcategories (so upload should require one). */
 export function hasSubcategories(id: string | null | undefined): boolean {
   return (getCategory(id)?.subs.length ?? 0) > 0;
-}
-
-// Legacy flat-label map, kept for any consumer that still wants { id: label }.
-export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  CATEGORIES.map((c) => [c.id, c.label]),
-);
-
-/**
- * Keyword-based subcategory suggestion for the upload flow. No ML: scans the
- * title for the first subcategory whose keywords match. Returns the owning
- * category + sub so upload can offer a one-tap "Clothing ▸ Hoodies?" chip.
- */
-export function suggestSubcategory(
-  title: string,
-): { category: CategoryId; sub: Subcategory } | null {
-  const t = ` ${title.toLowerCase()} `;
-  if (t.trim().length < 2) return null;
-  for (const cat of CATEGORIES) {
-    for (const sub of cat.subs) {
-      if (!sub.kw) continue;
-      for (const k of sub.kw) {
-        if (t.includes(k)) return { category: cat.id, sub };
-      }
-    }
-  }
-  return null;
 }

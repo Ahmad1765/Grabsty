@@ -9,11 +9,7 @@ import {
 } from '@/types/validation/order';
 
 export const FULFILLMENT_METHODS = ['delivery', 'handshake'] as const;
-export type FulfillmentMethod = (typeof FULFILLMENT_METHODS)[number];
-
 export const PAYMENT_METHODS = ['cod', 'card'] as const;
-export type PaymentMethodType = (typeof PAYMENT_METHODS)[number];
-
 export const CheckoutFormSchema = z.object({
   fulfillment: z.enum(FULFILLMENT_METHODS, {
     required_error: 'Please choose a fulfillment method',
@@ -22,9 +18,6 @@ export const CheckoutFormSchema = z.object({
     required_error: 'Please select a payment method',
   }),
 });
-
-export type CheckoutFormValues = z.infer<typeof CheckoutFormSchema>;
-
 export {
   CoordinatesSchema,
   ShippingAddressSchema,

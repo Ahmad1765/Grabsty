@@ -38,13 +38,6 @@ function haptic() {
 }
 
 const PAD = 16;
-
-// ── Actions ─────────────────────────────────────────────────────────────────
-export type BrowseAction =
-  | { kind: 'sort'; sort: SortKey }
-  | { kind: 'tab'; tab: DiscoverTab }
-  | { kind: 'saved' };
-
 export type TopicAction = { kind: 'category'; category: CategoryId } | { kind: 'all' };
 
 export type TopSeller = {

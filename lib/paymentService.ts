@@ -77,23 +77,6 @@ export function normalizeAddressInput(input: any): any {
     coordinates: input.coordinates ?? null,
   };
 }
-
-export function toSnakeCaseAddress(addr: ValidatedShippingAddress | null | undefined): Record<string, any> | null {
-  if (!addr) return null;
-  return {
-    recipient_name: addr.recipientName,
-    phone: addr.phone,
-    line1: addr.line1,
-    line2: addr.line2 ?? null,
-    city: addr.city,
-    state: addr.state,
-    postal_code: addr.postalCode,
-    country: addr.country,
-    delivery_notes: addr.deliveryInstructions ?? null,
-    coordinates: addr.coordinates ?? null,
-  };
-}
-
 // ── Cash on Delivery Provider ──────────────────────────────────────────────────
 export class CodPaymentProvider implements PaymentProvider {
   readonly id = 'cod' as const;

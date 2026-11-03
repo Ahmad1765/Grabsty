@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useOpenedNewsIds } from '@/lib/newsStorage';
 import { useNewFromFollowedQuery } from '@/lib/queries';
-import { radii, shadow, type as typography } from '@/lib/theme';
+import { shadow, type as typography } from '@/lib/theme';
 import { FollowingTab } from '@/components/news';
 
 function haptic() {

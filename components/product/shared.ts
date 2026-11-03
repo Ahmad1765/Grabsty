@@ -4,7 +4,6 @@
 // brand palette, and the listing→related-card mapping.
 import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { cardImageUrl } from '@/lib/images';
 import { CONTENT_MAX_WIDTH, isDesktopWidth } from '@/lib/responsive';
 import type { Listing } from '@/types';
 
@@ -93,19 +92,6 @@ export function tap(style: 'light' | 'medium' | 'selection' = 'selection') {
   else if (style === 'light') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
-
-export const iosShadow = IS_IOS
-  ? {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-    }
-  : {
-      shadowColor: '#000',
-      elevation: 3,
-    };
-
 export const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: 'New with tags',
   like_new: 'Like new',
@@ -114,16 +100,8 @@ export const CONDITION_LABELS: Record<string, string> = {
 };
 
 // Category labels now live in the single-source taxonomy (lib/categories).
-export { CATEGORY_LABELS } from '@/lib/categories';
-
-export const ITEM_COLOR = { name: 'Grabsty purple', hex: '#6C47FF' };
-
 // Unified brand palette (matches home tabs + PromoBanner + LiveActivityTicker)
 export const BRAND_PURPLE = '#6C47FF';
-export const BRAND_PURPLE_SOFT = 'rgba(108,71,255,0.10)';
-export const BRAND_LIME = '#6C47FF';
-
-export const LINK_PURPLE = BRAND_PURPLE;
 
 // Fallback shape used while the real listing is loading; render is gated on
 // `listing` being non-null, so this is never visible in the UI.
@@ -142,17 +120,6 @@ export const FALLBACK_SELLER = {
 // Stable empty reference for the React Query rail fallbacks (seller/similar
 // items), so downstream memos don't churn before the queries resolve.
 export const EMPTY_LISTINGS: Listing[] = [];
-
-export type RelatedItem = {
-  id: string;
-  images: string[];
-  brand: string;
-  meta: string;
-  price: number;
-  inclPrice: number;
-  likes: number;
-};
-
 export function conditionLabel(c: Listing['condition']) {
   switch (c) {
     case 'new_with_tags':
@@ -186,25 +153,6 @@ export function timeAgo(iso: string): string {
   if (weeks < 5) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
-
-export function listingToRelated(row: Listing): RelatedItem {
-  const meta = [row.size, conditionLabel(row.condition)].filter(Boolean).join(' · ');
-  // Every surface a RelatedItem reaches — the related rail, the bundle picker,
-  // the locked-in base card — is a ~171px tile, so they get the stored
-  // thumbnails (640px long edge) rather than the 1440px originals. Mapped by
-  // index because `thumbnails` can be shorter than `images` on a row whose
-  // thumbnail generation partly failed; cardImageUrl falls back per index.
-  return {
-    id: row.id,
-    images: (row.images ?? []).map((_, i) => cardImageUrl(row, i)),
-    brand: row.brand || row.title,
-    meta: meta || row.category,
-    price: Number(row.price ?? 0),
-    inclPrice: Number(row.price ?? 0),
-    likes: Number(row.likes ?? 0),
-  };
-}
-
 // Bundle tiers + the discount math live in lib/bundle.ts (pure + unit-tested).
 // Re-exported here so the product components keep a single import surface.
 export { BUNDLE_TIERS, BUNDLE_MIN_ITEMS, computeBundlePricing } from '@/lib/bundle';

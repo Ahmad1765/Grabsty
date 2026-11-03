@@ -31,7 +31,6 @@ import {
 import { confirm } from '@/lib/confirm';
 import { tap } from '@/lib/haptics';
 import { analyticsReady, isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
-import { APP_URL } from '@/lib/brand';
 import type {
   AddressForm,
   PayoutForm,
@@ -40,8 +39,6 @@ import type {
 import type { PayoutMethod, ShippingAddress, Verification } from '@/types';
 
 export const SUPPORT_EMAIL = 'support@grabsty.com';
-export const TERMS_URL = `${APP_URL}/legal/terms`;
-export const PRIVACY_URL = `${APP_URL}/legal/privacy`;
 
 export type Section =
   | 'general'

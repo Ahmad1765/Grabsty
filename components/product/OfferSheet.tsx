@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
 import { useIsDesktop } from '@/lib/responsive';
-import { radii, shadow, type } from '@/lib/theme';
+import { shadow, type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { formatPrice, CURRENCY_SYMBOL } from '@/lib/currency';
 import { orderTotal } from '@/lib/fees';

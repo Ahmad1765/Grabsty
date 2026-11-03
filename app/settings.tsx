@@ -16,7 +16,6 @@
 //    vacation mode, bundle discounts, push notifications, and auth flows.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
 import {
   View,
   Pressable,

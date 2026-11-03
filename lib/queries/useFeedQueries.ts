@@ -16,20 +16,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import {
-  useInfiniteQuery,
+  
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  fetchFollowingListingsResult,
+  
   fetchListings,
-  fetchListingsResult,
+  
   type FeedTab,
   type SortKey,
 } from '@/lib/listings';
-import { fetchRecommendations, fetchRecentlyViewed } from '@/lib/recommendations';
-import { fetchNewFromFollowed, fetchPriceDrops, type PriceDropListing } from '@/lib/myFeed';
+import { fetchRecommendations, } from '@/lib/recommendations';
+import { fetchNewFromFollowed, } from '@/lib/myFeed';
 import {
   deleteSavedSearch,
   fetchNewMatchesCount,
@@ -37,9 +37,7 @@ import {
   type SavedSearch,
 } from '@/lib/savedSearches';
 import type { Listing } from '@/types';
-import { qk, type HomeFeedTab } from './keys';
-
-const HOME_FEED_PAGE_SIZE = 60;
+import { qk, } from './keys';
 
 export type SavedSearchMatches = {
   /** New-match count per saved-search id. */
@@ -62,22 +60,6 @@ export function useMyFeedListingsQuery(userId: string | null) {
       userId ? fetchRecommendations(48) : fetchListings({ tab: 'for_you', limit: 60 }),
   });
 }
-
-/**
- * Price drops on liked items rail.
- */
-export function usePriceDropsQuery(userId: string | null) {
-  return useQuery({
-    queryKey: qk.priceDrops(userId),
-    enabled: !!userId,
-    queryFn: async (): Promise<PriceDropListing[]> => {
-      const r = await fetchPriceDrops(userId as string);
-      if (!r.ok) throw new Error('price drops unavailable');
-      return r.rows;
-    },
-  });
-}
-
 /**
  * New items listed by followed sellers.
  */
@@ -167,38 +149,6 @@ export function useDeleteSavedSearch(userId: string | null) {
     },
   });
 }
-
-/**
- * Paginated home feed infinite query.
- */
-export function useHomeFeedQuery(tab: HomeFeedTab, userId: string | null) {
-  return useInfiniteQuery({
-    queryKey: qk.homeFeed(tab, userId),
-    enabled: tab !== 'following' || !!userId,
-    initialPageParam: 0,
-    queryFn: async ({ pageParam }): Promise<Listing[]> => {
-      if (tab === 'following') {
-        if (!userId) return [];
-        const r = await fetchFollowingListingsResult(userId);
-        if (!r.ok) throw new Error('following feed unavailable');
-        return r.rows;
-      }
-      const r = await fetchListingsResult({
-        tab,
-        limit: HOME_FEED_PAGE_SIZE,
-        offset: pageParam,
-      });
-      if (!r.ok) throw new Error('feed unavailable');
-      return r.rows;
-    },
-    getNextPageParam: (lastPage, allPages) => {
-      if (tab === 'following') return undefined;
-      if (lastPage.length < HOME_FEED_PAGE_SIZE) return undefined;
-      return allPages.reduce((total, page) => total + page.length, 0);
-    },
-  });
-}
-
 /**
  * Filtered catalog listings query for categories and sorts.
  */
@@ -226,16 +176,5 @@ export function useRecommendationsQuery(userId: string | null, limit = 12) {
     queryKey: qk.recommendations(userId),
     enabled: !!userId,
     queryFn: () => fetchRecommendations(limit),
-  });
-}
-
-/**
- * Recently viewed listings query.
- */
-export function useRecentlyViewedQuery(userId: string | null, limit = 10) {
-  return useQuery({
-    queryKey: qk.recentlyViewed(userId),
-    enabled: !!userId,
-    queryFn: (): Promise<Listing[]> => fetchRecentlyViewed(limit),
   });
 }

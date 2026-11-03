@@ -22,9 +22,6 @@ import { useToast } from '@/lib/toast';
 import { safeBack } from '@/lib/nav';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { BRAND } from '@/lib/brand';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { BuyerProtectionSheet } from '@/components/product/BuyerProtectionSheet';
-import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import type { Order } from '@/lib/payments';
 import type { Listing, FulfillmentStatus } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
@@ -37,7 +34,6 @@ export interface OrderDetailsTrackingViewProps {
   onBack?: () => void;
   onShare?: () => void;
   actionButtons?: React.ReactNode;
-  initialTab?: 'shipment' | 'activity';
   onConfirmPickup?: (address: any) => Promise<void>;
   sellerDefaultAddress?: any;
   onOrderUpdate?: (updatedOrder: Order) => void;
@@ -313,7 +309,6 @@ export function OrderDetailsTrackingView({
   onBack,
   onShare,
   actionButtons,
-  initialTab = 'shipment',
   onConfirmPickup,
   sellerDefaultAddress,
   onOrderUpdate,
@@ -331,8 +326,6 @@ export function OrderDetailsTrackingView({
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'shipment' | 'activity'>(initialTab);
-  const [bpSheetOpen, setBpSheetOpen] = useState(false);
 
   // Seller Modals (Rule 1 & 2)
   const [labelModalVisible, setLabelModalVisible] = useState(false);
@@ -397,37 +390,21 @@ export function OrderDetailsTrackingView({
   if (!isSeller && (statusBadge === 'Needs Label' || statusBadge === 'Packing')) {
     statusBadge = 'Preparing Order';
   }
-  let statusPillText = isSeller ? 'Needs Label' : 'Preparing Order';
-  let itemStatusBadgeText = 'Preparing Package';
 
   if (currentFulfillment === 'delivered') {
     statusBadge = statusBadge || 'Delivered';
-    statusPillText = 'Delivered';
-    itemStatusBadgeText = 'Delivered';
   } else if (currentFulfillment === 'shifting' || (order as any)?.shipped_at || (order as any)?.shifted_at) {
     statusBadge = statusBadge || 'In Transit';
-    statusPillText = 'In Transit';
-    itemStatusBadgeText = 'In Transit';
   } else if (currentFulfillment === 'picked') {
     statusBadge = statusBadge || 'Picked';
-    statusPillText = 'Picked Up';
-    itemStatusBadgeText = 'Picked';
   } else if (currentFulfillment === 'completed') {
     statusBadge = statusBadge || 'Completed';
-    statusPillText = 'Completed';
-    itemStatusBadgeText = 'Completed';
   } else if (currentFulfillment === 'packing') {
     statusBadge = statusBadge || (isSeller ? 'Needs Label' : 'Preparing Order');
-    statusPillText = isSeller ? 'Needs Label' : 'Preparing Order';
-    itemStatusBadgeText = 'Preparing Package';
   } else if (currentFulfillment === 'disputed') {
     statusBadge = statusBadge || 'Refund Under Review';
-    statusPillText = 'Disputed';
-    itemStatusBadgeText = 'Under Review';
   } else if (currentFulfillment === 'canceled') {
     statusBadge = statusBadge || 'Cancelled';
-    statusPillText = 'Cancelled';
-    itemStatusBadgeText = 'Cancelled';
   } else {
     statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Needs Label' : 'Paid') : (isSeller ? 'Needs Label' : 'Preparing Order'));
   }
@@ -492,10 +469,6 @@ export function OrderDetailsTrackingView({
       },
     ];
   }, [order, listing, item, orderIdNumber, itemCondition, itemPhoto]);
-
-  // Buyer protection fee calculation
-  const listingPrice = Number(listing?.price ?? (order?.amount_cents ? order.amount_cents / 100 : 1000));
-  const protectionFee = buyerProtectionFee(listingPrice);
 
   // ── Dynamic order timestamps & live chronological event calculation ──
   const orderCreatedAt = useMemo(() => {

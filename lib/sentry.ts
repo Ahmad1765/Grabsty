@@ -89,11 +89,6 @@ export function initSentry(): void {
       : undefined,
   });
 }
-
-/** Wrap the root component for native crash + touch-event instrumentation. */
-export const wrapWithSentry: typeof Sentry.wrap = (component) =>
-  sentryEnabled ? Sentry.wrap(component) : component;
-
 /**
  * Report a caught error. Use this instead of a bare `console.error` in catch
  * blocks so production failures actually reach the dashboard. `context` is

@@ -118,15 +118,6 @@ export async function deleteSavedSearch(id: string): Promise<boolean> {
   }
   return true;
 }
-
-export async function touchSavedSearchSeen(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('saved_searches')
-    .update({ last_seen_at: new Date().toISOString() })
-    .eq('id', id);
-  if (error) console.warn('[saved-searches] touch', error.message);
-}
-
 // Counts how many listings have landed since the user last opened this
 // saved search. Used to render the "N new" badge on the Saved tab. Returns
 // 0 on any failure — the badge is supplementary UX.
