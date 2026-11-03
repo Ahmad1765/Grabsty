@@ -562,6 +562,10 @@ export function DiscoverSheetBody({
               onClose();
               router.push(`/user/${seller}` as any);
             }}
+            onSeeAllSellers={() => {
+              onClose();
+              router.push('/top-sellers' as any);
+            }}
           />
         </ScrollView>
       )}

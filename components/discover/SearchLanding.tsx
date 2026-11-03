@@ -1,10 +1,10 @@
 // Browse sheet body (Discover tab), top to bottom:
 //   1. Shop by category  - 30px chips for every top-level category + All
-//   2. Top sellers this week - columns of two that scroll sideways, rank on the avatar
+//   2. Top sellers this week - columns of two that scroll sideways, rank on the avatar;
+//                          "See all" opens app/top-sellers.tsx
 //                          (public top_sellers_week RPC: 7-day sales, then all-time)
 //   3. Popular brands    - the most-listed brands in the live feed
-//   4. Quick browse      - New drops / Trending / Best deals sort shortcuts
-//   5. You may like      - listings ranked for this buyer (get_recommendations),
+//   4. Freshly Out       - listings ranked for this buyer (get_recommendations),
 //                          feed order when signed out
 //
 // Complies with UI_GUARDRAILS.md (three-hue palette, 30px chips, Inter via rnText,
@@ -47,7 +47,7 @@ export type BrowseAction =
 
 export type TopicAction = { kind: 'category'; category: CategoryId } | { kind: 'all' };
 
-type TopSeller = {
+export type TopSeller = {
   id: string;
   username: string;
   full_name: string | null;
@@ -56,19 +56,19 @@ type TopSeller = {
   sold_total: number;
 };
 
-function useTopSellersWeek() {
+export function useTopSellersWeek(limit = 12) {
   return useQuery({
-    queryKey: ['topSellersWeek'],
+    queryKey: ['topSellersWeek', limit],
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<TopSeller[]> => {
-      const { data, error } = await supabase.rpc('top_sellers_week', { p_limit: 12 });
+      const { data, error } = await supabase.rpc('top_sellers_week', { p_limit: limit });
       if (error) throw error;
       return (data ?? []) as TopSeller[];
     },
   });
 }
 
-function soldLabel(s: TopSeller) {
+export function soldLabel(s: TopSeller) {
   return s.sold_week > 0 ? `${s.sold_week} sold this week` : `${s.sold_total} sold`;
 }
 
@@ -84,6 +84,7 @@ export function SearchLanding({
   onTab,
   onSearch,
   onSelectSeller,
+  onSeeAllSellers,
 }: {
   covers?: Partial<Record<string, string>>;
   listings?: Listing[];
@@ -93,6 +94,7 @@ export function SearchLanding({
   onTab: (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onSearch?: (query: string) => void;
   onSelectSeller?: (sellerIdOrUsername: string) => void;
+  onSeeAllSellers?: () => void;
 }) {
   const { theme, isDark } = useTheme();
   const { width } = useWindowDimensions();
@@ -118,7 +120,13 @@ export function SearchLanding({
     return [...counts.values()].sort((a, b) => b.n - a.n).slice(0, 10).map((e) => e.label);
   }, [listings]);
 
-  const chip = (key: string, label: string, onPress: () => void, icon?: keyof typeof Feather.glyphMap) => (
+  const chip = (
+    key: string,
+    label: string,
+    onPress: () => void,
+    icon?: keyof typeof Feather.glyphMap,
+    trailingIcon?: keyof typeof Feather.glyphMap,
+  ) => (
     <Pressable
       key={key}
       onPress={() => {
@@ -140,6 +148,7 @@ export function SearchLanding({
     >
       {icon ? <Feather name={icon} size={14} color={theme.mute} /> : null}
       <Text style={{ fontSize: 13, fontFamily: type.family.sansMedium, color: theme.ink }}>{label}</Text>
+      {trailingIcon ? <Feather name={trailingIcon} size={14} color={theme.ink} /> : null}
     </Pressable>
   );
 
@@ -195,7 +204,8 @@ export function SearchLanding({
             <Pressable
               onPress={() => {
                 haptic();
-                onTab('users', 'Top closets', 'users');
+                if (onSeeAllSellers) onSeeAllSellers();
+                else router.push('/top-sellers' as any);
               }}
               hitSlop={8}
               accessibilityRole="button"
@@ -292,22 +302,13 @@ export function SearchLanding({
       {popularBrands.length >= 2 && onSearch && (
         <View>
           <SectionTitle>Popular brands</SectionTitle>
-          {chipRow(popularBrands.map((b) => chip(`brand-${b}`, b, () => onSearch(b))))}
+          {chipRow(popularBrands.map((b) => chip(`brand-${b}`, b, () => onSearch(b), undefined, 'arrow-up-right')))}
         </View>
       )}
 
-      <View>
-        <SectionTitle>Quick browse</SectionTitle>
-        {chipRow([
-          chip('new', 'New drops', () => onSort('newest', 'New drops', 'clock'), 'clock'),
-          chip('trending', 'Trending', () => onSort('popular', 'Trending', 'trending-up'), 'trending-up'),
-          chip('deals', 'Best deals', () => onSort('price_asc', 'Deals', 'tag'), 'tag'),
-        ])}
-      </View>
-
       {picks.length > 0 && (
         <View>
-          <SectionTitle>You may like</SectionTitle>
+          <SectionTitle>Freshly Out</SectionTitle>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, gap: GRID_GAP }}>
             {picks.map((l) => (
               <View key={l.id} style={{ width: cardWidth }}>

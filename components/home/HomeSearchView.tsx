@@ -33,6 +33,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { supabase } from '@/lib/supabase';
+import { logSellerSearch } from '@/lib/recommendations';
 import { searchUsers } from '@/lib/follows';
 import { searchListings, fetchListingsResult } from '@/lib/listings';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
@@ -293,6 +294,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       return updated;
     });
     setHasRealRecentHistory(true);
+    logSellerSearch(member.id);
 
     router.push(`/user/${member.id}` as any);
   }, []);
@@ -738,11 +740,21 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => clearTimeout(timer);
   }, [query, searchFilters.category, hasSubmitted, runSearch]);
 
+  // While a tab tap animates the pager, onScroll still reports the old page for a
+  // few frames; without this lock it flipped activeTab back and forth (flicker).
+  const tabLockRef = useRef<SearchTab | null>(null);
+  const tabLockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Handle Tab Switch by clicking header (preserves open keyboard)
   const handleTabPress = useCallback(
     (tab: SearchTab) => {
       haptic();
       setActiveTab(tab);
+      tabLockRef.current = tab;
+      if (tabLockTimer.current) clearTimeout(tabLockTimer.current);
+      tabLockTimer.current = setTimeout(() => {
+        tabLockRef.current = null;
+      }, 500);
       const targetX = tab === 'listings' ? 0 : screenWidth;
       pagerRef.current?.scrollTo({ x: targetX, animated: true });
       RNAnimated.timing(scrollX, {
@@ -762,6 +774,10 @@ export const HomeSearchView = memo(function HomeSearchView({
       scrollX.setValue(offsetX);
       const pageIndex = Math.round(offsetX / screenWidth);
       const newTab: SearchTab = pageIndex === 0 ? 'listings' : 'seller';
+      if (tabLockRef.current) {
+        if (newTab === tabLockRef.current && offsetX % screenWidth === 0) tabLockRef.current = null;
+        return;
+      }
       if (newTab !== activeTab) {
         setActiveTab(newTab);
       }
@@ -775,6 +791,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       const offsetX = e.nativeEvent.contentOffset.x;
       const pageIndex = Math.round(offsetX / screenWidth);
       const newTab: SearchTab = pageIndex === 0 ? 'listings' : 'seller';
+      tabLockRef.current = null;
       if (newTab !== activeTab) {
         setActiveTab(newTab);
         inputRef.current?.focus?.();
@@ -1005,7 +1022,6 @@ export const HomeSearchView = memo(function HomeSearchView({
                 opacity: pressed ? 0.6 : 1,
               })}
             >
-              <Feather name="search" size={14} color={theme.mute} />
               <Text
                 style={{
                   fontSize: 13,
@@ -1535,11 +1551,8 @@ export const HomeSearchView = memo(function HomeSearchView({
               style={{
                 fontSize: 14,
                 lineHeight: 18,
-                fontWeight: activeTab === 'listings' ? '700' : '500',
-                fontFamily:
-                  activeTab === 'listings'
-                    ? typography.family.sansBold
-                    : typography.family.sansMedium,
+                fontWeight: '600',
+                fontFamily: typography.family.sansSemibold,
                 color:
                   activeTab === 'listings'
                     ? theme.text
@@ -1580,11 +1593,8 @@ export const HomeSearchView = memo(function HomeSearchView({
               style={{
                 fontSize: 14,
                 lineHeight: 18,
-                fontWeight: activeTab === 'seller' ? '700' : '500',
-                fontFamily:
-                  activeTab === 'seller'
-                    ? typography.family.sansBold
-                    : typography.family.sansMedium,
+                fontWeight: '600',
+                fontFamily: typography.family.sansSemibold,
                 color:
                   activeTab === 'seller'
                     ? theme.text

@@ -26,6 +26,14 @@ type TopListing = {
   image: string | null;
   period_viewers: number;
 };
+type SearchedSeller = {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  searches: number;
+  sold_week: number;
+  sold_total: number;
+};
 type Analytics = {
   days: number;
   kpis: Partial<Record<Metric | 'messages', { cur: number; prev: number }>>;
@@ -70,12 +78,17 @@ export function AdminAnalytics() {
   const [days, setDays] = useState<number>(28);
   const [metric, setMetric] = useState<Metric>('viewers');
   const [data, setData] = useState<Analytics | null>(null);
+  const [searched, setSearched] = useState<SearchedSeller[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data: res, error: err } = await supabase.rpc('admin_analytics', { p_days: days });
+    const [{ data: res, error: err }, ms] = await Promise.all([
+      supabase.rpc('admin_analytics', { p_days: days }),
+      supabase.rpc('most_searched_sellers', { p_limit: 10, p_days: days }),
+    ]);
+    if (!ms.error) setSearched((ms.data ?? []) as SearchedSeller[]);
     if (err) setError(err.message);
     else {
       setError(null);
@@ -269,6 +282,61 @@ export function AdminAnalytics() {
                     </>
                   )}
                   <Text style={{ width: 90, textAlign: 'right', fontSize: 14, color: theme.text }}>{formatPrice(l.price, { whole: true })}</Text>
+                </Pressable>
+              ))
+            )}
+          </View>
+
+          {/* Most searched sellers (seller_search_hits: distinct searchers per seller) */}
+          <View style={[card, { marginTop: 16 }]}>
+            <View style={{ padding: 18, paddingBottom: 10 }}>
+              <Text style={{ fontSize: 16, fontWeight: '700', color: theme.text }}>Most searched sellers</Text>
+              <Text style={{ fontSize: 12, color: theme.textMuted, marginTop: 2 }}>
+                People who opened the seller from search in this period
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', paddingHorizontal: 18, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1, borderColor: theme.border }}>
+              <Text style={{ flex: 1, fontSize: 12, fontWeight: '600', color: theme.textMuted }}>Seller</Text>
+              <Text style={{ width: 80, textAlign: 'right', fontSize: 12, fontWeight: '600', color: theme.textMuted }}>Searches</Text>
+              <Text style={{ width: 80, textAlign: 'right', fontSize: 12, fontWeight: '600', color: theme.textMuted }}>Sold (7d)</Text>
+              {width >= 600 && (
+                <Text style={{ width: 80, textAlign: 'right', fontSize: 12, fontWeight: '600', color: theme.textMuted }}>Sold total</Text>
+              )}
+            </View>
+            {searched.length === 0 ? (
+              <Text style={{ padding: 18, fontSize: 13, color: theme.textMuted }}>No seller searches yet.</Text>
+            ) : (
+              searched.map((s, i) => (
+                <Pressable
+                  key={s.id}
+                  testID={`analytics-searched-${s.id}`}
+                  onPress={() => router.push(`/user/${s.username || s.id}` as any)}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 18,
+                    paddingVertical: 10,
+                    borderBottomWidth: i === searched.length - 1 ? 0 : 1,
+                    borderBottomColor: theme.border,
+                    backgroundColor: pressed ? theme.surface : 'transparent',
+                  })}
+                >
+                  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Text style={{ width: 18, fontSize: 13, color: theme.textMuted }}>{i + 1}</Text>
+                    <Image
+                      source={s.avatar_url ? { uri: s.avatar_url } : undefined}
+                      style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: theme.surface }}
+                      contentFit="cover"
+                    />
+                    <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: theme.text }} numberOfLines={1}>
+                      @{s.username}
+                    </Text>
+                  </View>
+                  <Text style={{ width: 80, textAlign: 'right', fontSize: 14, fontWeight: '700', color: theme.text }}>{compact(s.searches)}</Text>
+                  <Text style={{ width: 80, textAlign: 'right', fontSize: 14, color: theme.text }}>{compact(s.sold_week)}</Text>
+                  {width >= 600 && (
+                    <Text style={{ width: 80, textAlign: 'right', fontSize: 14, color: theme.text }}>{compact(s.sold_total)}</Text>
+                  )}
                 </Pressable>
               ))
             )}
