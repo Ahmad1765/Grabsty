@@ -15,6 +15,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { BundleSection } from '@/components/product/BundleSection';
 import { ListingCard } from '@/components/ListingCard';
 import { useFittedCardWidth } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import {
   CARD_GAP,
   CARD_OUTER_PAD,
@@ -57,10 +58,11 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
   onLayout,
 }: ProductRelatedSectionProps) {
   const { theme } = useTheme();
-  const { cardWidth: estimatedCardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth, columns } = useProductDimensions();
   const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
     horizontalPadding: CARD_OUTER_PAD,
     gap: CARD_GAP,
+    columns,
   });
 
   const effectiveTab = relatedTab;
@@ -132,24 +134,19 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
               </Text>
             </View>
           ) : (
-            <View
-              ref={gridRef}
+            <CardGrid
+              gridRef={gridRef}
               onLayout={onGridLayout}
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                paddingHorizontal: CARD_OUTER_PAD,
-                columnGap: CARD_GAP,
-                rowGap: 16,
-              }}
+              columns={columns}
+              cardWidth={cardWidth}
+              padding={CARD_OUTER_PAD}
+              gap={CARD_GAP}
+              rowGap={16}
             >
               {similarItems.map((item) => (
-                <View key={item.id} style={{ width: cardWidth }}>
-                  <ListingCard listing={item} width={cardWidth} />
-                </View>
+                <ListingCard key={item.id} listing={item} width={cardWidth} />
               ))}
-            </View>
+            </CardGrid>
           )}
         </View>
       )}

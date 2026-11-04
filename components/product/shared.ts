@@ -28,6 +28,7 @@ export function getProductDimensions(windowWidth: number) {
   return {
     contentWidth,
     imageHeight,
+    columns: 2,
     cardWidth,
     cardImageHeight,
   };
@@ -60,6 +61,7 @@ export function getDesktopProductDimensions(areaWidth: number, areaHeight: numbe
   return {
     contentWidth,
     imageHeight: Math.round(contentWidth * 1.25),
+    columns,
     cardWidth,
     cardImageHeight: Math.round(cardWidth * 1.25),
     frameWidth,

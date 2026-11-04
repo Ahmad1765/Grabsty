@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { View, Pressable, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { useFittedCardWidth } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
@@ -308,17 +309,18 @@ export function SearchLanding({
       {picks.length > 0 && (
         <View>
           <SectionTitle>Freshly Out</SectionTitle>
-          <View
-            ref={gridRef}
+          <CardGrid
+            gridRef={gridRef}
             onLayout={onGridLayout}
-            style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: PAD, gap: GRID_GAP }}
+            columns={2}
+            cardWidth={cardWidth}
+            padding={PAD}
+            gap={GRID_GAP}
           >
             {picks.map((l) => (
-              <View key={l.id} style={{ width: cardWidth }}>
-                <ListingCard listing={l} width={cardWidth} />
-              </View>
+              <ListingCard key={l.id} listing={l} width={cardWidth} />
             ))}
-          </View>
+          </CardGrid>
         </View>
       )}
     </View>

@@ -50,6 +50,7 @@ import {
 } from '@/lib/searchFilters';
 import { ListingCard } from '@/components/ListingCard';
 import { useGridDimensions, useIsDesktop, DESKTOP_FEED_MAX } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import { categoryLabel } from '@/lib/categories';
 import { radii, type as typography } from '@/lib/theme';
 import type { Category, Listing } from '@/types';
@@ -505,7 +506,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   const HORIZONTAL_PAD = 12;
   const GRID_GAP = 8;
 
-  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useGridDimensions({
+  const { columns, cardWidth, onLayout: onGridLayout, ref: gridRef } = useGridDimensions({
     min: 2,
     max: isDesktop ? 5 : 4,
     thresholds: isDesktop ? [560, 900, 1150] : [560, 900, 1200],
@@ -1605,23 +1606,19 @@ export const HomeSearchView = memo(function HomeSearchView({
                 />
 
                 {displayListings.length > 0 ? (
-                  <View
-                    ref={gridRef}
+                  <CardGrid
+                    gridRef={gridRef}
                     onLayout={onGridLayout}
-                    style={{
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: GRID_GAP,
-                      paddingHorizontal: HORIZONTAL_PAD,
-                      paddingTop: 8,
-                    }}
+                    columns={columns}
+                    cardWidth={cardWidth}
+                    padding={HORIZONTAL_PAD}
+                    gap={GRID_GAP}
+                    style={{ paddingTop: 8 }}
                   >
                     {displayListings.map((item) => (
-                      <View key={item.id} style={{ width: cardWidth }}>
-                        <ListingCard listing={item} width={cardWidth} />
-                      </View>
+                      <ListingCard key={item.id} listing={item} width={cardWidth} />
                     ))}
-                  </View>
+                  </CardGrid>
                 ) : (
                   <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: 'center' }}>
                     <Text style={{ fontSize: 14, color: theme.mute, textAlign: 'center' }}>

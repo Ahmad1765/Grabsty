@@ -9,6 +9,7 @@ import { priceBreakdown } from '@/lib/fees';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { ListingCard } from '@/components/ListingCard';
 import { useFittedCardWidth } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import type { Listing } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleProgressBar } from './BundleProgressBar';
@@ -42,11 +43,12 @@ export function BundleSection({
   onSendBundleOffer: (totalAfterDiscount: number, selectedIds: string[]) => void;
 }) {
   const { theme } = useTheme();
-  const { cardWidth: estimatedCardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth, columns } = useProductDimensions();
   // All four grids below span the same width, so one measurement sizes them.
   const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
     horizontalPadding: CARD_OUTER_PAD,
     gap: CARD_GAP,
+    columns,
   });
   const username = listing.seller.username;
   const isSold = listing.is_sold;
@@ -60,22 +62,19 @@ export function BundleSection({
       <View style={{ paddingTop: 18 }}>
         {activeSellerItems.length === 0 ? (
           <View>
-            <View
-              ref={gridRef}
+            <CardGrid
+              gridRef={gridRef}
               onLayout={onGridLayout}
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                paddingHorizontal: CARD_OUTER_PAD,
-                columnGap: CARD_GAP,
-                rowGap: 16,
-              }}
+              columns={columns}
+              cardWidth={cardWidth}
+              padding={CARD_OUTER_PAD}
+              gap={CARD_GAP}
+              rowGap={16}
             >
               <View style={{ width: cardWidth }}>
                 <ListingCard listing={listing} width={cardWidth} />
               </View>
-            </View>
+            </CardGrid>
             <View style={{ paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center' }}>
               <Feather name="package" size={20} color={theme.mute} />
               <Text
@@ -92,24 +91,21 @@ export function BundleSection({
             </View>
           </View>
         ) : (
-          <View
-            ref={gridRef}
+          <CardGrid
+            gridRef={gridRef}
             onLayout={onGridLayout}
-            style={{
-              width: '100%',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              paddingHorizontal: CARD_OUTER_PAD,
-              columnGap: CARD_GAP,
-              rowGap: 16,
-            }}
+            columns={columns}
+            cardWidth={cardWidth}
+            padding={CARD_OUTER_PAD}
+            gap={CARD_GAP}
+            rowGap={16}
           >
             {activeSellerItems.map((item) => (
               <View key={item.id} style={{ width: cardWidth }}>
                 <ListingCard listing={item} width={cardWidth} />
               </View>
             ))}
-          </View>
+          </CardGrid>
         )}
       </View>
     );
@@ -131,21 +127,18 @@ export function BundleSection({
       {/* Selectable seller items grid */}
       {activeSellerItems.length === 0 ? (
         <View>
-          <View
-            ref={gridRef}
+          <CardGrid
+            gridRef={gridRef}
             onLayout={onGridLayout}
-            style={{
-              width: '100%',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              paddingHorizontal: CARD_OUTER_PAD,
-              columnGap: CARD_GAP,
-              rowGap: 16,
-            }}
+            columns={columns}
+            cardWidth={cardWidth}
+            padding={CARD_OUTER_PAD}
+            gap={CARD_GAP}
+            rowGap={16}
           >
             {/* The item being viewed is the seller's available listing */}
             <BaseItemCard item={listing} width={cardWidth} />
-          </View>
+          </CardGrid>
           <View style={{ paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center' }}>
             <Feather name="package" size={20} color={theme.mute} />
             <Text
@@ -162,17 +155,14 @@ export function BundleSection({
           </View>
         </View>
       ) : (
-        <View
-          ref={gridRef}
+        <CardGrid
+          gridRef={gridRef}
           onLayout={onGridLayout}
-          style={{
-            width: '100%',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            paddingHorizontal: CARD_OUTER_PAD,
-            columnGap: CARD_GAP,
-            rowGap: 16,
-          }}
+          columns={columns}
+          cardWidth={cardWidth}
+          padding={CARD_OUTER_PAD}
+          gap={CARD_GAP}
+          rowGap={16}
         >
           {/* The item being viewed is always part of the bundle — pin it first */}
           <BaseItemCard item={listing} width={cardWidth} />
@@ -189,7 +179,7 @@ export function BundleSection({
               />
             );
           })}
-        </View>
+        </CardGrid>
       )}
     </View>
   );
