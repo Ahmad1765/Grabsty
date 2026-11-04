@@ -290,6 +290,22 @@ export function AnimatedTabBar({ state, descriptors, navigation }: BottomTabBarP
         shouldHideTabBar && { display: 'none' },
       ]}
     >
+      {/* Mobile browsers can paint below the page box (iOS Safari's floating
+          toolbar, dynamic toolbars), leaving a strip under the bar. Run the
+          bar's background on down to the screen edge; the buttons stay put. */}
+      {Platform.OS === 'web' && (
+        <View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '100%',
+            height: 200,
+            backgroundColor: isDark ? '#1C1C1C' : '#FFFFFF',
+          }}
+        />
+      )}
       <GestureDetector gesture={gesture}>
         <View
           nativeID="tab-dock"
