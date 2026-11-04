@@ -164,68 +164,56 @@ export const SearchLiveResults = memo(function SearchLiveResults({
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* ── Sub-tabs (Markets/Items vs Profiles) ────────────────────── */}
+      {/* ── Sub-tabs: same as Home search's Items / Members switcher ── */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
           paddingHorizontal: 16,
-          paddingTop: 12,
-          paddingBottom: 8,
+          paddingTop: 8,
+          paddingBottom: 6,
         }}
       >
-        <Pressable
-          onPress={() => {
-            haptic();
-            setActiveTab('items');
-          }}
-          accessibilityRole="button"
-          style={{
-            paddingHorizontal: 14,
-            height: 32,
-            borderRadius: 16,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: activeTab === 'items' ? (isDark ? '#2C2C2E' : '#F0F1F5') : 'transparent',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              fontFamily: type.family.sansBold,
-              color: activeTab === 'items' ? theme.ink : theme.muteSoft,
-            }}
-          >
-            Markets
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => {
-            haptic();
-            setActiveTab('profiles');
-          }}
-          accessibilityRole="button"
-          style={{
-            paddingHorizontal: 14,
-            height: 32,
-            borderRadius: 16,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: activeTab === 'profiles' ? (isDark ? '#2C2C2E' : '#F0F1F5') : 'transparent',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              fontFamily: type.family.sansBold,
-              color: activeTab === 'profiles' ? theme.ink : theme.muteSoft,
-            }}
-          >
-            Profiles
-          </Text>
-        </Pressable>
+        {([['items', 'Items'], ['profiles', 'Members']] as const).map(([key, label]) => {
+          const active = activeTab === key;
+          return (
+            <Pressable
+              key={key}
+              onPress={() => {
+                haptic();
+                setActiveTab(key);
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={({ pressed }) => ({
+                paddingHorizontal: 14,
+                paddingVertical: 6,
+                borderRadius: 8,
+                backgroundColor: active
+                  ? isDark ? '#222E34' : '#F4F4F5'
+                  : pressed
+                  ? isDark ? '#1C2428' : '#F9FAFB'
+                  : 'transparent',
+                justifyContent: 'center',
+                alignItems: 'center',
+              })}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  lineHeight: 18,
+                  fontWeight: '600',
+                  fontFamily: type.family.sansSemibold,
+                  color: active ? theme.text : isDark ? '#9CA3AF' : '#6B7280',
+                  letterSpacing: -0.2,
+                }}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
 
         {loading && (
           <ActivityIndicator

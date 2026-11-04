@@ -24,7 +24,7 @@ export default function DiscoverScreen() {
   if (qs) return <Redirect href={`/?${qs}` as any} />;
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, paddingTop: 8, backgroundColor: theme.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
       <DiscoverSheetBody onClose={() => {}} contentBottom={tabBarClearance} />
     </SafeAreaView>
   );

@@ -48,8 +48,8 @@ import Feather from '@expo/vector-icons/Feather';
 import { router, usePathname } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFeedListingsQuery } from '@/lib/queries';
-import { radii, type } from '@/lib/theme';
-import { HIT_SLOP_8, isDesktopWidth, useIsDesktop } from '@/lib/responsive';
+import { radii } from '@/lib/theme';
+import { isDesktopWidth, useIsDesktop } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
 import { SearchLanding, SHEET_MAX, type TopicAction } from './SearchLanding';
@@ -57,6 +57,8 @@ import type { SortKey } from '@/lib/listings';
 import type { DiscoverTab } from './SearchTabs';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
+import { useActivityUnreadCount } from '@/lib/queries/useFeedQueries';
+import { FeedSearch } from '@/components/home/HomeHeader';
 
 // Every navigation out of the sheet carries a monotonic `n`. Without it,
 // picking the same chip twice produces an identical URL, expo-router hands
@@ -361,9 +363,8 @@ export function DiscoverSheetBody({
   contentBottom?: number;
 }) {
   const insets = useSafeAreaInsets();
-  const { theme, isDark } = useTheme();
   const { user } = useAuth();
-  const searchBg = isDark ? theme.surface : '#F0F1F5';
+  const unreadNotifications = useActivityUnreadCount(user?.id ?? null);
   const [query, setQuery] = useState('');
 
   const internalRef = useRef<TextInput>(null);
@@ -441,79 +442,27 @@ export function DiscoverSheetBody({
     [onClose],
   );
 
-  const searchBar = (
-    <View
-      style={{
-        // Same field as the Home bar (HomeHeader).
-        height: 44,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: radii.pill,
-        paddingLeft: 14,
-        paddingRight: 10,
-        borderWidth: 0,
-        backgroundColor: searchBg,
-      }}
-    >
-      <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
-      <TextInput
-        ref={searchRef}
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={submit}
-        placeholder="What are you looking for?"
-        placeholderTextColor={theme.muteSoft}
-        autoCorrect={false}
-        autoCapitalize="none"
-        returnKeyType="search"
-        accessibilityLabel="What are you looking for?"
-        onFocus={() => {
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-          }
-        }}
-        style={[
-          {
-            flex: 1,
-            marginLeft: 8,
-            marginRight: 6,
-            fontSize: 16,
-            letterSpacing: -0.15,
-            fontFamily: type.family.sansMedium,
-            color: theme.ink,
-            padding: 0,
-          },
-          Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
-        ]}
-      />
-      {query.length > 0 ? (
-        <Pressable
-          hitSlop={HIT_SLOP_8}
-          onPress={() => setQuery('')}
-          accessibilityRole="button"
-          accessibilityLabel="Clear search"
-          style={({ pressed }) => ({
-            width: 24,
-            height: 24,
-            borderRadius: radii.pill,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.6 : 1,
-          })}
-        >
-          <Feather name="x" size={16} color={theme.mute} />
-        </Pressable>
-      ) : null}
-    </View>
-  );
-
   return (
     <View style={{ flex: 1, width: '100%', maxWidth: SHEET_MAX, alignSelf: 'center' }}>
-      {/* Search bar pinned at top of sheet, full width without remounting */}
-      <View style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8 }}>
-        {searchBar}
+      {/* Same search bar as Home (FeedSearch), bell included. */}
+      <View style={{ marginBottom: 8 }}>
+        <FeedSearch
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={submit}
+          inputRef={searchRef}
+          focused={false}
+          onFocus={() => {
+            if (Platform.OS === 'web' && typeof window !== 'undefined') {
+              window.scrollTo(0, 0);
+              document.body.scrollTop = 0;
+              document.documentElement.scrollTop = 0;
+            }
+          }}
+          onBlur={() => {}}
+          resultCount={null}
+          unreadNotificationsCount={unreadNotifications}
+        />
       </View>
 
       {query.trim().length > 0 ? (
