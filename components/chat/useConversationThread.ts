@@ -773,7 +773,7 @@ export function useConversationThread(
         if (saved) {
           pinnedRef.current = true;
           setMessages((prev) => (prev.some((m) => m.id === saved.id) ? prev : [...prev, saved]));
-          toast.show('Offer sent', { variant: 'success', icon: 'check' });
+          toast.done('Offer sent', 'send');
           return true;
         } else {
           Alert.alert('Could not send offer', 'Please try again.');
@@ -802,17 +802,11 @@ export function useConversationThread(
           if (user?.id) {
             queryClient.invalidateQueries({ queryKey: qk.inbox(user.id) });
           }
-          toast.show('Offer accepted! Buyer can now complete purchase.', {
-            variant: 'success',
-            icon: 'check',
-          });
+          toast.done('Offer accepted! Buyer can now complete purchase.');
         } else {
           const ok = await updateOfferStatus(msg.id, 'declined');
           if (!ok) throw new Error('Could not decline offer');
-          toast.show('Offer declined', {
-            variant: 'info',
-            icon: 'x',
-          });
+          toast.done('Offer declined', 'x');
         }
       } catch (err: any) {
         setMessages((m) => m.map((x) => (x.id === msg.id ? { ...x, offer_status: prev } : x)));
@@ -839,7 +833,7 @@ export function useConversationThread(
             ...prev.map((m) => (m.id === parentMsg.id ? { ...m, offer_status: 'countered' as const } : m)),
             saved,
           ]);
-          toast.show('Counter-offer sent', { variant: 'success', icon: 'check' });
+          toast.done('Counter-offer sent', 'send');
           return true;
         }
         return false;
@@ -956,10 +950,8 @@ export function useConversationThread(
         reason,
         reportedUserId: other?.id ?? null,
       });
-      toast.show(ok ? 'Report sent — thank you' : "Couldn't send report", {
-        variant: ok ? 'success' : 'default',
-        icon: ok ? 'check' : 'alert-triangle',
-      });
+      if (ok) toast.done('Report sent, thank you', 'flag');
+      else toast.show("Couldn't send report", { variant: 'default', icon: 'alert-triangle' });
     },
     [convListingId, other?.id, toast, user],
   );

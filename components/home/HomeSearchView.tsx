@@ -33,6 +33,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { supabase } from '@/lib/supabase';
+import { getBlockPeerIds } from '@/lib/blocks';
 import { logSellerSearch } from '@/lib/recommendations';
 import { searchUsers } from '@/lib/follows';
 import { searchListings, fetchListingsResult } from '@/lib/listings';
@@ -245,7 +246,8 @@ export const HomeSearchView = memo(function HomeSearchView({
           .limit(10);
 
         if (!error && data && data.length > 0 && isMounted) {
-          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id).map((p) => ({
+          const hidden = new Set(await getBlockPeerIds());
+          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id && !hidden.has(p.id)).map((p) => ({
             id: p.id,
             username: p.username || 'user',
             full_name: p.full_name,
@@ -359,15 +361,9 @@ export const HomeSearchView = memo(function HomeSearchView({
     });
 
     if (nextSaved) {
-      toast.show(`Saved search alert for "${label}"`, {
-        variant: 'success',
-        icon: 'star',
-      });
+      toast.done(`Saved search alert for "${label}"`, 'star');
     } else {
-      toast.show('Search alert removed', {
-        variant: 'info',
-        icon: 'trash-2',
-      });
+      toast.done('Search alert removed', 'trash-2');
     }
 
     // If authenticated, sync with Supabase

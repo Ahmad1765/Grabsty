@@ -153,9 +153,13 @@ export async function fetchMyOrders(userId: string): Promise<MyOrder[]> {
 // Stripe is "enabled" only when a publishable key has been set. Until then
 // the Pay button runs in demo mode — no API call, just a simulated success
 // redirect so the UI flow is still walkable.
+//
+// Launch is Cash on Delivery only: a key alone can't turn cards on. See the gaps
+// listed at the CARD_PAYMENTS_ENABLED check in create-checkout-session first.
 const PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 export const STRIPE_ENABLED =
-  PK.startsWith("pk_test_") || PK.startsWith("pk_live_");
+  process.env.EXPO_PUBLIC_CARD_PAYMENTS === "true" &&
+  (PK.startsWith("pk_test_") || PK.startsWith("pk_live_"));
 export async function openCheckout(url: string): Promise<void> {
   if (Platform.OS === "web") {
     if (typeof window !== "undefined") window.location.href = url;

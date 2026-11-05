@@ -351,10 +351,7 @@ export default function ProfileEditScreen() {
       await refreshProfile();
       if (!mounted.current) return;
 
-      toast.show(isOnboarding ? "You're in 🌶️" : 'Profile updated', {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(isOnboarding ? "You're all set" : 'Profile updated');
 
       if (isOnboarding) router.replace('/(tabs)');
       else safeBack();

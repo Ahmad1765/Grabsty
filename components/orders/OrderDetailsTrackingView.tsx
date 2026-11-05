@@ -634,10 +634,7 @@ export function OrderDetailsTrackingView({
     tap('light');
     try {
       await Clipboard.setStringAsync(trackingNumber);
-      toast.show('Tracking ID copied to clipboard', {
-        variant: 'default',
-        icon: 'copy',
-      });
+      toast.done('Tracking ID copied to clipboard', 'copy');
     } catch {
       toast.show('Failed to copy tracking ID', {
         variant: 'default',
@@ -700,10 +697,7 @@ export function OrderDetailsTrackingView({
         setPickupConfirmed(true);
         setPickupConfirmedDateStr(chosenDateStr);
         setReadyDeliverModalVisible(false);
-        toast.show(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`, {
-          variant: 'default',
-          icon: 'check',
-        });
+        toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
       } catch (e: any) {
         console.warn('pickup schedule error', e);
         toast.show(e?.message || 'Could not schedule pickup', {
@@ -715,10 +709,7 @@ export function OrderDetailsTrackingView({
       setPickupConfirmed(true);
       setPickupConfirmedDateStr(chosenDateStr);
       setReadyDeliverModalVisible(false);
-      toast.show(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`, {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
     }
   };
 
@@ -729,15 +720,9 @@ export function OrderDetailsTrackingView({
       await Share.share({
         message: `${BRAND} Shipping Label\nWaybill: ${trackingNumber}\nFrom: ${pickupContactName} (${pickupLine1}, ${pickupCity})\nTo: ${recipient} (${streetAddress})\nCarrier: ${carrierName}`,
       });
-      toast.show('Shipping label ready & shared', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Shipping label ready & shared');
     } catch {
-      toast.show('Label saved to documents', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Label saved to documents');
     }
   };
 
@@ -1295,7 +1280,7 @@ export function OrderDetailsTrackingView({
                       onPress={() => {
                         tap('light');
                         Clipboard.setStringAsync(sItem.orderId.replace('Order #', ''))
-                          .then(() => toast.show('Order number copied', { variant: 'default', icon: 'copy' }))
+                          .then(() => toast.done('Order number copied', 'copy'))
                           .catch(() => {});
                       }}
                     >

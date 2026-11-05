@@ -170,7 +170,7 @@ export default function NewsScreen() {
     }
     const idsToMark = followedListings.map((l) => `listing-${l.id}`);
     await markAllOpened(idsToMark);
-    toast.show('All notifications marked as read', { variant: 'info', icon: 'check-circle' });
+    toast.done('All notifications marked as read');
   }, [user, followedQ.data, markAllOpened, toast]);
 
   return (

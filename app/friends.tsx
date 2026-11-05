@@ -225,10 +225,7 @@ export default function FriendsScreen() {
       setHasSynced(true);
 
       if (result.matchedFriends.length > 0) {
-        toast.show(`Found ${result.matchedFriends.length} friends on ${BRAND}!`, {
-          variant: 'default',
-          icon: 'check',
-        });
+        toast.done(`Found ${result.matchedFriends.length} friends on ${BRAND}!`);
       } else {
         toast.show(`No contacts registered on ${BRAND} yet. Invite them!`, {
           variant: 'default',
@@ -729,7 +726,7 @@ export default function FriendsScreen() {
                       tap('light');
                       const ok = await copyInviteLink(profile?.username);
                       if (ok) {
-                        toast.show('Profile link copied!', { variant: 'default', icon: 'check' });
+                        toast.done('Profile link copied!', 'copy');
                       }
                     }}
                     style={{

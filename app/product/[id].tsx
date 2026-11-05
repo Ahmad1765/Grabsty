@@ -338,7 +338,7 @@ export default function ProductScreen() {
       });
       return;
     }
-    toast.show('Listing deleted', { variant: 'success', icon: 'check' });
+    toast.done('Listing deleted', 'trash-2');
     safeBack();
   }, [listing, ownerBusy, deleteM, toast]);
 
@@ -449,7 +449,7 @@ export default function ProductScreen() {
       });
       if (saved) {
         engagement.setOfferVisible(false);
-        toast.show('Offer sent', { variant: 'success', icon: 'check' });
+        toast.done('Offer sent', 'send');
         router.push(`/conversation/${conv.id}` as any);
       } else {
         Alert.alert('Could not send offer', 'Please try again.');
@@ -498,10 +498,8 @@ export default function ProductScreen() {
             reportedUserId: listing.seller_id,
             reason: r.id,
           });
-          toast.show(ok ? 'Thanks — our team will review this.' : "Couldn't submit report", {
-            variant: ok ? 'success' : 'default',
-            icon: ok ? 'check' : 'alert-triangle',
-          });
+          if (ok) toast.done('Thanks, our team will review this.', 'flag');
+          else toast.show("Couldn't submit report", { variant: 'default', icon: 'alert-triangle' });
         },
       })),
       { text: 'Cancel', style: 'cancel' as const },

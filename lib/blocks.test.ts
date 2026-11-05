@@ -1,94 +1,93 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { blockUser, unblockUser, isUserBlocked, getBlockedUserIds } from './blocks';
+import { blockUser, getBlockRelation, getBlockedUserIds, listBlockedUsers, unblockUser } from './blocks';
 import { supabase } from './supabase';
 
-const mockStorage: Record<string, string> = {};
+// Enforcement is tested against the database in
+// tests/adversarial/blocks_and_launch_guards.sql; this covers what the client does
+// with the answers, and the one-time move of device-only blocks to the server.
+
+const storage: Record<string, string> = {};
 
 vi.mock('@react-native-async-storage/async-storage', () => ({
   default: {
-    getItem: vi.fn(async (key: string) => mockStorage[key] ?? null),
-    setItem: vi.fn(async (key: string, val: string) => {
-      // Small simulated delay to thoroughly exercise concurrency locking
-      await new Promise((r) => setTimeout(r, 5));
-      mockStorage[key] = val;
-    }),
+    getItem: vi.fn(async (key: string) => storage[key] ?? null),
     removeItem: vi.fn(async (key: string) => {
-      delete mockStorage[key];
+      delete storage[key];
     }),
   },
 }));
 
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      insert: vi.fn().mockResolvedValue({ error: null }),
-    })),
-  },
-}));
+vi.mock('@/lib/supabase', () => ({ supabase: { from: vi.fn(), rpc: vi.fn() } }));
+vi.mock('@/lib/sentry', () => ({ captureError: vi.fn() }));
 
-vi.mock('@/lib/sentry', () => ({
-  captureError: vi.fn(),
-}));
+/** A table mock answering every chain with `result`, recording upserts. */
+function table(result: { data?: unknown; error?: unknown }, upsert = vi.fn().mockResolvedValue({ error: null })) {
+  const chain: any = {
+    select: () => chain,
+    eq: () => chain,
+    delete: () => chain,
+    order: () => chain,
+    upsert,
+    then: (resolve: (v: unknown) => void) => resolve(result),
+  };
+  return chain;
+}
 
-describe('blocks lib', () => {
+describe('blocks', () => {
   beforeEach(() => {
-    Object.keys(mockStorage).forEach((key) => delete mockStorage[key]);
+    Object.keys(storage).forEach((k) => delete storage[k]);
     vi.clearAllMocks();
   });
 
-  it('blocks and unblocks a user correctly', async () => {
-    const blocker = 'user-1';
-    const target = 'user-2';
-
-    expect(await isUserBlocked(blocker, target)).toBe(false);
-
-    const success = await blockUser({
-      blockerId: blocker,
-      blockedId: target,
-      reason: 'spam',
-    });
-    expect(success).toBe(true);
-    expect(await isUserBlocked(blocker, target)).toBe(true);
-
-    const unblockSuccess = await unblockUser({
-      blockerId: blocker,
-      blockedId: target,
-    });
-    expect(unblockSuccess).toBe(true);
-    expect(await isUserBlocked(blocker, target)).toBe(false);
+  it('reports each side of a block', async () => {
+    vi.mocked(supabase.from).mockReturnValue(table({ data: [{ blocked_id: 'them' }], error: null }));
+    vi.mocked(supabase.rpc).mockResolvedValue({ data: ['them', 'blocker'], error: null } as any);
+    expect(await getBlockRelation('me', 'them')).toBe('blocked_by_me');
+    expect(await getBlockRelation('me', 'blocker')).toBe('blocked_me');
+    expect(await getBlockRelation('me', 'stranger')).toBe('none');
   });
 
-  it('handles concurrent blockUser calls without overwriting each other', async () => {
-    const blocker = 'user-1';
-    const targetA = 'user-2';
-    const targetB = 'user-3';
-
-    await Promise.all([
-      blockUser({ blockerId: blocker, blockedId: targetA }),
-      blockUser({ blockerId: blocker, blockedId: targetB }),
-    ]);
-
-    const list = await getBlockedUserIds(blocker);
-    expect(list).toContain(targetA);
-    expect(list).toContain(targetB);
-    expect(list.length).toBe(2);
+  it('fails soft when the block list cannot be read', async () => {
+    vi.mocked(supabase.from).mockReturnValue(table({ data: null, error: { message: 'offline' } }));
+    expect(await getBlockedUserIds('reader')).toEqual([]);
   });
 
-  it('completes blocking successfully even if reports insert encounters an error', async () => {
-    vi.mocked(supabase.from).mockReturnValueOnce({
-      insert: vi.fn().mockResolvedValueOnce({ error: { message: 'Database error' } }),
-    } as any);
+  it('surfaces a load failure to the settings screen instead of an empty list', async () => {
+    vi.mocked(supabase.from).mockReturnValue(table({ data: null, error: new Error('offline') }));
+    await expect(listBlockedUsers('reader')).rejects.toThrow('offline');
+  });
 
-    const blocker = 'user-1';
-    const target = 'user-99';
+  it('says when a block or unblock did not stick', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: { message: 'denied' } });
+    vi.mocked(supabase.from).mockReturnValue(table({ error: { message: 'denied' } }, upsert));
+    expect(await blockUser({ blockerId: 'a', blockedId: 'b' })).toBe(false);
+    expect(await unblockUser({ blockerId: 'a', blockedId: 'b' })).toBe(false);
+  });
 
-    const success = await blockUser({
-      blockerId: blocker,
-      blockedId: target,
-      reason: 'harassment',
-    });
+  it('caps the stored reason', async () => {
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(supabase.from).mockReturnValue(table({ error: null }, upsert));
+    expect(await blockUser({ blockerId: 'a', blockedId: 'b', reason: 'x'.repeat(500) })).toBe(true);
+    expect(upsert.mock.calls[0][0].reason).toHaveLength(200);
+  });
 
-    expect(success).toBe(true);
-    expect(await isUserBlocked(blocker, target)).toBe(true);
+  it('moves device-only blocks up once and clears them', async () => {
+    storage['carrinex_blocked_users_mover'] = JSON.stringify(['b', 'mover', 42]);
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    vi.mocked(supabase.from).mockReturnValue(table({ data: [], error: null }, upsert));
+    await getBlockedUserIds('mover');
+    await getBlockedUserIds('mover');
+    expect(upsert).toHaveBeenCalledTimes(1);
+    // Junk and self-blocks don't survive the move.
+    expect(upsert.mock.calls[0][0]).toEqual([{ blocker_id: 'mover', blocked_id: 'b' }]);
+    expect(storage['carrinex_blocked_users_mover']).toBeUndefined();
+  });
+
+  it('keeps device-only blocks if the move fails', async () => {
+    storage['carrinex_blocked_users_retry'] = JSON.stringify(['b']);
+    const upsert = vi.fn().mockResolvedValue({ error: { message: 'offline' } });
+    vi.mocked(supabase.from).mockReturnValue(table({ data: [], error: null }, upsert));
+    await getBlockedUserIds('retry');
+    expect(storage['carrinex_blocked_users_retry']).toBeDefined();
   });
 });

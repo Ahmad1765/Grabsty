@@ -472,7 +472,6 @@ export function SellForm({
     const [selected] = currentSlots.splice(index, 1);
     currentSlots.unshift(selected);
     setValue('slots', currentSlots, { shouldValidate: true });
-    toast.show('Cover photo updated', { variant: 'default', icon: 'check' });
   };
 
   const estimatedTile = useMemo(() => {
@@ -691,7 +690,7 @@ export function SellForm({
           price: updatedListing.price,
         });
 
-        toast.show('Listing updated', { variant: 'success', icon: 'check' });
+        toast.done('Listing updated');
         onClose();
       } catch (e: any) {
         Alert.alert('Could not save changes', e?.message ?? 'Unknown error');

@@ -341,10 +341,7 @@ export default function InvoiceScreen() {
       if (effectiveListingId) {
         queryClient.invalidateQueries({ queryKey: qk.listing(effectiveListingId) });
       }
-      toast.show('Order cancelled successfully', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Order cancelled successfully');
     } catch (e: any) {
       toast.show(e?.message || 'Failed to cancel order', {
         variant: 'default',
@@ -368,10 +365,7 @@ export default function InvoiceScreen() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
-      toast.show('Ready for pickup. Our courier will collect it from your address.', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Ready for pickup. Our courier will collect it from your address.');
     } catch (e: any) {
       toast.show(e?.message || 'Failed to update order status', {
         variant: 'default',
@@ -402,12 +396,9 @@ export default function InvoiceScreen() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
-      toast.show(
-        order.fulfillment_type === 'dropship'
+      toast.done(order.fulfillment_type === 'dropship'
           ? 'Sent to supplier for processing'
-          : 'Marked ready for pickup',
-        { variant: 'default', icon: 'check' },
-      );
+          : 'Marked ready for pickup', 'send');
     } catch (e: any) {
       toast.show(e?.message || 'Failed to update order status', {
         variant: 'default',
@@ -442,10 +433,7 @@ export default function InvoiceScreen() {
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
-      toast.show('Dispute opened. Funds placed on hold.', {
-        variant: 'default',
-        icon: 'shield',
-      });
+      toast.done('Dispute opened. Funds placed on hold.', 'shield');
     } catch (e: any) {
       toast.show(e?.message || 'Failed to open dispute', {
         variant: 'default',
@@ -477,10 +465,7 @@ export default function InvoiceScreen() {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
         queryClient.invalidateQueries({ queryKey: ['myOrders'] });
       }
-      toast.show('Order completed', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Order completed');
     } catch (e: any) {
       toast.show(e?.message || 'Could not confirm delivery. Please try again.', { variant: 'default', icon: 'alert-triangle' });
     } finally {
@@ -516,7 +501,7 @@ export default function InvoiceScreen() {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
         queryClient.invalidateQueries({ queryKey: ['myOrders'] });
       }
-      toast.show('Order completed. Thanks for confirming.', { variant: 'default', icon: 'check' });
+      toast.done('Order completed. Thanks for confirming.');
     } catch (e: any) {
       setOrder(previousOrder);
       toast.show(e?.message ?? 'Could not confirm the order', {

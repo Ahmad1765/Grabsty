@@ -146,11 +146,6 @@ export function AddressSheet({
         postal_code: loc.postal_code || s.postal_code,
         country: loc.country || s.country || 'Pakistan',
       }));
-
-      toast.show('Address updated from your location', {
-        variant: 'default',
-        icon: 'check',
-      });
     } catch (e: any) {
       toast.show(e?.message ?? 'Could not detect location', {
         variant: 'default',

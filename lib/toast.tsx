@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { View, Pressable, Animated, Easing, Platform, StyleSheet } from 'react-native';
+import { AccessibilityInfo, View, Pressable, Animated, Easing, Platform, StyleSheet } from 'react-native';
 // Text comes from the rnText shim, not react-native, so toast copy renders in
 // Inter on native instead of falling back to the OS system font.
 import { Text } from './rnText';
@@ -41,7 +41,13 @@ type ToastApi = {
       action?: ToastAction;
     },
   ) => void;
+  // Success feedback: a wordless animation instead of a message. `message` is
+  // never drawn, only announced to screen readers, so write it as the full
+  // sentence a blind user needs. Errors and instructions still use show().
+  done: (message: string, icon?: DoneIcon) => void;
 };
+
+type DoneIcon = keyof typeof Feather.glyphMap;
 
 const ToastContext = createContext<ToastApi | undefined>(undefined);
 
@@ -54,7 +60,98 @@ function variantStyles(v: ToastVariant) {
   return { bg: INK, fg: 'white', accent: 'rgba(255,255,255,0.12)', accentFg: 'white' };
 }
 
+// Pops in with a ring pulse, holds, and leaves. Runs on the native driver and
+// keeps all its state here, so the provider (and the app under it) never re-renders
+// per frame. 'send' flies its plane off so "sent" reads differently from "saved".
+function DoneBurst({ icon, onEnd }: { icon: DoneIcon; onEnd: () => void }) {
+  const [v] = useState(() => ({
+    scale: new Animated.Value(0.5),
+    opacity: new Animated.Value(0),
+    ring: new Animated.Value(0),
+    leave: new Animated.Value(0),
+  }));
+  const flies = icon === 'send';
+
+  useEffect(() => {
+    let stopped = false;
+    const timing = (value: Animated.Value, toValue: number, duration: number) =>
+      Animated.timing(value, { toValue, duration, easing: Easing.out(Easing.cubic), useNativeDriver: USE_NATIVE_DRIVER });
+    AccessibilityInfo.isReduceMotionEnabled()
+      .catch(() => false)
+      .then((reduced) => {
+        if (stopped) return;
+        if (reduced) v.scale.setValue(1);
+        Animated.sequence([
+          Animated.parallel([
+            timing(v.opacity, 1, 120),
+            ...(reduced
+              ? []
+              : [
+                  Animated.spring(v.scale, { toValue: 1, damping: 11, stiffness: 240, mass: 0.7, useNativeDriver: USE_NATIVE_DRIVER }),
+                  timing(v.ring, 1, 520),
+                ]),
+          ]),
+          Animated.delay(flies ? 120 : 380),
+          Animated.parallel([timing(v.leave, 1, 240), Animated.sequence([Animated.delay(flies ? 120 : 40), timing(v.opacity, 0, 160)])]),
+        ]).start(() => onEnd());
+      });
+    return () => {
+      stopped = true;
+    };
+    // One run per mount; a newer success remounts this via its key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <View
+      testID="done-animation"
+      style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center', zIndex: 10001, pointerEvents: 'none' }]}
+    >
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: 84,
+          height: 84,
+          borderRadius: 42,
+          borderWidth: 2,
+          borderColor: PURPLE,
+          opacity: v.ring.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.5, 0] }),
+          transform: [{ scale: v.ring.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }],
+        }}
+      />
+      <Animated.View
+        style={{
+          width: 84,
+          height: 84,
+          borderRadius: 42,
+          backgroundColor: PURPLE,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: v.opacity,
+          transform: [{ scale: v.scale }],
+        }}
+      >
+        <Animated.View
+          style={
+            flies
+              ? {
+                  transform: [
+                    { translateX: v.leave.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) },
+                    { translateY: v.leave.interpolate({ inputRange: [0, 1], outputRange: [0, -40] }) },
+                  ],
+                }
+              : undefined
+          }
+        >
+          <Feather name={icon} size={36} color="white" />
+        </Animated.View>
+      </Animated.View>
+    </View>
+  );
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const [doneBurst, setDoneBurst] = useState<{ id: number; icon: DoneIcon } | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [visible, setVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -166,11 +263,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   // propagation. `show` is already a stable useCallback, so the value only
   // needs to be pinned to it. Same fix every other provider in the tree
   // (Auth / GuestGate / SellSheet / DiscoverSheet) already carries.
-  const api = useMemo<ToastApi>(() => ({ show }), [show]);
+  const done: ToastApi['done'] = useCallback((message, icon = 'check') => {
+    setDoneBurst({ id: ++counter.current, icon });
+    AccessibilityInfo.announceForAccessibility(message);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+  }, []);
+
+  const api = useMemo<ToastApi>(() => ({ show, done }), [show, done]);
 
   return (
     <ToastContext.Provider value={api}>
       {children}
+      {doneBurst && (
+        <DoneBurst key={doneBurst.id} icon={doneBurst.icon} onEnd={() => setDoneBurst(null)} />
+      )}
       {visible && toast && v && (
         <Animated.View
           style={{
@@ -271,7 +379,7 @@ export function useToast(): ToastApi {
   if (!ctx) {
     // Soft fallback: allow components to call show() outside of provider in dev
     // without crashing. In production, provider is always mounted.
-    return { show: () => {} };
+    return { show: () => {}, done: () => {} };
   }
   return ctx;
 }

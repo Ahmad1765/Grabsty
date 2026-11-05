@@ -13,9 +13,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { User as AuthUser } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/lib/toast';
 import { confirm } from '@/lib/confirm';
-import { blockUser, unblockUser, isUserBlocked } from '@/lib/blocks';
+import { blockUser, unblockUser, getBlockRelation, refreshAfterBlockChange } from '@/lib/blocks';
 
 export type BlockStatus = 'loading' | 'blocked' | 'unblocked' | 'unavailable';
 
@@ -24,6 +25,7 @@ export function useConversationBlock(
   other: { id?: string; username?: string | null; full_name?: string | null } | null,
 ) {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const [blockStatus, setBlockStatus] = useState<BlockStatus>('loading');
   const [blockSheetOpen, setBlockSheetOpen] = useState(false);
   const isBlocked = blockStatus === 'blocked';
@@ -38,10 +40,12 @@ export function useConversationBlock(
     const currentReqId = ++blockCheckReqIdRef.current;
     setBlockStatus('loading');
 
-    isUserBlocked(user.id, other.id)
-      .then((blocked) => {
+    getBlockRelation(user.id, other.id)
+      .then((relation) => {
         if (!active || currentReqId !== blockCheckReqIdRef.current) return;
-        setBlockStatus(blocked ? 'blocked' : 'unblocked');
+        // 'unavailable' when they blocked you: the banner says messaging is off
+        // without announcing who did what.
+        setBlockStatus(relation === 'blocked_by_me' ? 'blocked' : relation === 'blocked_me' ? 'unavailable' : 'unblocked');
       })
       .catch((err) => {
         if (!active || currentReqId !== blockCheckReqIdRef.current) return;
@@ -71,7 +75,8 @@ export function useConversationBlock(
       const success = await unblockUser({ blockerId: user.id, blockedId: other.id });
       if (success) {
         setBlockStatus('unblocked');
-        toast.show(`Unblocked ${targetName}`);
+        toast.done(`Unblocked ${targetName}`);
+        refreshAfterBlockChange(queryClient);
       } else {
         setBlockStatus('blocked');
         toast.show('Failed to unblock user. Please try again.');
@@ -79,7 +84,7 @@ export function useConversationBlock(
     } else {
       setBlockSheetOpen(true);
     }
-  }, [user?.id, other?.id, other?.username, other?.full_name, isBlocked, toast]);
+  }, [user?.id, other?.id, other?.username, other?.full_name, isBlocked, toast, queryClient]);
 
   const handleBlockWithReason = useCallback(
     async (reasonLabel: string) => {
@@ -91,21 +96,18 @@ export function useConversationBlock(
       const success = await blockUser({
         blockerId: user.id,
         blockedId: other.id,
-        blockedUsername: other.username ?? undefined,
         reason: reasonLabel,
       });
 
       if (success) {
         setBlockStatus('blocked');
-        toast.show(`Blocked ${targetName}`, {
-          variant: 'default',
-          icon: 'slash',
-        });
+        toast.done(`Blocked ${targetName}`, 'slash');
+        refreshAfterBlockChange(queryClient);
       } else {
         toast.show('Failed to block user. Please try again.');
       }
     },
-    [user?.id, other?.id, other?.username, other?.full_name, toast],
+    [user?.id, other?.id, other?.username, other?.full_name, toast, queryClient],
   );
 
   return {

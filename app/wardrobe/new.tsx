@@ -47,7 +47,7 @@ function NewWardrobeInner() {
         faceHidden: false,
         bgRemoved: false,
       });
-      toast.show('Posted to your wardrobe', { variant: 'success', icon: 'check' });
+      toast.done('Posted to your wardrobe');
       router.back();
     } catch (e: any) {
       Alert.alert('Could not post', e?.message ?? 'Unknown error');

@@ -187,7 +187,7 @@ function LoginScreen() {
         });
         if (error) throw error;
         capture('signed_in', { method: 'password' });
-        toast.show('Welcome back', { variant: 'success', icon: 'check' });
+        toast.done('Welcome back');
         if (router.canDismiss()) router.dismiss();
         else router.replace('/(tabs)');
       } else {
@@ -198,7 +198,7 @@ function LoginScreen() {
         if (error) throw error;
         capture('signed_up', { method: 'password', needs_email_confirm: !data.session });
         if (data.session) {
-          toast.show('Account created', { variant: 'success', icon: 'check' });
+          toast.done('Account created');
           router.replace('/onboarding');
         } else {
           Alert.alert(
@@ -244,10 +244,7 @@ function LoginScreen() {
       });
       if (error) throw error;
       setForgotCooldown(60);
-      toast.show('Password reset link sent — check your inbox', {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done('Password reset link sent — check your inbox', 'send');
     } catch (e: any) {
       const msg = e?.message ?? '';
       if (/rate_limit|over_email_send_rate_limit|429|too many/i.test(msg)) {
@@ -278,7 +275,7 @@ function LoginScreen() {
     const r = await signInWithGoogle();
     setOauthLoading(false);
     if (r.ok) {
-      toast.show('Welcome', { variant: 'success', icon: 'check' });
+      toast.done('Welcome');
       if (router.canDismiss()) router.dismiss();
       else router.replace('/(tabs)');
     } else if (!r.cancelled) {
@@ -663,6 +660,12 @@ function LoginScreen() {
                         {forgotCooldown > 0 ? `Resend link (${forgotCooldown}s)` : 'Forgot password?'}
                       </Text>
                     </Pressable>
+                  )}
+                  {/* The send animation says it worked; this says what to do next. */}
+                  {mode === 'signin' && forgotCooldown > 0 && (
+                    <Text testID="reset-link-sent" style={{ fontSize: 13, color: colors.mute, marginTop: 6 }}>
+                      Reset link sent. Check your inbox.
+                    </Text>
                   )}
                 </View>
 

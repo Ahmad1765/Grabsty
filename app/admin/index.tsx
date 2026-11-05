@@ -367,7 +367,7 @@ export default function AdminConsoleScreen() {
       }
       await loadSupportMessages(selectedSupportConv.id);
 
-      toast.show('Reply sent to user', { variant: 'success', icon: 'check' });
+      toast.done('Reply sent to user', 'send');
 
       setSupportConvs((prev) =>
         prev.map((c) =>
@@ -394,7 +394,7 @@ export default function AdminConsoleScreen() {
   const copyText = async (text: string, label: string) => {
     tap('light');
     await Clipboard.setStringAsync(text);
-    toast.show(`${label} copied to clipboard`, { variant: 'default', icon: 'check' });
+    toast.done(`${label} copied to clipboard`, 'copy');
   };
 
   const dialPhone = (phone?: string | null) => {
@@ -437,10 +437,7 @@ export default function AdminConsoleScreen() {
         notes: extra.notes || null,
       });
 
-      toast.show(`Order updated to ${targetStatus.replace(/_/g, ' ')}`, {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(`Order updated to ${targetStatus.replace(/_/g, ' ')}`);
       setShowDispatchModal(false);
       setSelectedTx(null);
       loadAllData();
@@ -467,20 +464,14 @@ export default function AdminConsoleScreen() {
           targetStatus: 'COMPLETED_FUNDS_RELEASED',
           notes: `[ADMIN RESOLUTION - RELEASED TO SELLER]: ${disputeNotes}`,
         });
-        toast.show('Dispute resolved: Escrow released to seller', {
-          variant: 'success',
-          icon: 'check',
-        });
+        toast.done('Dispute resolved: Escrow released to seller');
       } else {
         await escrowService.advanceStatus({
           orderId: selectedTx.order_id,
           targetStatus: 'CANCELLED',
           cancelReason: `[ADMIN RESOLUTION - REFUNDED TO BUYER]: ${disputeNotes}`,
         });
-        toast.show('Dispute resolved: Escrow refunded to buyer', {
-          variant: 'success',
-          icon: 'check',
-        });
+        toast.done('Dispute resolved: Escrow refunded to buyer');
       }
 
       setShowDisputeModal(false);
@@ -508,10 +499,7 @@ export default function AdminConsoleScreen() {
       });
       if (error) throw error;
 
-      toast.show(`Seller verification ${decision}`, {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(`Seller verification ${decision}`);
       loadAllData();
     } catch (err: any) {
       toast.show(err?.message || 'Failed to update KYC status', {

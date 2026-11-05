@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { formatPrice } from '@/lib/currency';
+import { getBlockedUserIds } from '@/lib/blocks';
 import type { User, Listing } from '@/types';
 
 export type MessageKind = 'text' | 'offer' | 'system';
@@ -60,16 +61,16 @@ export interface ConversationRow {
   buyer_last_read_at?: string | null;
   seller_last_read_at?: string | null;
   listing?: Pick<Listing, 'id' | 'title' | 'price' | 'images' | 'thumbnails' | 'is_sold'> | null;
-  buyer?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales'> | null;
-  seller?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales'> | null;
+  buyer?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales' | 'is_verified'> | null;
+  seller?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales' | 'is_verified'> | null;
 }
 
 export const CONVERSATION_SELECT = `
   id, listing_id, buyer_id, seller_id, last_message, last_sender_id, updated_at,
   buyer_last_read_at, seller_last_read_at,
   listing:listings(id, title, price, images, thumbnails, is_sold),
-  buyer:profiles!conversations_buyer_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales),
-  seller:profiles!conversations_seller_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales)
+  buyer:profiles!conversations_buyer_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales, is_verified),
+  seller:profiles!conversations_seller_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales, is_verified)
 `;
 
 export async function listConversations(userId: string): Promise<ConversationRow[]> {
@@ -82,7 +83,12 @@ export async function listConversations(userId: string): Promise<ConversationRow
     console.warn('[chat] listConversations', error.message);
     return [];
   }
-  return (data ?? []) as unknown as ConversationRow[];
+  // A chat with someone you blocked leaves your inbox. Order updates still land
+  // in it, and unblocking brings it back.
+  const blocked = new Set(await getBlockedUserIds(userId));
+  return ((data ?? []) as unknown as ConversationRow[]).filter(
+    (c) => !blocked.has(c.buyer_id === userId ? c.seller_id : c.buyer_id),
+  );
 }
 
 export async function getConversation(conversationId: string): Promise<ConversationRow | null> {
@@ -142,6 +148,7 @@ export async function getOrCreateConversation(args: {
           .maybeSingle();
         return (again as unknown as ConversationRow) ?? null;
       }
+      if (error.code === '42501') throw new Error(error.message); // blocked pair
       console.warn('[chat] getOrCreateConversation', error.message);
       return null;
     }
@@ -182,6 +189,7 @@ export async function getOrCreateConversation(args: {
         .maybeSingle();
       return (again as unknown as ConversationRow) ?? null;
     }
+    if (error.code === '42501') throw new Error(error.message); // blocked pair
     console.warn('[chat] getOrCreateConversation direct', error.message);
     return null;
   }

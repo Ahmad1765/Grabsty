@@ -261,7 +261,7 @@ function ProfileScreenInner() {
         icon: 'alert-triangle',
       });
     } else if (shared) {
-      toast.show('Profile shared successfully!', { variant: 'success', icon: 'check-circle' });
+      toast.done('Profile shared successfully!');
     }
   }, [profileId, profileUsername, toast]);
 

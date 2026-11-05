@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
 
+vi.mock('@/lib/toast', () => ({ useToast: () => ({ show: vi.fn(), done: vi.fn() }) }));
+
 vi.mock('react', async () => {
   const actual = await vi.importActual<any>('react');
   return {

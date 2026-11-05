@@ -39,7 +39,7 @@ import {
   type PaymentMethodOption,
   type SelectedPaymentMethod,
 } from '@/components/payment/PaymentOptionsModal';
-import { paymentService, normalizeAddressInput } from '@/lib/paymentService';
+import { paymentService, normalizeAddressInput, isDemoMode } from '@/lib/paymentService';
 import { ShippingAddressSchema } from '@/lib/schemas/order';
 import { getOrCreateConversation, cancelBundleOffersForSoldItem } from '@/lib/chat';
 import { SELECT_LISTING_WITH_SELLER } from '@/lib/listings';
@@ -114,7 +114,7 @@ export default function PaymentScreen() {
   const { user, profile, loading: authLoading } = useAuth();
   const toast = useToast();
 
-  const isDemo = id === 'demo' || !id;
+  const isDemo = isDemoMode() && (id === 'demo' || !id);
 
   const listingQ = useListingQuery(id && !isDemo ? String(id) : null);
   const fetchedListing = listingQ.data ?? null;
@@ -490,7 +490,7 @@ export default function PaymentScreen() {
     setAddressSheetOpen(false);
 
     if (isDemo || !user?.id) {
-      toast.show('Shipping address updated', { variant: 'default', icon: 'check' });
+      toast.done('Shipping address updated');
       return;
     }
 
@@ -548,7 +548,7 @@ export default function PaymentScreen() {
       if (savedAddress) {
         setShippingAddress(savedAddress);
       }
-      toast.show('Shipping address saved', { variant: 'default', icon: 'check' });
+      toast.done('Shipping address saved');
     } catch (err: any) {
       setShippingAddress(previousAddress);
       toast.show(err?.message || 'Could not save address. Please try again.', {
@@ -712,7 +712,7 @@ export default function PaymentScreen() {
     } catch (e: any) {
       // Seller deleted/sold the item while the buyer sat on checkout: say so
       // plainly and leave, instead of a cut-off DB message on a dead screen.
-      if (/not found|already sold|been sold/i.test(e?.message ?? '')) {
+      if (/not found|already sold|been sold|no longer available/i.test(e?.message ?? '')) {
         queryClient.invalidateQueries({ queryKey: qk.listing(String(listing.id)) });
         toast.show('This item is no longer available', { variant: 'default', icon: 'alert-triangle' });
         router.back();

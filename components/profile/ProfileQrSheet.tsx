@@ -43,7 +43,6 @@ export function ProfileQrSheet({
     const ok = await copyInviteLink(username);
     if (ok) {
       setCopied(true);
-      toast.show('Profile link copied to clipboard', { variant: 'default', icon: 'check' });
       if (copyTimeoutRef.current) {
         clearTimeout(copyTimeoutRef.current);
       }
@@ -57,7 +56,7 @@ export function ProfileQrSheet({
     tap('light');
     const res = await shareInviteLink(username, fullName);
     if (res.action === 'copied') {
-      toast.show('Profile link copied to clipboard', { variant: 'default', icon: 'check' });
+      setCopied(true);
     }
   };
 

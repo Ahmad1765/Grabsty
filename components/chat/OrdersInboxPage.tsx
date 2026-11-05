@@ -12,6 +12,7 @@ import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import { router, useFocusEffect } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
+import { useToast } from '@/lib/toast';
 import { tap } from '@/lib/haptics';
 import { type as typography, tabularNumberStyle } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
@@ -334,7 +335,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
   const sell = useSellSheet();
   const [subTab, setSubTab] = useState<OrderSide>(initialSide);
   const [filter, setFilter] = useState<FilterStatus>('in_progress');
-  const [showToast, setShowToast] = useState(justPaid === '1' || justPaid === '0');
+  const toast = useToast();
   const listRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -354,12 +355,14 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
 
   useEffect(() => {
     if (justPaid === '1' || justPaid === '0') {
-      setShowToast(true);
       refetch();
-      const timer = setTimeout(() => setShowToast(false), 7000);
-      return () => clearTimeout(timer);
+      toast.done(
+        justPaid === '1'
+          ? `Payment successful. Your order${recentTitle ? ` for ${recentTitle}` : ''} is confirmed.`
+          : `Order placed${recentTitle ? ` for ${recentTitle}` : ''}. Pay cash on delivery.`,
+      );
     }
-  }, [justPaid, refetch]);
+  }, [justPaid, recentTitle, refetch, toast]);
 
   // When switching filter or subTab, cleanly reset scroll position on iOS
   useEffect(() => {
@@ -417,39 +420,6 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
         overflow: 'hidden',
       }}
     >
-      {/* Toast banner after checkout */}
-      {showToast && (
-        <View
-          style={{
-            marginHorizontal: 16,
-            marginTop: 8,
-            marginBottom: 4,
-            padding: 12,
-            borderRadius: 12,
-            backgroundColor: isDark ? 'rgba(108, 71, 255, 0.14)' : 'rgba(108, 71, 255, 0.08)',
-            borderWidth: 1,
-            borderColor: isDark ? 'rgba(108, 71, 255, 0.28)' : 'rgba(108, 71, 255, 0.20)',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-            flexShrink: 0,
-          }}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
-            <Feather name="check-circle" size={16} color="#6C47FF" />
-            <Text style={{ fontSize: 13, color: theme.ink, fontFamily: typography.family.sansMedium, flex: 1 }}>
-              {justPaid === '1'
-                ? `Payment successful! Your order${recentTitle ? ` for "${recentTitle}"` : ''} is confirmed.`
-                : `Order placed! Cash on delivery confirmed${recentTitle ? ` for "${recentTitle}"` : ''}.`}
-            </Text>
-          </View>
-          <Pressable onPress={() => setShowToast(false)} hitSlop={8}>
-            <Feather name="x" size={15} color={theme.mute} />
-          </Pressable>
-        </View>
-      )}
-
       {/* Sub-toggle: Purchases | Selling */}
       <View
         style={{

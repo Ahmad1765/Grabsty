@@ -15,6 +15,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { isConversationUnread, otherParticipant, type ConversationRow } from '@/lib/chat';
 import { ListingThumb, listingStatus } from './ListingThumb';
 import { relativeTime } from './format';
+import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 
 function InboxRowImpl({
   conv,
@@ -96,17 +97,21 @@ function InboxRowImpl({
       </View>
 
       <View style={{ flex: 1, minWidth: 0 }}>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: typography.family.sansBold,
-            fontSize: 15,
-            letterSpacing: -0.2,
-            color: theme.ink,
-          }}
-        >
-          {displayName}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Text
+            numberOfLines={1}
+            style={{
+              flexShrink: 1,
+              fontFamily: typography.family.sansBold,
+              fontSize: 15,
+              letterSpacing: -0.2,
+              color: theme.ink,
+            }}
+          >
+            {displayName}
+          </Text>
+          {other?.is_verified && <ShieldCheckIcon size={15} />}
+        </View>
         <Text
           numberOfLines={1}
           style={{

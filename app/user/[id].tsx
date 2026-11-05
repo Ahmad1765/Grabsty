@@ -51,6 +51,8 @@ import { ListingCard } from '@/components/ListingCard';
 import { ProfileQrSheet } from '@/components/profile/ProfileQrSheet';
 import { StatusFilterChips } from '@/components/profile/StatusFilterChips';
 import { useUserSafetyActions } from '@/hooks/useUserSafetyActions';
+import { useQuery } from '@tanstack/react-query';
+import { getBlockRelation } from '@/lib/blocks';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 type SellerTab = 'shop' | 'liked' | 'collections';
@@ -145,6 +147,16 @@ export default function UserProfileScreen() {
       safeBack();
     },
   });
+
+  const blockRelationQ = useQuery({
+    queryKey: ['blockRelation', authUser?.id, profileId],
+    enabled: !!authUser && !!profileId && authUser.id !== profileId,
+    queryFn: () => getBlockRelation(authUser!.id, profileId!),
+    // Never trust a cached or restored answer: this decides which actions show.
+    staleTime: 0,
+    gcTime: 0,
+  });
+  const isBlockedByMe = blockRelationQ.data === 'blocked_by_me';
 
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [showQrSheet, setShowQrSheet] = useState(false);
@@ -268,7 +280,8 @@ export default function UserProfileScreen() {
     );
   }
 
-  if (!profile) {
+  // Someone who blocked you reads as a profile that isn't there.
+  if (!profile || blockRelationQ.data === 'blocked_me') {
     return (
       <SafeContainer edges={['top', 'left', 'right']} backgroundColor={colors.background} style={{ flex: 1 }}>
         <View style={{ padding: 14, flexDirection: 'row', alignItems: 'center' }}>
@@ -421,6 +434,27 @@ export default function UserProfileScreen() {
               >
                 {!isSelf ? (
                   <>
+                    {isBlockedByMe ? (
+                    <Pressable
+                      testID="profile-unblock"
+                      onPress={() => safety.unblockUser(profile.id, profile.username)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Unblock"
+                      style={({ pressed }) => ({
+                        height: 36,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
+                        borderRadius: radii.pill,
+                        backgroundColor: colors.ink,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: pressed ? 0.75 : 1,
+                      })}
+                    >
+                      <Text style={{ fontSize: 14.5, fontWeight: '600', color: colors.background }}>Unblock</Text>
+                    </Pressable>
+                    ) : (
+                    <>
                     <Pressable
                       onPress={handleFollowToggle}
                       disabled={followBusy}
@@ -477,6 +511,9 @@ export default function UserProfileScreen() {
                         </Text>
                       )}
                     </Pressable>
+
+                    </>
+                    )}
 
                     <Pressable
                       onPress={handleShare}
@@ -960,6 +997,8 @@ export default function UserProfileScreen() {
 
           {!isSelf ? (
             <>
+              {!isBlockedByMe && (
+              <>
               {/* Follow / Unfollow */}
               <Pressable
                 onPress={() => {
@@ -1042,6 +1081,9 @@ export default function UserProfileScreen() {
                 <Feather name="chevron-right" size={16} color={colors.mute} />
               </Pressable>
 
+              </>
+              )}
+
               {/* Report User */}
               <Pressable
                 onPress={() => {
@@ -1087,7 +1129,8 @@ export default function UserProfileScreen() {
               <Pressable
                 onPress={() => {
                   setMoreOptionsOpen(false);
-                  safety.blockUser(profile.id, profile.username);
+                  if (isBlockedByMe) safety.unblockUser(profile.id, profile.username);
+                  else safety.blockUser(profile.id, profile.username);
                 }}
                 style={({ pressed }) => ({
                   flexDirection: 'row',
@@ -1115,10 +1158,10 @@ export default function UserProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 15, fontWeight: '700', color: '#EF4444' }}>
-                    Block user
+                    {isBlockedByMe ? 'Unblock user' : 'Block user'}
                   </Text>
                   <Text style={{ fontSize: 12.5, color: colors.mute }}>
-                    Hide all items and prevent future messages
+                    {isBlockedByMe ? 'Allow messages, offers and purchases again' : 'Hide all items and prevent future messages'}
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={16} color="#EF4444" />

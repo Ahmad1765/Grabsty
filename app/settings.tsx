@@ -286,6 +286,22 @@ export default function SettingsScreen() {
 
             {session && (
               <ChatGPTRow
+                label="Blocked accounts"
+                desc="See who you've blocked and unblock them"
+              >
+                <ChatGPTButton
+                  label="Manage"
+                  icon="slash"
+                  onPress={() => {
+                    tap('light');
+                    router.push('/blocked' as any);
+                  }}
+                />
+              </ChatGPTRow>
+            )}
+
+            {session && (
+              <ChatGPTRow
                 label="Sign out"
                 desc="Sign out of your account on this device"
               >

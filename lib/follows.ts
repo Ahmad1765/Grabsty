@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { escapeSearchQuery } from '@/lib/search';
+import { getBlockPeerIds } from '@/lib/blocks';
 
 export type FollowState = {
   followersCount: number;
@@ -225,7 +226,8 @@ export async function searchUsers(query: string, limit = 20): Promise<FollowList
     console.warn('[follows] searchUsers', error.message);
     return [];
   }
-  return (data ?? []).map((row: any) => ({
+  const hidden = new Set(await getBlockPeerIds());
+  return (data ?? []).filter((row: any) => !hidden.has(row.id)).map((row: any) => ({
     id: row.id,
     username: row.username,
     full_name: row.full_name,
