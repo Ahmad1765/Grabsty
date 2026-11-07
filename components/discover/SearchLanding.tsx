@@ -4,8 +4,8 @@
 //                          "See all" opens app/top-sellers.tsx
 //                          (public top_sellers_week RPC: 7-day sales, then all-time)
 //   3. Popular brands    - the most-listed brands in the live feed
-//   4. Freshly Out       - listings ranked for this buyer (get_recommendations),
-//                          feed order when signed out
+//   4. Freshly Out       - the newest unsold listings (created_at desc), own items
+//                          hidden; "See all" opens Home sorted by New
 //
 // Complies with UI_GUARDRAILS.md (three-hue palette, 30px chips, Inter via rnText,
 // inline styles on Pressable).
@@ -26,7 +26,7 @@ import { CATEGORIES, type CategoryId } from '@/lib/categories';
 import { type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 
-import { useRecommendationsQuery } from '@/lib/queries/useFeedQueries';
+import { useFeedListingsQuery } from '@/lib/queries/useFeedQueries';
 import { ListingCard } from '@/components/ListingCard';
 
 import type { SortKey } from '@/lib/listings';
@@ -98,9 +98,8 @@ export function SearchLanding({
   const contentWidth = Math.min(width, SHEET_MAX);
   const { data: topSellers = [] } = useTopSellersWeek();
 
-  // Listings ranked for this buyer by get_recommendations (likes, saves, purchases, views →
-  // category/brand/price affinity). Signed-out users get [] and fall back to feed order.
-  const { data: recs = [] } = useRecommendationsQuery(userId ?? null, 48);
+  // Newest unsold listings. Over-fetch so hiding the viewer's own items still fills 12.
+  const { data: newest = [] } = useFeedListingsQuery({ tab: 'for_you', sort: 'newest', limit: 24 });
 
   // Most-listed brands in the live feed sample.
   const popularBrands = useMemo(() => {
@@ -175,17 +174,10 @@ export function SearchLanding({
     Math.floor((contentWidth - PAD * 2 - GRID_GAP) / 2),
     { horizontalPadding: PAD, gap: GRID_GAP, columns: 2 },
   );
-  const picks = useMemo(() => {
-    const seen = new Set<string>();
-    const out: Listing[] = [];
-    for (const l of [...recs, ...listings]) {
-      if (!l?.id || seen.has(l.id) || l.is_sold || (userId && l.seller_id === userId)) continue;
-      seen.add(l.id);
-      out.push(l);
-      if (out.length === 12) break;
-    }
-    return out;
-  }, [recs, listings, userId]);
+  const picks = useMemo(
+    () => newest.filter((l) => !l.is_sold && (!userId || l.seller_id !== userId)).slice(0, 12),
+    [newest, userId],
+  );
 
   return (
     <View style={{ paddingTop: 20, gap: 28 }}>
@@ -308,7 +300,21 @@ export function SearchLanding({
 
       {picks.length > 0 && (
         <View>
-          <SectionTitle>Freshly Out</SectionTitle>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', paddingRight: PAD }}>
+            <SectionTitle>Freshly Out</SectionTitle>
+            <Pressable
+              onPress={() => {
+                haptic();
+                onSort('newest', 'New', 'clock');
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="See all new listings"
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ fontSize: 13, fontFamily: type.family.sansMedium, color: theme.mute }}>See all</Text>
+            </Pressable>
+          </View>
           <CardGrid
             gridRef={gridRef}
             onLayout={onGridLayout}

@@ -358,9 +358,6 @@ export default function UserProfileScreen() {
                   <Text style={{ fontSize: 13.5, color: colors.mute, fontWeight: '500' }}>
                     @{profile.username}
                   </Text>
-                  {profile.is_verified && (
-                    <ShieldCheckIcon size={15} />
-                  )}
                 </View>
 
               </View>
