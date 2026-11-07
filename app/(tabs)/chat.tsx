@@ -11,6 +11,7 @@ import {
   LayoutChangeEvent,
   ScrollView,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -34,7 +35,15 @@ import {
 import { useInboxQuery } from '@/lib/queries';
 import { markActivitySeen } from '@/hooks/useActivityDot';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
-import { isThisDeviceRegistered, pushSupported } from '@/lib/notifications';
+import {
+  dismissPushBanner,
+  ensurePermissionAndRegister,
+  isPushBannerDismissed,
+  isThisDeviceRegistered,
+  pushSupported,
+  webPushBlocked,
+} from '@/lib/notifications';
+import { useToast } from '@/lib/toast';
 import { radii, shadow, type as typography } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { EmptyState, BellIcon } from '@/components/ui';
@@ -584,7 +593,7 @@ function SupportPage({
   );
 }
 
-function PushNotificationBanner({ onDismiss }: { onDismiss: () => void }) {
+function PushNotificationBanner({ onEnable, onDismiss }: { onEnable: () => void; onDismiss: () => void }) {
   const { theme } = useTheme();
   const bottom = useTabBarClearance();
   return (
@@ -647,7 +656,7 @@ function PushNotificationBanner({ onDismiss }: { onDismiss: () => void }) {
         hitSlop={HIT_SLOP_8}
         onPress={() => {
           haptic();
-          router.push('/settings?open=enhance' as any);
+          onEnable();
         }}
         style={({ pressed }) => ({
           paddingHorizontal: 13,
@@ -739,7 +748,8 @@ export default function InboxScreen() {
       let cancelled = false;
       isThisDeviceRegistered()
         .then((on) => {
-          if (!cancelled) setPushReady(on);
+          // A blocked browser can't be re-asked from here, so treat it as settled.
+          if (!cancelled) setPushReady(on || webPushBlocked());
         })
         .catch(() => {});
       return () => {
@@ -747,6 +757,35 @@ export default function InboxScreen() {
       };
     }, [user]),
   );
+  useEffect(() => {
+    isPushBannerDismissed().then((d) => d && setBannerDismissed(true));
+  }, []);
+  const toast = useToast();
+  const enablingPush = useRef(false);
+  const enablePush = useCallback(async () => {
+    if (!user || enablingPush.current) return;
+    enablingPush.current = true;
+    try {
+      const { granted, blocked } = await ensurePermissionAndRegister(user.id);
+      if (granted) {
+        setPushReady(true);
+        toast.show('Notifications are on', { variant: 'success', icon: 'bell' });
+      } else if (blocked && Platform.OS === 'web') {
+        setPushReady(true);
+        toast.show("Notifications are blocked for this site. Allow them in your browser's site settings.", {
+          variant: 'info',
+          icon: 'bell',
+        });
+      } else if (blocked) {
+        toast.show('Enable notifications in system settings', { variant: 'info', icon: 'bell' });
+        Linking.openSettings().catch(() => {});
+      } else {
+        toast.show('Notifications not enabled', { variant: 'info', icon: 'bell' });
+      }
+    } finally {
+      enablingPush.current = false;
+    }
+  }, [user, toast]);
   const [pagerHeight, setPagerHeight] = useState(0);
 
   const onPagerLayout = useCallback((e: LayoutChangeEvent) => {
@@ -1038,7 +1077,13 @@ export default function InboxScreen() {
 
       {/* Push notification banner */}
       {!bannerDismissed && user && pushReady === false && (
-        <PushNotificationBanner onDismiss={() => setBannerDismissed(true)} />
+        <PushNotificationBanner
+          onEnable={enablePush}
+          onDismiss={() => {
+            setBannerDismissed(true);
+            dismissPushBanner();
+          }}
+        />
       )}
     </SafeAreaView>
   );

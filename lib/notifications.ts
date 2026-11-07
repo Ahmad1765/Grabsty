@@ -299,6 +299,30 @@ export async function hasPromptedForPush(): Promise<boolean> {
   }
 }
 
+/** Browser has notifications blocked for this site: only its site settings can undo that. */
+export function webPushBlocked(): boolean {
+  return IS_WEB && webPermission() === 'denied';
+}
+
+const BANNER_DISMISSED_KEY = 'push_banner_dismissed';
+
+/** The Activity "Turn on notifications" card, once closed, stays closed on this device. */
+export async function isPushBannerDismissed(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(BANNER_DISMISSED_KEY)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+export async function dismissPushBanner(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(BANNER_DISMISSED_KEY, '1');
+  } catch {
+    // Non-fatal: the card shows again next visit.
+  }
+}
+
 export async function markPromptedForPush(): Promise<void> {
   try {
     await AsyncStorage.setItem(PROMPTED_KEY, '1');
