@@ -56,6 +56,8 @@ module.exports = () => ({
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.grabsty.app',
+      // Only standard HTTPS: skips App Store Connect's export-compliance question on every build.
+      config: { usesNonExemptEncryption: false },
       infoPlist: {
         NSContactsUsageDescription: 'Allow Grabsty to access your contacts to find friends on the app.',
         NSCameraUsageDescription: 'Grabsty needs camera access to take photos of items to sell.',
@@ -179,7 +181,6 @@ module.exports = () => ({
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-      sentryDebug: process.env.EXPO_PUBLIC_SENTRY_DEBUG,
       posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY,
       posthogHost: process.env.EXPO_PUBLIC_POSTHOG_HOST,
     },

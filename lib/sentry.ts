@@ -12,7 +12,6 @@ import { redactData, redactUrl } from '@/lib/sentryScrub';
 // supabase client uses, so a fresh `expo start` always picks up .env.local.
 const extra = (Constants.expoConfig?.extra ?? {}) as {
   sentryDsn?: string;
-  sentryDebug?: string;
 };
 const dsn = (extra.sentryDsn ?? process.env.EXPO_PUBLIC_SENTRY_DSN ?? '').trim();
 
@@ -20,8 +19,7 @@ const dsn = (extra.sentryDsn ?? process.env.EXPO_PUBLIC_SENTRY_DSN ?? '').trim()
 // EXPO_PUBLIC_SENTRY_DEBUG=1 in .env.local + restart with `--clear` to verify
 // the Sentry connection locally. Leave it unset normally so dev noise never
 // reaches the dashboard.
-const debugEnabled =
-  (extra.sentryDebug ?? process.env.EXPO_PUBLIC_SENTRY_DEBUG ?? '').trim() === '1';
+const debugEnabled = (process.env.EXPO_PUBLIC_SENTRY_DEBUG ?? '').trim() === '1';
 
 // A DSN is the only thing that turns reporting on. No DSN → every helper below
 // becomes a no-op, so local dev and PR previews stay silent unless you opt in.
