@@ -50,7 +50,7 @@ import {
 import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
 import { AdminUsers } from '@/components/admin/AdminUsers';
 import type { EscrowStatus, Verification } from '@/types';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   fetchAdminSupportConversations,
   fetchAdminSupportMessages,
@@ -2038,7 +2038,7 @@ export default function AdminConsoleScreen() {
                                           <Text style={{ fontSize: 11, fontWeight: '700', color: theme.purple }}>
                                             Grabsty Support
                                           </Text>
-                                          <ShieldCheckIcon size={12} />
+                                          <VerifiedBadge size={12} />
                                         </>
                                       ) : (
                                         <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textMuted }}>

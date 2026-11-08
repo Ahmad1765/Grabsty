@@ -8,7 +8,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { type as typography } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { HIT_SLOP_8 } from '@/lib/responsive';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 export function ThreadHeader({
   name,
@@ -155,7 +155,7 @@ export function ThreadHeader({
             >
               {name}
             </Text>
-            {verified && <ShieldCheckIcon size={15} />}
+            {verified && <VerifiedBadge size={15} />}
           </View>
           {subtitle ? (
             <Text

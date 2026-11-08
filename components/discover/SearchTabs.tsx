@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { fetchFollowingMask, toggleFollow } from '@/lib/follows';
 import { useToast } from '@/lib/toast';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { useTheme } from '@/context/ThemeContext';
 import { radii, type } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
@@ -186,7 +186,7 @@ function UserRow({
           >
             {user.full_name || user.username}
           </Text>
-          {user.is_verified && <ShieldCheckIcon size={14} />}
+          {user.is_verified && <VerifiedBadge size={14} />}
         </View>
 
         <Text style={{ fontSize: 12.5, color: colors.mute, marginTop: 1 }} numberOfLines={1}>

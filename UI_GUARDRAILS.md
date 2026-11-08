@@ -130,7 +130,7 @@ These rules protect the runtime from silent crashes, style collapse, and mobile/
   - In effects, depend on stable `scrollToBottom` callback references instead of volatile hook objects.
 
 ### Rule 2.7: Strict Mercari Buyer Protection Shield Geometry (`components/ui/ShieldCheckIcon.tsx`)
-- **The Invariant:** All buyer protection and seller verification marks across the entire application **MUST** strictly use the canonical Mercari shield and checkmark design implemented in `<ShieldCheckIcon>` (`@/components/ui/ShieldCheckIcon`). The icon renders inside a `0 0 24 24` viewBox with a scaled Mercari group transform:
+- **The Invariant:** All buyer protection marks (verified-account marks next to names use `<VerifiedBadge>` instead) across the entire application **MUST** strictly use the canonical Mercari shield and checkmark design implemented in `<ShieldCheckIcon>` (`@/components/ui/ShieldCheckIcon`). The icon renders inside a `0 0 24 24` viewBox with a scaled Mercari group transform:
   - **Group Transform:** `<G transform="translate(-5.4, -5.4) scale(1.45)">` (precisely maps Mercari's original 48x48 vector geometry to the canonical 24x24 viewBox).
   - **Mercari Shield Path:**
     `d="M12.033 6.8s-2.93 1.424-5.833 1.424v.168c0 .838.044 1.634.154 2.367.33 2.47 1.233 4.398 2.729 6.01l.066.084c.594.628 1.255 1.131 1.937 1.529.198.125.925.419.925.419s.726-.293.925-.419c.704-.377 1.343-.9 1.937-1.529l.066-.084c1.035-1.11 1.783-2.387 2.245-3.874.22-.67.33-1.361.44-2.136.088-.733.176-1.529.176-2.367v-.168c-2.833 0-5.767-1.424-5.767-1.424z"`

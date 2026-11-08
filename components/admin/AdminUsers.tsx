@@ -11,7 +11,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { supabase } from '@/lib/supabase';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { timeAgo } from '@/components/product/shared';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 type Sort = 'newest' | 'oldest' | 'active' | 'listings' | 'sales' | 'purchases' | 'offers';
 type Filter = 'all' | 'sellers' | 'buyers' | 'verified' | 'admins';
@@ -408,7 +408,7 @@ export function AdminUsers() {
                           >
                             {name}
                           </Text>
-                          {u.is_verified && <ShieldCheckIcon size={14} />}
+                          {u.is_verified && <VerifiedBadge size={14} />}
                           {u.is_admin && (
                             <View
                               style={{

@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { shadow } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { getOptimizedImageUrl } from '@/lib/images';
@@ -185,11 +185,12 @@ export function ProfileBanner({
                 right: -2,
                 bottom: -2,
                 borderRadius: 14,
+                backgroundColor: colors.background,
                 borderWidth: 2,
                 borderColor: colors.background,
               }}
             >
-              <ShieldCheckIcon size={24} />
+              <VerifiedBadge size={22} />
             </View>
           ) : null}
 

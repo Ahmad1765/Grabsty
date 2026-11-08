@@ -25,7 +25,7 @@ import { safeBack } from '@/lib/nav';
 import { radii, type as typography, shadow } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH, HIT_SLOP_8 } from '@/lib/responsive';
 import { PressableScale } from '@/components/PressableScale';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { searchUsers, fetchSuggestedFollows, toggleFollow, type FollowListRow } from '@/lib/follows';
 import {
@@ -1056,7 +1056,7 @@ export default function FriendsScreen() {
 }
 
 /**
- * Reusable User Row with quiet luxury styling and unified <ShieldCheckIcon>.
+ * Reusable User Row with quiet luxury styling and unified <VerifiedBadge>.
  */
 function UserRow({
   user,
@@ -1125,7 +1125,7 @@ function UserRow({
           >
             {displayName}
           </Text>
-          {user.is_verified && <ShieldCheckIcon size={14} />}
+          {user.is_verified && <VerifiedBadge size={14} />}
         </View>
         <Text style={{ fontSize: 12, color: theme.mute, marginTop: 1 }} numberOfLines={1}>
           {handle}

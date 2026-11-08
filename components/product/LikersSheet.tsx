@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useFollowStateQuery, useToggleFollow, useListingLikersQuery } from '@/lib/queries';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl } from '@/lib/images';
 
 import type { ListingLiker } from '@/types';
@@ -97,7 +97,7 @@ function LikerRow({ liker, onClose }: { liker: ListingLiker; onClose: () => void
             >
               {liker.full_name || liker.username}
             </Text>
-            {liker.is_verified && <ShieldCheckIcon size={14} />}
+            {liker.is_verified && <VerifiedBadge size={14} />}
           </View>
           <Text
             numberOfLines={1}

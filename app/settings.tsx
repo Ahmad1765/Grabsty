@@ -36,6 +36,7 @@ import { safeBack } from '@/lib/nav';
 import { tap } from '@/lib/haptics';
 import { useTheme } from '@/context/ThemeContext';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { bp } from '@/lib/responsive';
 import { BRAND } from '@/lib/brand';
@@ -203,7 +204,7 @@ export default function SettingsScreen() {
                     </Text>
                     {profile.is_verified && (
                       <View style={{ marginLeft: 6 }}>
-                        <ShieldCheckIcon size={16} />
+                        <VerifiedBadge size={16} />
                       </View>
                     )}
                   </View>

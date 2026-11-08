@@ -15,7 +15,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { isConversationUnread, otherParticipant, type ConversationRow } from '@/lib/chat';
 import { ListingThumb, listingStatus } from './ListingThumb';
 import { relativeTime } from './format';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 function InboxRowImpl({
   conv,
@@ -110,7 +110,7 @@ function InboxRowImpl({
           >
             {displayName}
           </Text>
-          {other?.is_verified && <ShieldCheckIcon size={15} />}
+          {other?.is_verified && <VerifiedBadge size={15} />}
         </View>
         <Text
           numberOfLines={1}
