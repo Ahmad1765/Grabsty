@@ -22,6 +22,7 @@ import { queryClient } from '@/lib/queryClient';
 import { qk } from '@/lib/queries/keys';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
+import { isDeliverableCountry, NOT_DELIVERABLE_MESSAGE } from '@/lib/delivery';
 import { safeBack } from '@/lib/nav';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { supabase } from '@/lib/supabase';
@@ -612,9 +613,8 @@ export default function PaymentScreen() {
       }
 
       // Mirrors the server rule (pakistan_only_orders) so the buyer hears it before paying.
-      const country = (shippingAddress.country || '').trim().toLowerCase();
-      if (country && !['pakistan', 'pk', 'pak'].includes(country)) {
-        toast.show("Grabsty isn't available in your country yet. We only deliver within Pakistan.", {
+      if (!isDeliverableCountry(shippingAddress.country)) {
+        toast.show(NOT_DELIVERABLE_MESSAGE, {
           variant: 'default',
           icon: 'globe',
         });
