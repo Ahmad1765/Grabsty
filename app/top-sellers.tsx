@@ -7,7 +7,7 @@
 // green/red movement arrows), 30px pill tabs, Inter via rnText, inline Pressable styles.
 
 import { useMemo, useState } from 'react';
-import { View, Pressable, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Pressable, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
@@ -140,7 +140,7 @@ export default function TopSellersScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.surface }}>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + 8,
@@ -160,7 +160,7 @@ export default function TopSellersScreen() {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: theme.panel,
+            backgroundColor: theme.surface,
             alignItems: 'center',
             justifyContent: 'center',
             opacity: pressed ? 0.7 : 1,
@@ -190,7 +190,7 @@ export default function TopSellersScreen() {
             {empty}
           </Text>
         ) : (
-          <View style={{ gap: 12 }}>
+          <View>
             {rows.map((r, i) => (
               <Pressable
                 key={r.id}
@@ -204,9 +204,10 @@ export default function TopSellersScreen() {
                   flexDirection: 'row',
                   alignItems: 'center',
                   gap: 14,
-                  padding: 12,
-                  borderRadius: 16,
-                  backgroundColor: theme.panel,
+                  paddingVertical: 12,
+                  // Plain list on the page background, like Settings and Followers.
+                  borderBottomWidth: i < rows.length - 1 ? StyleSheet.hairlineWidth : 0,
+                  borderBottomColor: theme.border,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
@@ -244,7 +245,7 @@ export default function TopSellersScreen() {
                       borderRadius: 12,
                       backgroundColor: isDark ? theme.surface : '#F2F3FE',
                       borderWidth: 2,
-                      borderColor: theme.panel,
+                      borderColor: theme.background,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
