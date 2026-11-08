@@ -39,6 +39,39 @@ async function sha256Hex(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Web: draws Google's own button into `el` (the login screen lays it invisibly
+ * over its styled button). Google's popup then names Grabsty instead of the
+ * Supabase domain the redirect flow shows. Resolves false when unavailable,
+ * so the caller keeps the redirect flow.
+ */
+export async function renderGoogleWebButton(
+  el: HTMLElement,
+  onResult: (r: { ok: true } | { ok: false; error: string }) => void,
+): Promise<boolean> {
+  if (Platform.OS !== 'web' || !CLIENT_ID) return false;
+  await loadGsi();
+  const nonce = crypto.randomUUID();
+  google.accounts.id.initialize({
+    client_id: CLIENT_ID,
+    nonce: await sha256Hex(nonce),
+    itp_support: true,
+    callback: async ({ credential }: { credential: string }) => {
+      const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: credential, nonce });
+      if (error) return onResult({ ok: false, error: error.message });
+      capture('signed_in', { method: 'google' });
+      onResult({ ok: true });
+    },
+  });
+  google.accounts.id.renderButton(el, {
+    theme: 'outline',
+    size: 'large',
+    text: 'continue_with',
+    width: Math.min(400, Math.max(200, Math.round(el.clientWidth))),
+  });
+  return true;
+}
+
 export function GoogleOneTap() {
   const { session, loading } = useAuth();
   const pathname = usePathname();

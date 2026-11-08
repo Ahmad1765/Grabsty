@@ -10,6 +10,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { signInWithGoogle, signInWithApple, type OAuthResult } from '@/lib/oauth';
+import { renderGoogleWebButton } from '@/lib/googleOneTap';
 import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
 import { BRAND } from '@/lib/brand';
@@ -95,6 +96,8 @@ function LoginScreen() {
   const passwordRef = useRef<any>(null);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [forgotCooldown, setForgotCooldown] = useState(0);
+  const gsiHost = useRef<View>(null);
+  const [gsiReady, setGsiReady] = useState(false);
 
   useEffect(() => {
     if (forgotCooldown <= 0) return;
@@ -268,14 +271,34 @@ function LoginScreen() {
     else router.replace('/(tabs)');
   };
 
-  const handleGoogle = () => runOAuth(signInWithGoogle);
+  useEffect(() => {
+    if (Platform.OS !== 'web' || step !== 'welcome' || !gsiHost.current) return;
+    let live = true;
+    renderGoogleWebButton(gsiHost.current as unknown as HTMLElement, (r) => {
+      if (live) finishOAuth(r.ok ? r : { ok: false, error: r.error });
+    })
+      .then((ok) => live && setGsiReady(ok))
+      .catch(() => live && setGsiReady(false));
+    return () => {
+      live = false;
+      setGsiReady(false);
+    };
+  }, [step]);
+
+  // Web: Google's own button sits invisibly over ours (see renderGoogleWebButton),
+  // so a click opens Google's popup naming Grabsty. Ours only handles clicks
+  // when that button couldn't load, falling back to the redirect flow.
+  const handleGoogle = () => (gsiReady ? undefined : runOAuth(signInWithGoogle));
   const handleApple = () => runOAuth(signInWithApple);
 
   const runOAuth = async (signIn: () => Promise<OAuthResult>) => {
     if (oauthLoading) return;
     tap('light');
     setOauthLoading(true);
-    const r = await signIn();
+    finishOAuth(await signIn());
+  };
+
+  const finishOAuth = (r: OAuthResult) => {
     setOauthLoading(false);
     if (r.ok) {
       toast.done('Welcome');
@@ -519,6 +542,25 @@ function LoginScreen() {
                       {oauthLoading ? 'Connecting…' : 'Continue with Google'}
                     </Text>
                   </View>
+                  {Platform.OS === 'web' ? (
+                    // Google's real button, invisible but on top, catching the click.
+                    <View
+                      ref={gsiHost}
+                      testID="google-web-button"
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.01,
+                        // Google's iframe is 40px tall; stretch it over the 56px button.
+                        transform: [{ scaleY: 1.4 }],
+                      }}
+                    />
+                  ) : null}
                 </PressableScale>
 
                 {Platform.OS === 'ios' ? (
