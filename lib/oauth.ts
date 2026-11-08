@@ -50,6 +50,17 @@ async function nativeGoogle(): Promise<OAuthResult | null> {
   }
 }
 
+/** Best-effort; never throws. No-op on web / Expo Go. */
+export function signOutGoogle(): void {
+  if (Platform.OS === 'web') return;
+  try {
+    const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+    GoogleSignin.signOut().catch(() => {});
+  } catch {
+    // native module not in this build
+  }
+}
+
 /** iOS only. Apple requires it alongside Google sign-in (App Review 4.8). */
 export async function signInWithApple(): Promise<OAuthResult> {
   try {

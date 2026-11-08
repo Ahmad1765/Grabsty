@@ -11,6 +11,7 @@ import {
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { signOutDevice } from '@/lib/signOutDevice';
+import { signOutGoogle } from '@/lib/oauth';
 import { clearQueryCache } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { identify, resetIdentity } from '@/lib/analytics';
@@ -195,6 +196,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.warn('[auth] signOut error', e);
     }
+    // Forget the native Google account too, or the next person on this phone
+    // gets signed straight into it.
+    signOutGoogle();
     // Drop every cached query, and with it the persisted AsyncStorage copy that
     // would otherwise rehydrate one account's data into the next session.
     //
