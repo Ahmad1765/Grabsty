@@ -40,6 +40,18 @@ describe('useIsKeyboardShown', () => {
     expect(isTypingTarget(null)).toBe(false);
   });
 
+  it('needs both a focused field and a shrunken viewport', async () => {
+    const { isWebKeyboardOpen } = await import('./useIsKeyboardShown');
+    // keyboard up while typing
+    expect(isWebKeyboardOpen(true, 400, 800)).toBe(true);
+    // keyboard dismissed with the back button: field still focused, viewport back to full
+    expect(isWebKeyboardOpen(true, 800, 800)).toBe(false);
+    // browser toolbar sliding in/out is a small change, not a keyboard
+    expect(isWebKeyboardOpen(true, 740, 800)).toBe(false);
+    // no field focused
+    expect(isWebKeyboardOpen(false, 400, 800)).toBe(false);
+  });
+
   it('exports hook and can attach listeners', async () => {
     const { useIsKeyboardShown } = await import('./useIsKeyboardShown');
     expect(typeof useIsKeyboardShown).toBe('function');
