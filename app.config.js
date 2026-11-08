@@ -12,6 +12,12 @@
 const easProjectId =
   process.env.EAS_PROJECT_ID || '601d3c06-7d72-4ab7-88a3-97c570648676';
 
+// Native Google sign-in: iOS opens Google via the reversed iOS client ID as a URL scheme.
+const googleIosClientId = (process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '').trim();
+const googleIosUrlScheme = googleIosClientId
+  ? 'com.googleusercontent.apps.' + googleIosClientId.replace('.apps.googleusercontent.com', '')
+  : undefined;
+
 // This file is the ONLY app config. There is no app.json — a dynamic config that
 // returns an object keyed `expo` makes @expo/config's reduceExpoObject() collapse
 // to exactly that object, so anything merged in from a static app.json was thrown
@@ -56,6 +62,7 @@ module.exports = () => ({
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.grabsty.app',
+      usesAppleSignIn: true,
       // Only standard HTTPS: skips App Store Connect's export-compliance question on every build.
       config: { usesNonExemptEncryption: false },
       infoPlist: {
@@ -113,6 +120,8 @@ module.exports = () => ({
     ],
     plugins: [
       'expo-router',
+      'expo-apple-authentication',
+      ...(googleIosUrlScheme ? [['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }]] : []),
       'expo-secure-store',
       [
         'expo-image-picker',

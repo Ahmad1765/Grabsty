@@ -9,7 +9,7 @@ import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
-import { signInWithGoogle } from '@/lib/oauth';
+import { signInWithGoogle, signInWithApple, type OAuthResult } from '@/lib/oauth';
 import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
 import { BRAND } from '@/lib/brand';
@@ -268,11 +268,14 @@ function LoginScreen() {
     else router.replace('/(tabs)');
   };
 
-  const handleGoogle = async () => {
+  const handleGoogle = () => runOAuth(signInWithGoogle);
+  const handleApple = () => runOAuth(signInWithApple);
+
+  const runOAuth = async (signIn: () => Promise<OAuthResult>) => {
     if (oauthLoading) return;
     tap('light');
     setOauthLoading(true);
-    const r = await signInWithGoogle();
+    const r = await signIn();
     setOauthLoading(false);
     if (r.ok) {
       toast.done('Welcome');
@@ -517,6 +520,37 @@ function LoginScreen() {
                     </Text>
                   </View>
                 </PressableScale>
+
+                {Platform.OS === 'ios' ? (
+                  <PressableScale onPress={handleApple} disabled={oauthLoading} style={{}}>
+                    <View
+                      style={{
+                        height: 56,
+                        borderRadius: 16,
+                        backgroundColor: colors.paper,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 20,
+                      }}
+                    >
+                      <Ionicons name="logo-apple" size={19} color={colors.ink} />
+                      <Text
+                        style={{
+                          marginLeft: 10,
+                          fontSize: 15.5,
+                          fontWeight: '700',
+                          color: colors.ink,
+                          letterSpacing: 0.1,
+                        }}
+                      >
+                        Continue with Apple
+                      </Text>
+                    </View>
+                  </PressableScale>
+                ) : null}
 
                 <View
                   style={{
