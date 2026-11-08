@@ -16,10 +16,10 @@ import { supabase } from '@/lib/supabase';
 import { fetchSuggestedFollows, toggleFollow } from '@/lib/follows';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { CATEGORIES } from '@/lib/categories';
-import { colors } from '@/lib/theme';
 import { BRAND } from '@/lib/brand';
 import type { User } from '@/types';
 
+import { useTheme } from '@/context/ThemeContext';
 type Suggestion = Pick<
   User,
   'id' | 'username' | 'full_name' | 'avatar_url' | 'followers_count' | 'is_verified'
@@ -36,6 +36,7 @@ const BENEFITS: { icon: keyof typeof Feather.glyphMap; title: string; desc: stri
 ];
 
 export default function OnboardingScreen() {
+  const { theme: colors } = useTheme();
   const { user, refreshProfile } = useAuth();
   const toast = useToast();
   const [step, setStep] = useState(0);
@@ -102,7 +103,7 @@ export default function OnboardingScreen() {
     step === 0 ? 'Get started' : step === 1 ? 'Continue' : followCount > 0 ? 'Done' : 'Start browsing';
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }} edges={['top', 'bottom']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.paper }} edges={['top', 'bottom']}>
       {/* Progress + skip */}
       <View
         style={{
@@ -122,7 +123,7 @@ export default function OnboardingScreen() {
                 width: i === step ? 22 : 7,
                 height: 7,
                 borderRadius: 999,
-                backgroundColor: i === step ? colors.primary : 'rgba(15,15,15,0.12)',
+                backgroundColor: i === step ? colors.primary : colors.border,
               }}
             />
           ))}
@@ -195,8 +196,8 @@ export default function OnboardingScreen() {
                       paddingVertical: 12,
                       borderRadius: 999,
                       borderWidth: 1.5,
-                      borderColor: active ? colors.primary : 'rgba(15,15,15,0.10)',
-                      backgroundColor: active ? 'rgba(108,71,255,0.10)' : colors.white,
+                      borderColor: active ? colors.primary : colors.border,
+                      backgroundColor: active ? 'rgba(108,71,255,0.10)' : colors.paper,
                       transform: [{ scale: pressed ? 0.97 : 1 }],
                     })}
                   >
@@ -238,7 +239,7 @@ export default function OnboardingScreen() {
                           height: 48,
                           borderRadius: 24,
                           overflow: 'hidden',
-                          backgroundColor: 'rgba(15,15,15,0.06)',
+                          backgroundColor: colors.surface,
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
@@ -251,7 +252,7 @@ export default function OnboardingScreen() {
                             cachePolicy="memory-disk"
                           />
                         ) : (
-                          <Feather name="user" size={20} color="rgba(15,15,15,0.4)" />
+                          <Feather name="user" size={20} color={colors.muteSoft} />
                         )}
                       </View>
                       <View style={{ flex: 1 }}>
@@ -271,13 +272,13 @@ export default function OnboardingScreen() {
                           paddingVertical: 9,
                           borderRadius: 999,
                           borderWidth: 1,
-                          borderColor: isFollowing ? 'rgba(15,15,15,0.12)' : colors.primary,
-                          backgroundColor: isFollowing ? colors.white : colors.primary,
+                          borderColor: isFollowing ? colors.border : colors.primary,
+                          backgroundColor: isFollowing ? colors.paper : colors.primary,
                           transform: [{ scale: pressed ? 0.97 : 1 }],
                         })}
                       >
                         <Text
-                          style={{ fontSize: 13.5, fontWeight: '800', color: isFollowing ? colors.ink : colors.white }}
+                          style={{ fontSize: 13.5, fontWeight: '800', color: isFollowing ? colors.ink : colors.background }}
                         >
                           {isFollowing ? 'Following' : 'Follow'}
                         </Text>
@@ -308,7 +309,7 @@ export default function OnboardingScreen() {
             transform: [{ scale: pressed ? 0.99 : 1 }],
           })}
         >
-          <Text style={{ fontSize: 16, fontWeight: '800', color: colors.white, letterSpacing: 0.2 }}>
+          <Text style={{ fontSize: 16, fontWeight: '800', color: colors.background, letterSpacing: 0.2 }}>
             {primaryLabel}
           </Text>
         </Pressable>

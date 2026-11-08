@@ -54,20 +54,17 @@ body,
     box-shadow: none;
   }
 
-  /* Non-text controls: suppress the ring on mouse/touch, but keep it for
-     keyboard navigation so tab-through stays accessible. */
-  select:focus:not(:focus-visible),
-  button:focus:not(:focus-visible),
-  [role="button"]:focus:not(:focus-visible),
-  [tabindex]:focus:not(:focus-visible) {
+  /* Non-text controls: never draw a ring unless the user is navigating by
+     keyboard. :focus-visible alone also matches programmatic focus (modal
+     focus traps, .focus() after a tap), which flashed purple rings/lines on
+     touch devices. lib/keyboardFocusRing.ts sets html[data-keyboard-nav] on
+     Tab and clears it on the next pointer press. */
+  :where(select, button, [role="button"], [tabindex]):focus {
     outline: none;
     box-shadow: none;
   }
 
-  select:focus-visible:not(.no-ring),
-  button:focus-visible:not(.no-ring),
-  [role="button"]:focus-visible:not(.no-ring),
-  [tabindex]:focus-visible:not(.no-ring) {
+  html[data-keyboard-nav] :where(select, button, [role="button"], [tabindex]):focus-visible:not(.no-ring) {
     outline: 2px solid #6C47FF;
     outline-offset: 2px;
   }

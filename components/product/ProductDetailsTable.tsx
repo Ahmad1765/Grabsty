@@ -43,6 +43,7 @@ type ProductDetailsTableProps = {
   onToggleDescExpanded: () => void;
   onShare: () => void;
   onReport: () => void;
+  onOpenBpSheet?: () => void;
 };
 
 export const ProductDetailsTable = memo(function ProductDetailsTable({
@@ -51,6 +52,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
   onToggleDescExpanded,
   onShare,
   onReport,
+  onOpenBpSheet,
 }: ProductDetailsTableProps) {
   const { theme } = useTheme();
   const catSubLabel = listing.subcategory
@@ -150,7 +152,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
       <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 6 }}>
         <View
           style={{
-            backgroundColor: theme.white,
+            backgroundColor: theme.paper,
             borderRadius: 18,
             borderWidth: HAIRLINE,
             borderColor: theme.border,
@@ -190,7 +192,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                     opacity: pressed ? 0.6 : 1,
                   })}
                 >
-                  <Text style={{ fontSize: 13, fontFamily: 'Inter_600SemiBold', color: BRAND_PURPLE, letterSpacing: 0.2 }}>
+                  <Text style={{ fontSize: 14, fontFamily: 'Inter_600SemiBold', color: BRAND_PURPLE }}>
                     {descExpanded ? 'Show less' : 'Read more'}
                   </Text>
                   <Feather
@@ -217,10 +219,9 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
             <Text
               style={{
                 width: LABEL_W,
-                fontFamily: 'Inter_600SemiBold',
+                fontFamily: 'Inter_400Regular',
                 fontSize: 15,
-                color: theme.ink,
-                letterSpacing: 0.1,
+                color: theme.mute,
               }}
             >
               Category
@@ -233,7 +234,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 }}
                 style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
               >
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: theme.mute }}>
+                <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: theme.ink }}>
                   {categoryLabel(listing.category)}
                 </Text>
               </Pressable>
@@ -254,7 +255,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                     }}
                     style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
                   >
-                    <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 15, color: theme.mute }}>
+                    <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: theme.ink }}>
                       {catSubLabel}
                     </Text>
                   </Pressable>
@@ -282,16 +283,15 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 paddingVertical: 16,
                 borderTopWidth: HAIRLINE,
                 borderTopColor: theme.border,
-                backgroundColor: pressed && row.onPress ? theme.panel : theme.white,
+                backgroundColor: pressed && row.onPress ? theme.panel : theme.paper,
               })}
             >
               <Text
                 style={{
                   width: LABEL_W,
                   fontSize: 15,
-                  fontFamily: 'Inter_600SemiBold',
-                  color: theme.ink,
-                  letterSpacing: 0.1,
+                  fontFamily: 'Inter_400Regular',
+                  color: theme.mute,
                 }}
               >
                 {row.label}
@@ -300,8 +300,8 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 style={{
                   flex: 1,
                   fontSize: 15,
-                  fontFamily: 'Inter_400Regular',
-                  color: row.link ? BRAND_PURPLE : theme.mute,
+                  fontFamily: 'Inter_500Medium',
+                  color: row.link ? BRAND_PURPLE : theme.ink,
                 }}
                 numberOfLines={1}
               >
@@ -323,7 +323,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                   router.push(`/?searchOpen=1&searchQuery=${encodeURIComponent(tag)}` as any);
                 }}
                 style={({ pressed }) => ({
-                  backgroundColor: theme.white,
+                  backgroundColor: theme.paper,
                   borderWidth: 1,
                   borderColor: theme.border,
                   borderRadius: 999,
@@ -436,9 +436,9 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
         </View>
       </View>
 
-      {/* Safety & Trust Banner */}
+      {/* Safety & Trust Banner: "How you're covered" opens the buyer protection sheet */}
       <View style={{ paddingHorizontal: 16, paddingTop: 22, paddingBottom: 6 }}>
-        <SafetyBanner />
+        <SafetyBanner onLinkPress={onOpenBpSheet} />
       </View>
     </>
   );

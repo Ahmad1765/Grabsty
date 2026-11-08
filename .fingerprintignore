@@ -1,0 +1,10 @@
+# Local Gradle/IDE leftovers inside native packages. They exist on dev machines but
+# not on EAS, and a fingerprint mismatch fails `eas build` at "Configure expo-updates".
+node_modules/**/.classpath
+node_modules/**/.project
+node_modules/**/.settings/**
+node_modules/**/.gradle/**
+node_modules/**/.cxx/**
+node_modules/**/android/build/**
+node_modules/**/*-gradle-plugin/build/**
+node_modules/**/*-gradle-plugin/bin/**

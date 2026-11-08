@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { escapeSearchQuery } from '@/lib/search';
+import { getBlockPeerIds } from '@/lib/blocks';
 
 export type FollowState = {
   followersCount: number;
@@ -49,11 +50,6 @@ function putCachedFollowState(
 ): void {
   followCache.set(cacheKey(followerId, followeeId), state);
 }
-
-export function clearFollowCache(): void {
-  followCache.clear();
-}
-
 // One round trip: get_follow_state returns target's counts + whether the
 // current auth.uid() follows them. Replaces the previous two-table fanout
 // which paid two latencies for what is conceptually one read.
@@ -230,7 +226,8 @@ export async function searchUsers(query: string, limit = 20): Promise<FollowList
     console.warn('[follows] searchUsers', error.message);
     return [];
   }
-  return (data ?? []).map((row: any) => ({
+  const hidden = new Set(await getBlockPeerIds());
+  return (data ?? []).filter((row: any) => !hidden.has(row.id)).map((row: any) => ({
     id: row.id,
     username: row.username,
     full_name: row.full_name,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Image } from 'expo-image';
+import { GrabstyLogo, BRAND_MARK_PURPLE } from '@/components/ui/GrabstyLogo';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import Animated, {
@@ -24,7 +25,6 @@ import Svg, { Circle, Path } from 'react-native-svg';
 // as the logo shrinks -> brief hold on the small logo -> hand off to the app.
 // Signal Purple stands in for the reference's yellow (three-hue rule).
 
-const PURPLE = '#6C47FF';
 const INK = '#0F0F0F';
 const WHITE = '#FFFFFF';
 const MIN_SHOW_MS = 1500;
@@ -61,7 +61,6 @@ const PIECES = [
   { src: require('@/assets/images/splash/phone.webp'), x: 0.16, y: 0.88, w: 0.66, ar: 380 / 560, rot: 18, spin: -25 },
   { src: require('@/assets/images/splash/sneaker.webp'), x: 0.76, y: 0.9, w: 0.64, ar: 497 / 541, rot: -12, spin: 22 },
 ];
-const G = require('@/assets/images/splash/g.png');
 
 // Feather outlines, drawn with SVG so they don't wait on the icon font.
 const DOODLES: { x: number; y: number; rot: number; d: string[]; circle?: [number, number, number] }[] = [
@@ -135,7 +134,7 @@ export function AnimatedSplash({ appReady }: { appReady: boolean }) {
 
   const rootStyle = useAnimatedStyle(() => ({
     opacity: fade.value,
-    backgroundColor: interpolateColor(bg.value, [0, 1], [WHITE, PURPLE]),
+    backgroundColor: interpolateColor(bg.value, [0, 1], [WHITE, BRAND_MARK_PURPLE]),
   }));
   const collageStyle = useAnimatedStyle(() => ({
     opacity: shown.value * interpolate(exit.value, [0, 0.6, 1], [1, 1, 0]),
@@ -182,19 +181,15 @@ export function AnimatedSplash({ appReady }: { appReady: boolean }) {
           {
             width: logoSize,
             height: logoSize,
-            borderRadius: logoSize * 0.3,
+            // Matches the favicon / app-icon tile (GrabstyLogo).
+            borderRadius: logoSize * 0.21,
             left: (w - logoSize) / 2,
             top: (h - logoSize) / 2,
           },
           logoStyle,
         ]}
       >
-        <Image
-          source={G}
-          style={{ width: logoSize * 0.56, height: logoSize * 0.56 * (256 / 250) }}
-          contentFit="contain"
-          tintColor={PURPLE}
-        />
+        <GrabstyLogo size={logoSize} />
       </Animated.View>
     </Animated.View>
   );
@@ -205,7 +200,7 @@ const styles = StyleSheet.create({
   abs: { position: 'absolute' },
   logo: {
     position: 'absolute',
-    backgroundColor: INK,
+    backgroundColor: BRAND_MARK_PURPLE,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: INK,

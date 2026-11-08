@@ -1,0 +1,4291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<style media="">/* ==========================================================================
+   Grabsty Official Brand Typography (Loaded from brand/fonts/)
+   ========================================================================== */
+
+/* Bricolage Grotesque - Modern Variable Font (Weight 200..900, Optical Size 12..96) */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('assets/fonts/font-8599e06a4b6364fc.ttf') format('truetype-variations'),
+       url('assets/fonts/BricolageGrotesque-Bold.ttf') format('truetype');
+  font-weight: 200 900;
+  font-stretch: 75% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Static Weight Declarations for Maximum Browser Compatibility */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('assets/fonts/BricolageGrotesque-Regular.ttf') format('truetype'),
+       url('assets/fonts/BricolageGrotesque-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('assets/fonts/BricolageGrotesque-Medium.ttf') format('truetype'),
+       url('assets/fonts/BricolageGrotesque-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('https://www.grabsty.com/brand/fonts/BricolageGrotesque-SemiBold.ttf') format('truetype'),
+       url('https://www.grabsty.com/brand/fonts/BricolageGrotesque-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('assets/fonts/BricolageGrotesque-Bold.ttf') format('truetype'),
+       url('https://www.grabsty.com/brand/fonts/BricolageGrotesque-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('https://www.grabsty.com/brand/fonts/BricolageGrotesque-ExtraBold.ttf') format('truetype'),
+       url('https://www.grabsty.com/brand/fonts/BricolageGrotesque-ExtraBold.otf') format('opentype');
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 96pt Display Cut for Monumental Headlines */
+@font-face {
+  font-family: 'Bricolage Grotesque 96pt';
+  src: url('assets/fonts/BricolageGrotesque96pt-Bold.ttf') format('truetype'),
+       url('assets/fonts/BricolageGrotesque96pt-Bold.otf') format('opentype');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Kelsi - Official Brand Bubble/Graffiti Streetwear Display Typeface */
+@font-face {
+  font-family: 'Kelsi';
+  src: url('assets/fonts/kelsi-regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Kelsi Fill';
+  src: url('assets/fonts/kelsi-fill.otf') format('opentype');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+html { overflow-x: clip; }
+:root {
+  /* Strict Grabsty 3-Hue Palette */
+  --ink: #0F0F0F;
+  --ink-surface: #171717;
+  --ink-elevated: #1F1F1F;
+  --paper: #FFFFFF;
+  --signal: #6C47FF;
+  --signal-hover: #7E5CFF;
+  --signal-subtle: rgba(108, 71, 255, 0.12);
+  --signal-glow: rgba(108, 71, 255, 0.35);
+  
+  /* Semantic Approved Exceptions */
+  --shield-bg: #F2F3FE;
+  --shield-stroke: #5356EE;
+  --error: #EF4444;
+
+  /* Alpha Opacities */
+  --paper-5: rgba(255, 255, 255, 0.05);
+  --paper-10: rgba(255, 255, 255, 0.10);
+  --paper-20: rgba(255, 255, 255, 0.20);
+  --paper-40: rgba(255, 255, 255, 0.40);
+  --paper-60: rgba(255, 255, 255, 0.60);
+  --paper-80: rgba(255, 255, 255, 0.80);
+
+  /* Emil Kowalski Timing Curves */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Typography - Official Grabsty Brand Fonts */
+  --font-display: 'Bricolage Grotesque 96pt', 'Bricolage Grotesque', sans-serif;
+  --font-heading: 'Bricolage Grotesque', sans-serif;
+  --font-kelsi: 'Kelsi', cursive, sans-serif;
+  --font-kelsi-fill: 'Kelsi Fill', 'Kelsi', cursive, sans-serif;
+  --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ==========================================================================
+   Base & Reset
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--ink);
+  /* Architectural Drafting Matrix: Hairline Grid + Coordinates Crosshairs */
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(108, 71, 255, 0.045) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 16px 16px;
+  background-position: 0 0, 0 0, 8px 8px;
+  color: var(--paper);
+  font-family: var(--font-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 3px solid var(--paper);
+  outline-offset: 4px;
+}
+
+::selection {
+  background-color: var(--signal);
+  color: var(--paper);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Headings Default To Brand Heading Typeface */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Brand Typography Utility Classes */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-kelsi {
+  font-family: var(--font-kelsi);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.font-kelsi-fill {
+  font-family: var(--font-kelsi-fill);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Scroll Progress Bar
+   ========================================================================== */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 4px;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal);
+  z-index: 10000;
+  width: 0%;
+  pointer-events: none;
+  transition: width 40ms linear;
+}
+
+/* ==========================================================================
+   Celebration Party Popper Canvas
+   ========================================================================== */
+.party-popper-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+/* ==========================================================================
+   Texture & Ambient Stage
+   ========================================================================== */
+
+.grain-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url('https://www.grabsty.com/%23noiseFilter')' opacity='0.06'/%3E%3C/svg%3E");
+}
+
+/* Subtle Mughal Jaali Islamic Star Watermark */
+.jaali-watermark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120' fill='none'%3E%3Cpath d='M60 0L75 45L120 60L75 75L60 120L45 75L0 60L45 45Z' stroke='%23FFFFFF' stroke-width='1'/%3E%3Crect x='30' y='30' width='60' height='60' stroke='%236C47FF' stroke-width='0.8' transform='rotate(45 60 60)'/%3E%3Ccircle cx='60' cy='60' r='20' stroke='%23FFFFFF' stroke-width='0.8' stroke-dasharray='3 3'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
+}
+
+.cursor-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 71, 255, 0.14) 0%, rgba(108, 71, 255, 0.03) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 300ms ease;
+  will-change: transform;
+}
+
+/* Lahore Architectural Floating Accents Stage */
+.heritage-stage,
+.memphis-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.heritage-shape,
+.memphis-shape {
+  position: absolute;
+  will-change: transform;
+  filter: drop-shadow(0 0 18px rgba(108, 71, 255, 0.18));
+}
+
+@media (max-width: 1180px) {
+  .heritage-stage,
+  .memphis-stage {
+    opacity: 0.2;
+  }
+}
+
+@media (max-width: 860px) {
+  .heritage-stage,
+  .memphis-stage {
+    display: none !important;
+  }
+}
+
+.shape-arch {
+  top: 13%;
+  left: 5%;
+  animation: float-slow 8s ease-in-out infinite alternate;
+}
+
+.shape-jharokha {
+  top: 23%;
+  right: 6%;
+  animation: float-rev 9s ease-in-out infinite alternate;
+}
+
+.shape-jaali {
+  top: 48%;
+  left: 4%;
+  animation: spin-slow 50s linear infinite;
+}
+
+.shape-meridian {
+  top: 38%;
+  right: 5%;
+  animation: float-slow 11s ease-in-out infinite alternate;
+}
+
+.shape-dome {
+  top: 68%;
+  left: 7%;
+  animation: float-rev 10s ease-in-out infinite alternate;
+}
+
+.shape-muqarnas {
+  top: 80%;
+  right: 8%;
+  animation: float-slow 9s ease-in-out infinite alternate;
+}
+
+@keyframes float-slow {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(-20px) rotate(6deg); }
+}
+
+@keyframes float-rev {
+  0% { transform: translateY(0px) rotate(0deg); }
+  100% { transform: translateY(20px) rotate(-6deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Header Navigation
+   ========================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(15, 15, 15, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 2px solid var(--paper-10);
+  z-index: 1000;
+  transition: border-color 200ms ease;
+}
+
+.header-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* Ambient Global Collector Ticker (Feature 5) */
+.header-live-ticker {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--paper-20);
+  padding: 0.35rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--paper-80);
+  transition: opacity 250ms ease;
+  user-select: none;
+}
+
+@media (min-width: 680px) {
+  .header-live-ticker {
+    display: inline-flex;
+  }
+}
+
+.ticker-pulse-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--signal);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--signal);
+  animation: pulse-live 2s infinite;
+  flex-shrink: 0;
+}
+
+.ticker-text {
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Audio Haptics Button (Feature 4) */
+.header-sfx-btn {
+  background: transparent;
+  border: 1.5px solid var(--paper-40);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 120ms ease;
+  letter-spacing: 0.04em;
+}
+
+.header-sfx-btn:hover {
+  border-color: var(--paper);
+  background: var(--paper-10);
+  transform: translateY(-1px);
+}
+
+.header-sfx-btn.muted {
+  opacity: 0.6;
+  border-color: var(--paper-20);
+}
+
+.brand-logo {
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--paper);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  transition: transform 150ms var(--ease-out);
+}
+
+.brand-logo:hover {
+  transform: skewX(-4deg);
+}
+
+.brand-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--signal);
+  display: inline-block;
+  margin-left: 2px;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.header-action-btn {
+  font-family: var(--font-heading);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+  text-decoration: none;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  border: 2px solid var(--paper);
+  box-shadow: 3px 3px 0 var(--signal);
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+}
+
+.header-action-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--signal);
+}
+
+.header-action-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--signal);
+}
+
+/* ==========================================================================
+   Page Content & Layout
+   ========================================================================== */
+.page-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+.hero-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Lahore Heritage Coordinates Tag */
+.hero-heritage-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--ink);
+  border: 1.5px solid var(--paper-20);
+  padding: 0.35rem 0.85rem;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: var(--paper-80);
+  box-shadow: 3px 3px 0 var(--signal);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heritage-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+  animation: pulse-live 2s infinite;
+}
+
+/* Hero Typography */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 5.8vw, 4.5rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+  color: var(--paper);
+  margin-bottom: 1.15rem;
+  text-transform: uppercase;
+  text-shadow: 4px 4px 0 var(--signal);
+  font-variation-settings: "opsz" 96, "wdth" 100, "wght" 900;
+}
+
+.hero-br {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hero-br {
+    display: block;
+  }
+}
+
+.word-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(105%) rotate(4deg);
+  animation: word-reveal 750ms var(--ease-out) forwards;
+}
+
+@keyframes word-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+/* Subtitle Box */
+.hero-subtitle-box {
+  max-width: 42rem;
+  margin: 0 auto 1.5rem;
+  background-color: var(--ink);
+  border: 3px solid var(--paper);
+  padding: 0.85rem 1.5rem;
+  box-shadow: -5px 5px 0 var(--signal);
+  text-align: center;
+}
+
+.subtitle-text {
+  font-size: clamp(0.9375rem, 1.8vw, 1.0625rem);
+  color: var(--paper);
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Funnel Form & State
+   ========================================================================== */
+.funnel-container {
+  width: 100%;
+  max-width: 32rem;
+  margin: 0 auto;
+  position: relative;
+  min-height: 165px;
+}
+
+.form-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 300ms ease, transform 300ms var(--ease-out), filter 300ms ease;
+}
+
+.form-wrapper.hidden {
+  opacity: 0;
+  transform: translateY(20px) scale(0.96);
+  filter: blur(8px);
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ==========================================================================
+   Waitlist Location Banner (Lahore Focus)
+   ========================================================================== */
+.waitlist-location-card {
+  width: 100%;
+  background-color: var(--ink-surface);
+  border: 2px solid var(--paper);
+  padding: 0.85rem 1.15rem;
+  margin-bottom: 1.15rem;
+  box-shadow: 4px 4px 0 var(--signal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.waitlist-loc-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.loc-arch-badge {
+  width: 40px;
+  height: 40px;
+  background-color: var(--ink);
+  border: 1.5px solid var(--paper-20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 2px 2px 0 var(--signal);
+}
+
+.loc-arch-svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+}
+
+.loc-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.loc-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--paper);
+}
+
+.loc-sub {
+  font-size: 0.6875rem;
+  color: var(--paper-80);
+}
+
+.loc-status-pill {
+  font-family: var(--font-kelsi-fill);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--paper);
+  background-color: var(--signal);
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--paper);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   Referred-By Banner
+   ========================================================================== */
+.referral-banner {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  background-color: var(--signal-subtle);
+  border: 2px dashed var(--signal);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.referral-banner.hidden {
+  display: none;
+}
+
+.ref-badge-icon {
+  color: var(--signal);
+  font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   Role & Interest Selectors
+   ========================================================================== */
+.role-selector-wrap,
+.interest-selector-wrap {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 0.25rem;
+}
+
+.role-selector-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--paper-60);
+  margin-bottom: 0.45rem;
+}
+
+.role-pills {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.role-pill {
+  background-color: var(--ink-surface);
+  border: 2px solid var(--paper-20);
+  color: var(--paper-80);
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 0.6875rem;
+  letter-spacing: 0.03em;
+  padding: 0.6rem 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 120ms ease;
+}
+
+@media (min-width: 480px) {
+  .role-pill {
+    font-size: 0.75rem;
+    padding: 0.65rem 0.5rem;
+  }
+}
+
+.role-pill:hover,
+.interest-pill:hover {
+  border-color: var(--paper-60);
+  color: var(--paper);
+  background-color: var(--ink-elevated);
+}
+
+.role-pill.active,
+.interest-pill.active {
+  background-color: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+  box-shadow: 3px 3px 0 var(--signal);
+}
+
+.role-pill-indicator {
+  font-size: 0.65rem;
+}
+
+/* Interest Selector Pills (Lahore Architecture Design Focus) */
+.interest-pills {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+@media (min-width: 520px) {
+  .interest-pills {
+    grid-template-columns: 1.15fr 1fr;
+  }
+  .interest-pills button[data-interest="both"] {
+    grid-column: 1 / -1;
+  }
+}
+
+.interest-pill {
+  background-color: var(--ink-surface);
+  border: 2px solid var(--paper-20);
+  color: var(--paper-80);
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 0.6875rem;
+  letter-spacing: 0.03em;
+  padding: 0.6rem 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 120ms ease;
+}
+
+.interest-icon {
+  font-size: 0.75rem;
+}
+
+.interest-icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.interest-icon-svg svg {
+  display: block;
+}
+
+.waitlist-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-bottom: 1.15rem;
+}
+
+/* ==========================================================================
+   Form Fields Grid & Inputs
+   ========================================================================== */
+.form-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+  width: 100%;
+  text-align: left;
+}
+
+@media (min-width: 580px) {
+  .form-fields-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .input-group-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.input-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.field-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--paper-80);
+  margin-bottom: 0.35rem;
+}
+
+.field-req {
+  color: var(--signal);
+}
+
+.field-opt {
+  color: var(--paper-60);
+  font-weight: 600;
+  font-size: 0.625rem;
+}
+
+.form-text-input {
+  width: 100%;
+  height: 48px;
+  background-color: var(--paper);
+  border: 3px solid var(--ink);
+  padding: 0 1rem;
+  color: var(--ink);
+  font-family: var(--font-main);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  outline: none;
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out), border-color 150ms ease;
+  box-shadow: 3px 3px 0 var(--signal);
+}
+
+.form-text-input::placeholder {
+  color: rgba(15, 15, 15, 0.45);
+  font-weight: 600;
+}
+
+.form-text-input:focus {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--signal);
+}
+
+.form-text-input.has-error {
+  border-color: var(--error);
+  box-shadow: 3px 3px 0 var(--error);
+  animation: input-shake 300ms ease;
+}
+
+@keyframes input-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.input-error-msg {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--error);
+  margin-top: 0.35rem;
+  min-height: 1rem;
+  text-align: left;
+}
+
+.form-action-row {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.form-action-row .submit-btn {
+  width: 100%;
+}
+
+/* Primary CTA Button (Strict 1-Primary CTA Rule) */
+.submit-btn {
+  height: 52px;
+  background-color: var(--signal);
+  color: var(--paper);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  padding: 0 1.75rem;
+  border: 3px solid var(--paper);
+  box-shadow: 5px 5px 0 var(--paper);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .submit-btn:hover {
+    background-color: var(--signal-hover);
+    box-shadow: 8px 8px 0 var(--paper);
+  }
+}
+
+/* Emil Kowalski 0.97 Scale Rule */
+.submit-btn:active {
+  transform: scale(0.97) !important;
+  box-shadow: 2px 2px 0 var(--paper) !important;
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--paper);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin-slow 800ms linear infinite;
+  margin-left: 0.5rem;
+}
+
+.submit-btn.loading .btn-spinner {
+  display: inline-block;
+}
+
+/* Trust Pill (Canonical Mercari Geometry) */
+.trust-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  background-color: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 3px 3px 0 var(--signal);
+  transform: rotate(1deg);
+  transition: transform 200ms ease;
+  cursor: default;
+}
+
+.trust-pill:hover {
+  transform: rotate(0deg) scale(1.02);
+}
+
+.canonical-shield {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+.trust-label {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--paper);
+  letter-spacing: 0.02em;
+}
+
+.trust-bullet {
+  color: var(--paper-40);
+  font-size: 0.75rem;
+}
+
+.trust-sub {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--paper-80);
+}
+
+.social-counter {
+  margin-top: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--paper-60);
+  letter-spacing: 0.03em;
+}
+
+.counter-num {
+  color: var(--paper);
+  font-weight: 800;
+}
+
+.lookup-toggle-wrap {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.lookup-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--paper-80);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 150ms ease;
+  padding: 0.25rem 0.5rem;
+}
+
+.lookup-toggle-btn:hover {
+  color: var(--paper);
+}
+
+.lookup-toggle-btn:focus-visible {
+  outline: 2px solid var(--paper);
+}
+
+/* Success Card */
+.success-state {
+  width: 100%;
+  transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), filter 400ms ease;
+}
+
+.success-state.hidden {
+  display: none;
+  opacity: 0;
+  transform: scale(0.92) rotate(-3deg);
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+.success-card {
+  background-color: var(--signal);
+  border: 4px solid var(--paper);
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 10px 10px 0 var(--ink), 10px 10px 0 4px var(--paper);
+  animation: success-pop 500ms var(--ease-spring) forwards;
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0.9) rotate(-3deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.success-badge-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  background-color: var(--paper);
+  border: 3px solid var(--ink);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 var(--ink);
+  margin-bottom: 1rem;
+}
+
+.success-badge-icon svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.success-queue-tag {
+  font-family: var(--font-kelsi-fill);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  background-color: var(--ink);
+  color: var(--paper);
+  padding: 0.25rem 0.65rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.08em;
+}
+
+.success-title {
+  font-family: var(--font-heading);
+  font-size: 1.625rem;
+  font-weight: 900;
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.85rem;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+/* Success Details Box */
+.success-details-box {
+  width: 100%;
+  background-color: var(--ink);
+  border: 2px solid var(--paper);
+  padding: 1rem 1.15rem;
+  margin-bottom: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  text-align: left;
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+.success-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+  padding-bottom: 0.4rem;
+}
+
+.success-detail-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detail-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: var(--signal);
+  letter-spacing: 0.08em;
+}
+
+.detail-value {
+  font-family: var(--font-main);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--paper);
+  text-align: right;
+  word-break: break-all;
+}
+
+.success-text {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.5;
+  margin-bottom: 1.15rem;
+}
+
+/* ==========================================================================
+   Viral Referral Station
+   ========================================================================== */
+.referral-station {
+  width: 100%;
+  background-color: var(--ink);
+  border: 3px solid var(--paper);
+  padding: 1.35rem 1.15rem;
+  margin: 0.5rem 0 1.25rem;
+  text-align: center;
+  box-shadow: 5px 5px 0 var(--paper);
+}
+
+.ref-station-header {
+  margin-bottom: 1rem;
+}
+
+.ref-station-tag {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: var(--signal);
+  letter-spacing: 0.1em;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  border-bottom: 1px solid var(--signal);
+  padding-bottom: 2px;
+}
+
+.ref-station-title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 900;
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.35rem;
+}
+
+.ref-station-desc {
+  font-size: 0.8125rem;
+  color: var(--paper-80);
+  line-height: 1.45;
+  max-width: 24rem;
+  margin: 0 auto;
+}
+
+.ref-link-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.85rem;
+}
+
+@media (min-width: 480px) {
+  .ref-link-box {
+    flex-direction: row;
+    gap: 0.35rem;
+  }
+}
+
+.ref-link-input {
+  flex: 1;
+  height: 44px;
+  background-color: var(--ink-surface);
+  border: 2px solid var(--paper-40);
+  padding: 0 0.85rem;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 150ms ease;
+}
+
+.ref-link-input:focus {
+  border-color: var(--paper);
+}
+
+.copy-ref-btn {
+  height: 44px;
+  background-color: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--paper);
+  font-family: var(--font-main);
+  font-weight: 900;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 0 1.25rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.copy-ref-btn:hover {
+  background-color: var(--signal);
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+.copy-ref-btn:active {
+  transform: scale(0.97);
+}
+
+.copy-ref-btn.copied {
+  background-color: #10B981;
+  color: var(--paper);
+  border-color: var(--paper);
+}
+
+.ref-share-actions {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.85rem;
+}
+
+.ref-share-btn {
+  flex: 1;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid var(--paper);
+  transition: all 120ms ease;
+  cursor: pointer;
+}
+
+.share-x {
+  background-color: var(--ink);
+  color: var(--paper);
+}
+
+.share-x:hover {
+  background-color: var(--paper);
+  color: var(--ink);
+}
+
+.share-wa {
+  background-color: var(--signal);
+  color: var(--paper);
+}
+
+.share-wa:hover {
+  background-color: var(--signal-hover);
+}
+
+.share-native {
+  background-color: var(--ink-surface);
+  color: var(--paper);
+}
+
+.share-native.hidden {
+  display: none;
+}
+
+.ref-tracker-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--paper-60);
+  background-color: rgba(255, 255, 255, 0.04);
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--paper-10);
+}
+
+.ref-tracker-dot {
+  width: 6px;
+  height: 6px;
+  background-color: var(--signal);
+  border-radius: 50%;
+}
+
+.success-footer-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 2px dashed rgba(15, 15, 15, 0.4);
+  width: 100%;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.success-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  margin-top: 1.15rem;
+  align-items: center;
+}
+
+.secondary-card-btn {
+  width: 100%;
+  height: 44px;
+  background-color: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--paper);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: all 120ms ease;
+}
+
+.secondary-card-btn:hover {
+  background-color: var(--ink-surface);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--paper);
+}
+
+.secondary-card-btn:active {
+  transform: scale(0.98);
+}
+
+.back-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0.35rem 0.75rem;
+  transition: opacity 120ms ease;
+}
+
+.back-link-btn:hover {
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   Kinetic Marquee (lapz.io style)
+   ========================================================================== */
+.marquee-section {
+  width: 104%;
+  margin-left: -2%;
+  overflow: hidden;
+  background-color: var(--signal);
+  color: var(--paper);
+  padding: 1.25rem 0;
+  border-top: 4px solid var(--paper);
+  border-bottom: 4px solid var(--paper);
+  transform: rotate(-2deg);
+  margin-top: 4.5rem;
+  margin-bottom: 4.5rem;
+  box-shadow: 0 8px 0 var(--ink);
+  user-select: none;
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.marquee-stream {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+  font-size: 1.375rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding-right: 1.5rem;
+}
+
+.star-sep {
+  color: var(--paper);
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   Features Section & Bento Grid
+   ========================================================================== */
+.features-section {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 5rem;
+}
+
+.section-tag {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+}
+
+.section-tag span {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--paper);
+  background-color: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 3px 3px 0 var(--signal);
+  padding: 0.35rem 0.75rem;
+}
+
+.section-heading {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--paper);
+  margin-bottom: 3.5rem;
+  text-transform: uppercase;
+  font-variation-settings: "opsz" 48, "wght" 800;
+}
+
+/* ==========================================================================
+   Lahore Architecture Design Showcase Card
+   ========================================================================== */
+.lahore-architecture-card {
+  width: 100%;
+  background-color: var(--ink-surface);
+  border: 3px solid var(--paper);
+  box-shadow: 8px 8px 0 var(--signal);
+  padding: 2.25rem 2rem;
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+.arch-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 2px dashed var(--paper-20);
+}
+
+.arch-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+/* Architecture Blueprint Study Switcher Tabs */
+.arch-study-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.arch-study-tab {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--ink);
+  color: var(--paper-80);
+  border: 1.5px solid var(--paper-20);
+  cursor: pointer;
+  transition: all 140ms ease;
+  user-select: none;
+}
+
+.arch-study-tab:hover {
+  color: var(--paper);
+  border-color: var(--paper);
+  transform: translateY(-1px);
+}
+
+.arch-study-tab.active {
+  background-color: var(--signal);
+  color: var(--paper);
+  border-color: var(--paper);
+  box-shadow: 2px 2px 0 var(--paper);
+}
+
+.arch-card-tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--paper);
+  background-color: var(--signal);
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--paper);
+}
+
+.arch-card-pill {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--paper-80);
+}
+
+.arch-badge-city {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--paper-60);
+}
+
+.arch-card-content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+@media (min-width: 880px) {
+  .arch-card-content-grid {
+    grid-template-columns: 1.15fr 1fr;
+  }
+}
+
+.arch-card-visual {
+  width: 100%;
+  background-color: var(--ink);
+  border: 2px solid var(--paper-40);
+  box-shadow: 5px 5px 0 var(--paper);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arch-blueprint-frame {
+  width: 100%;
+}
+
+.arch-blueprint-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.arch-study-panel {
+  transition: opacity 220ms ease;
+}
+
+.arch-study-panel.hidden {
+  display: none !important;
+}
+
+.arch-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.arch-info-title {
+  font-family: var(--font-heading);
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: var(--paper);
+  line-height: 1.25;
+}
+
+.arch-info-desc {
+  font-size: 0.9375rem;
+  color: var(--paper-80);
+  line-height: 1.6;
+}
+
+.arch-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.arch-tag-pill {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: var(--paper);
+  background-color: var(--ink);
+  border: 1.5px solid var(--paper);
+  box-shadow: 2px 2px 0 var(--signal);
+  padding: 0.35rem 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.pill-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+/* Lahore Design Lineage: 3 Pillars Grid */
+.arch-lineage-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-top: 2rem;
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .arch-lineage-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lineage-card {
+  background-color: var(--ink-surface);
+  border: 2px solid var(--paper-20);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 140ms ease, border-color 140ms ease;
+  text-align: left;
+}
+
+.lineage-card:hover {
+  border-color: var(--signal);
+  transform: translateY(-2px);
+  box-shadow: 5px 5px 0 var(--signal);
+}
+
+.lineage-card-num {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--signal);
+  letter-spacing: -0.04em;
+}
+
+.lineage-card-title {
+  font-family: var(--font-heading);
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--paper);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lineage-card-desc {
+  font-size: 0.8125rem;
+  color: var(--paper-80);
+  line-height: 1.5;
+}
+
+.lineage-badge {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 800;
+  color: var(--paper-60);
+  background-color: var(--paper-5);
+  border: 1px solid var(--paper-10);
+  padding: 0.2rem 0.5rem;
+  margin-top: auto;
+  letter-spacing: 0.04em;
+}
+
+/* Subtle Ambient Lahore Skyline Horizon Backdrop */
+.lahore-skyline-backdrop {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 160px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0.9;
+}
+
+.skyline-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+}
+
+@media (min-width: 860px) {
+  .bento-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.bento-card {
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --lift-y: 0px;
+
+  background-color: var(--ink-surface);
+  border: 3px solid var(--paper);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 7px 7px 0 var(--signal);
+  transform: perspective(1000px) rotateX(var(--rotate-x)) rotateY(var(--rotate-y)) translateY(var(--lift-y));
+  transition: transform 150ms var(--ease-out), box-shadow 350ms var(--ease-out);
+  will-change: transform;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .bento-card:hover {
+    box-shadow: 12px 12px 0 var(--signal);
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+
+.card-num {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: var(--paper);
+}
+
+.card-tag {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--paper-80);
+  background: var(--paper-10);
+  padding: 0.25rem 0.5rem;
+}
+
+.card-visual {
+  min-height: 150px;
+  background-color: var(--ink);
+  border: 2px solid var(--paper-20);
+  margin-bottom: 1.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Card 1: Escrow Visual */
+.escrow-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--paper-5);
+  border: 1px solid var(--paper-20);
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.escrow-icon-wrap {
+  width: 24px;
+  height: 24px;
+}
+
+.escrow-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.escrow-status-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.escrow-status-title {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: var(--paper);
+}
+
+.escrow-status-desc {
+  font-size: 0.6875rem;
+  color: var(--paper-60);
+}
+
+.escrow-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 0 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.step-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  background: var(--ink);
+  z-index: 2;
+}
+
+.step-dot.active {
+  background: var(--signal);
+  box-shadow: 0 0 8px var(--signal);
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--paper-20);
+  margin: 0 4px;
+}
+
+.step-line.active {
+  background: var(--signal);
+}
+
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--paper-60);
+  padding: 0 0.25rem;
+}
+
+/* Card 2: Interactive Archival Wardrobe Vault (Feature 2) */
+.vault-tabs-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.vault-tab-btn {
+  background: var(--ink);
+  border: 1.5px solid var(--paper-20);
+  color: var(--paper-60);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 800;
+  padding: 0.45rem 0.2rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-align: center;
+  transition: all 120ms ease;
+  white-space: nowrap;
+}
+
+.vault-tab-btn:hover {
+  color: var(--paper);
+  border-color: var(--paper-60);
+}
+
+.vault-tab-btn.active {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+  box-shadow: 2px 2px 0 var(--signal);
+}
+
+.mockup-listing-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.vault-provenance-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.3rem 0.6rem;
+  margin-top: 0.65rem;
+  align-self: center;
+}
+
+.mockup-img-container {
+  height: 90px;
+  background: rgba(108, 71, 255, 0.05);
+  border: 1px dashed var(--paper-20);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.garment-svg {
+  width: 60px;
+  height: 70px;
+}
+
+/* Canonical Sharp Sold Badge (Strict Plick Invariant: 0px radius, purple bg) */
+.sharp-sold-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background-color: var(--signal);
+  color: var(--paper);
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0 !important; /* Strict Plick Invariant */
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.mockup-meta {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.mockup-brand {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--signal);
+  letter-spacing: 0.05em;
+}
+
+.mockup-item-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--paper);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mockup-price {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--paper-80);
+}
+
+/* Card 3: Interactive Clutter Filter X-Ray Toggle */
+.clutter-toggle-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.clutter-tab-btn {
+  background: var(--ink);
+  border: 1.5px solid var(--paper-20);
+  color: var(--paper-60);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 800;
+  padding: 0.45rem 0.35rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 150ms ease;
+  white-space: nowrap;
+}
+
+.clutter-tab-btn:hover {
+  color: var(--paper);
+  border-color: var(--paper-60);
+}
+
+.clutter-tab-btn.active {
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--paper);
+  box-shadow: 2px 2px 0 var(--signal);
+}
+
+.comparison-visual {
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+  transition: all 250ms ease;
+  padding: 1rem;
+}
+
+/* Casino Chaotic Mode */
+.comparison-visual.mode-casino {
+  background-color: #1A0D00;
+  border-color: #F59E0B;
+  box-shadow: inset 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+.casino-overlay {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  animation: jitter-in 200ms ease;
+}
+
+.comparison-visual.mode-casino .casino-overlay {
+  display: flex;
+}
+
+.comparison-visual.mode-casino .discipline-content {
+  display: none;
+}
+
+.casino-banner {
+  background: #DC2626;
+  color: #FFFFFF;
+  font-family: var(--font-main);
+  font-weight: 900;
+  font-size: 0.6875rem;
+  padding: 0.3rem 0.5rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: pulse-red 800ms infinite alternate;
+}
+
+@keyframes pulse-red {
+  from { background-color: #DC2626; transform: scale(1); }
+  to { background-color: #EF4444; transform: scale(1.02); }
+}
+
+.casino-chips-wrap {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.casino-badge {
+  font-family: var(--font-main);
+  font-size: 0.625rem;
+  font-weight: 900;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #F59E0B;
+  background: #78350F;
+  color: #FDE68A;
+}
+
+.blink-slow {
+  animation: blink-anim 1.2s infinite;
+}
+
+.blink-fast {
+  animation: blink-anim 600ms infinite;
+  background: #B45309;
+}
+
+.shake-pill {
+  animation: shake-badge 400ms infinite;
+  background: #991B1B;
+  color: #FEE2E2;
+}
+
+@keyframes blink-anim {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes shake-badge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px) rotate(-1deg); }
+  75% { transform: translateX(2px) rotate(1deg); }
+}
+
+.casino-countdown {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  color: #EF4444;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  border: 1px dashed #EF4444;
+}
+
+/* Grabsty Discipline Mode */
+.discipline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.discipline-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.discipline-metric-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  background: var(--signal-subtle);
+  color: var(--paper);
+  border: 1.5px solid var(--signal);
+  padding: 0.35rem 0.6rem;
+  letter-spacing: 0.05em;
+}
+
+.discipline-status-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--paper-20);
+  padding: 0.5rem 0.75rem;
+  justify-content: center;
+}
+
+.discipline-indicator-dot {
+  width: 6px;
+  height: 6px;
+  background: #10B981;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.discipline-status-text {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: var(--paper-80);
+  letter-spacing: 0.06em;
+}
+
+/* Card Typography */
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.3125rem;
+  font-weight: 900;
+  color: var(--paper);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.card-desc {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--paper-80);
+  line-height: 1.55;
+}
+
+/* Wide Metrics Card */
+@media (min-width: 860px) {
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.metrics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+@media (min-width: 768px) {
+  .metrics-grid {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+  }
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+}
+
+.metric-value {
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--paper);
+  text-shadow: 4px 4px 0 var(--signal);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.metric-label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--paper);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.25rem;
+}
+
+.metric-sub {
+  font-size: 0.8125rem;
+  color: var(--paper-60);
+  max-width: 16rem;
+}
+
+.metric-divider {
+  width: 100%;
+  height: 2px;
+  background: var(--paper-10);
+}
+
+@media (min-width: 768px) {
+  .metric-divider {
+    width: 2px;
+    height: 70px;
+  }
+}
+
+/* ==========================================================================
+   FAQ Section (Memphis Accordion)
+   ========================================================================== */
+.faq-section {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.faq-item {
+  background-color: var(--ink-surface);
+  border: 3px solid var(--paper);
+  box-shadow: 5px 5px 0 var(--signal);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.faq-item[open] {
+  box-shadow: 8px 8px 0 var(--signal);
+}
+
+.faq-question {
+  padding: 1.5rem 1.75rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: var(--paper);
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+}
+
+.faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-arrow {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--signal);
+  transition: transform 250ms var(--ease-out);
+}
+
+.faq-item[open] .faq-arrow {
+  transform: rotate(45deg);
+}
+
+.faq-answer {
+  padding: 0 1.75rem 1.75rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--paper-80);
+  line-height: 1.6;
+  border-top: 1px solid var(--paper-10);
+  padding-top: 1.25rem;
+}
+
+/* ==========================================================================
+   Bottom Funnel Banner
+   ========================================================================== */
+.bottom-cta-section {
+  max-width: 1080px;
+  margin: 0 auto 5rem;
+  padding: 0 1.5rem;
+}
+
+.cta-banner-box {
+  background-color: var(--signal);
+  border: 4px solid var(--paper);
+  padding: 3.5rem 2rem;
+  text-align: center;
+  box-shadow: 12px 12px 0 var(--ink), 12px 12px 0 4px var(--paper);
+}
+
+.cta-inner {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--paper);
+  margin-bottom: 0.75rem;
+  text-shadow: 3px 3px 0 var(--ink);
+  font-variation-settings: "opsz" 72, "wght" 900;
+}
+
+.cta-desc {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2rem;
+}
+
+.cta-scroll-btn {
+  display: inline-block;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: 1.0625rem;
+  letter-spacing: 0.05em;
+  padding: 1.1rem 2.5rem;
+  border: 4px solid var(--ink);
+  text-decoration: none;
+  box-shadow: 6px 6px 0 var(--ink);
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+}
+
+.cta-scroll-btn:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 9px 9px 0 var(--ink);
+}
+
+.cta-scroll-btn:active {
+  transform: scale(0.97);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.site-footer {
+  border-top: 4px solid var(--paper);
+  background-color: var(--ink);
+  padding: 3rem 1.5rem;
+  width: 100%;
+}
+
+.footer-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.footer-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+@media (min-width: 640px) {
+  .footer-top {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.footer-brand {
+  font-size: 1.125rem;
+  font-weight: 900;
+  color: var(--paper);
+  letter-spacing: -0.02em;
+}
+
+.footer-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--paper-60);
+  letter-spacing: 0.06em;
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--paper-10);
+  padding-top: 1.5rem;
+}
+
+.footer-copy {
+  font-size: 0.8125rem;
+  color: var(--paper-40);
+}
+
+/* ==========================================================================
+   Scroll Animations
+   ========================================================================== */
+.animate-on-scroll {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+@keyframes autoRevealFallback {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-on-scroll:not(.in-view) {
+  animation: autoRevealFallback 400ms ease 1.2s forwards;
+}
+
+.reveal-up {
+  transform: translateY(50px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+}
+
+.reveal-up.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-rotate {
+  transform: translateY(40px) rotate(-3deg);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+}
+
+.reveal-rotate.in-view {
+  opacity: 1;
+  transform: translateY(0) rotate(0deg);
+}
+
+.bento-card.animate-on-scroll {
+  transform: perspective(1000px) translateY(50px);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out), box-shadow 350ms var(--ease-out);
+}
+
+.bento-card.animate-on-scroll.in-view {
+  opacity: 1;
+  transform: perspective(1000px) translateY(0);
+}
+
+/* Stagger Delays */
+.delay-100 { transition-delay: 100ms; animation-delay: 100ms; }
+.delay-150 { transition-delay: 150ms; animation-delay: 150ms; }
+.delay-200 { transition-delay: 200ms; animation-delay: 200ms; }
+.delay-250 { transition-delay: 250ms; animation-delay: 250ms; }
+.delay-300 { transition-delay: 300ms; animation-delay: 300ms; }
+.delay-350 { transition-delay: 350ms; animation-delay: 350ms; }
+.delay-450 { transition-delay: 450ms; animation-delay: 450ms; }
+
+/* ==========================================================================
+   Accessibility: Reduced Motion
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-on-scroll,
+  .reveal-up,
+  .reveal-rotate,
+  .bento-card.animate-on-scroll,
+  .word {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .cursor-glow,
+  .heritage-shape,
+  .memphis-shape {
+    display: none !important;
+  }
+
+  .marquee-track {
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   3D layer (scene3d.js)
+   ========================================================================== */
+#scene-3d {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+
+/* The WebGL objects take over from the flat heritage SVG accents. */
+body.has-3d .heritage-stage { display: none; }
+
+.tilt-3d {
+  transition: transform 180ms ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-3d-title {
+  transition: transform 300ms ease-out;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-3d, .tilt-3d-title { transform: none !important; }
+}
+</style>
+<style media="">/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2JL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa0ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2ZL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa2pL7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa25L7W0Q5n-wU.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(assets/fonts/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7W0Q5nw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwgknk-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(assets/fonts/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwgknk-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+
+</head>
+<body>
+<canvas id="scene-3d" aria-hidden="true" data-engine="three.js r169" width="1920" height="1080" style="opacity: 1;"></canvas>
+  <!-- Scroll Progress Bar -->
+  <div id="scroll-progress" class="scroll-progress-bar" aria-hidden="true" style="width: 0%;"></div>
+
+  <!-- Noise Film Grain -->
+  <div class="grain-overlay" aria-hidden="true" style="display: none;"></div>
+
+  <!-- Architectural Mughal Jaali Watermark Canvas -->
+  <div class="jaali-watermark" aria-hidden="true"></div>
+
+  <!-- Mouse Ambient Spotlight Glow -->
+  <div class="cursor-glow" id="cursor-glow" aria-hidden="true" style="transform: translate3d(960px, 540px, 0px) translate(-50%, -50%);"></div>
+
+  <!-- Celebration Party Popper Canvas -->
+  <canvas id="party-popper-canvas" class="party-popper-canvas" aria-hidden="true" style="display: none;"></canvas>
+
+  <!-- Lahore Architectural Floating Graphic Accents -->
+  <div class="memphis-stage heritage-stage" aria-hidden="true">
+    <!-- 01: Mughal Cusped Arch (Shahi Qila Naulakha Portal Elevation) -->
+    <div class="memphis-shape heritage-shape shape-arch" data-rot="0" data-speed="0.12" style="transform: translate3d(0px, 0px, 0px) rotate(0deg);">
+      <svg width="110" height="130" viewBox="0 0 110 130" fill="none">
+        <!-- Outer Gateway Pishtaq Portal Frame -->
+        <rect x="8" y="12" width="94" height="110" stroke="#FFFFFF" stroke-width="1.2" opacity="0.35" />
+        <rect x="14" y="18" width="82" height="104" stroke="#6C47FF" stroke-width="1.2" opacity="0.45" />
+        <line x1="4" y1="122" x2="106" y2="122" stroke="#FFFFFF" stroke-width="2" opacity="0.6" />
+        <line x1="6" y1="126" x2="104" y2="126" stroke="#6C47FF" stroke-width="1.2" opacity="0.5" />
+        
+        <!-- Spandrel Corner Rosettes -->
+        <circle cx="28" cy="32" r="5" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+        <circle cx="28" cy="32" r="2" fill="#6C47FF" opacity="0.7" />
+        <circle cx="82" cy="32" r="5" stroke="#FFFFFF" stroke-width="1" opacity="0.4" />
+        <circle cx="82" cy="32" r="2" fill="#6C47FF" opacity="0.7" />
+        
+        <!-- Multi-foil Cusped Arch with 9 Cusps -->
+        <path d="M22 122 V70 Q22 55 30 55 Q33 46 40 44 Q44 35 50 32 Q53 24 55 20 Q57 24 60 32 Q66 35 70 44 Q77 46 80 55 Q88 55 88 70 V122" stroke="#6C47FF" stroke-width="2.2" stroke-linecap="round" fill="rgba(108, 71, 255, 0.06)" opacity="0.85" />
+        <!-- Inner Decorative Cusped Contour -->
+        <path d="M30 122 V74 Q30 62 36 62 Q39 55 45 53 Q49 46 55 38 Q61 46 65 53 Q71 55 74 62 Q80 62 80 74 V122" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.5" />
+        
+        <!-- Pilaster Columns & Fluted Grooves -->
+        <line x1="18" y1="122" x2="18" y2="68" stroke="#FFFFFF" stroke-width="1" opacity="0.3" />
+        <line x1="92" y1="122" x2="92" y2="68" stroke="#FFFFFF" stroke-width="1" opacity="0.3" />
+        <circle cx="55" cy="20" r="3" fill="#6C47FF" />
+        <line x1="55" y1="8" x2="55" y2="20" stroke="#FFFFFF" stroke-width="1.2" opacity="0.6" />
+      </svg>
+    </div>
+
+    <!-- 02: Lahori Jharokha (Walled City Cantilevered Balcony Elevation) -->
+    <div class="memphis-shape heritage-shape shape-jharokha" data-rot="12" data-speed="-0.16" style="transform: translate3d(0px, 0px, 0px) rotate(12deg);">
+      <svg width="110" height="120" viewBox="0 0 110 120" fill="none">
+        <!-- Bangladar Eaves Canopy Roof -->
+        <path d="M12 30 Q55 10 98 30 L92 38 Q55 20 18 38 Z" stroke="#FFFFFF" stroke-width="1.5" fill="rgba(255, 255, 255, 0.04)" opacity="0.5" />
+        <circle cx="55" cy="8" r="3" fill="#6C47FF" opacity="0.8" />
+        <line x1="55" y1="8" x2="55" y2="18" stroke="#6C47FF" stroke-width="1.5" opacity="0.7" />
+        
+        <!-- Cornice Dentils / Brackets -->
+        <line x1="24" y1="38" x2="24" y2="43" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+        <line x1="39" y1="38" x2="39" y2="43" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+        <line x1="55" y1="38" x2="55" y2="43" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+        <line x1="71" y1="38" x2="71" y2="43" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+        <line x1="86" y1="38" x2="86" y2="43" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+        <line x1="18" y1="43" x2="92" y2="43" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4" />
+
+        <!-- Triple Window Openings with Cusped Arches & Jaali Grid -->
+        <rect x="22" y="43" width="66" height="42" stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity="0.35" />
+        <!-- Center Cusped Arch Window -->
+        <path d="M40 76 V56 Q40 48 55 45 Q70 48 70 56 V76" stroke="#6C47FF" stroke-width="1.4" fill="none" opacity="0.7" />
+        <line x1="40" y1="76" x2="70" y2="76" stroke="#6C47FF" stroke-width="1" opacity="0.5" />
+        <!-- Jaali Screen Crosshatch Lattice -->
+        <path d="M26 47 L36 57 M26 57 L36 47 M26 67 L36 77 M26 77 L36 67" stroke="#6C47FF" stroke-width="0.8" opacity="0.45" />
+        <path d="M74 47 L84 57 M74 57 L84 47 M74 67 L84 77 M74 77 L84 67" stroke="#6C47FF" stroke-width="0.8" opacity="0.45" />
+
+        <!-- Carved Balustrade Base Railing -->
+        <rect x="22" y="80" width="66" height="10" stroke="#FFFFFF" stroke-width="1.2" opacity="0.4" />
+        <circle cx="33" cy="85" r="2" fill="#6C47FF" opacity="0.6" />
+        <circle cx="55" cy="85" r="2" fill="#6C47FF" opacity="0.6" />
+        <circle cx="77" cy="85" r="2" fill="#6C47FF" opacity="0.6" />
+
+        <!-- Carved Cantilever Timber Corbel Brackets (Todas) -->
+        <path d="M22 90 C18 100 12 108 10 114 H100 C98 108 92 100 88 90" stroke="#FFFFFF" stroke-width="1.5" fill="none" opacity="0.45" />
+        <path d="M36 90 Q32 102 28 114" stroke="#6C47FF" stroke-width="1.2" opacity="0.55" />
+        <path d="M55 90 V114" stroke="#6C47FF" stroke-width="1.4" opacity="0.7" />
+        <path d="M74 90 Q78 102 82 114" stroke="#6C47FF" stroke-width="1.2" opacity="0.55" />
+        <circle cx="55" cy="116" r="2.5" fill="#6C47FF" opacity="0.8" />
+      </svg>
+    </div>
+
+    <!-- 03: 12-Point Star Girih Jaali Medallion (Wazir Khan Geometry) -->
+    <div class="memphis-shape heritage-shape shape-jaali" data-rot="0" data-speed="0.20" style="transform: translate3d(0px, 0px, 0px) rotate(0deg);">
+      <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
+        <!-- Concentric Drafting Construction Rings -->
+        <circle cx="50" cy="50" r="46" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 3" opacity="0.3" />
+        <circle cx="50" cy="50" r="38" stroke="#6C47FF" stroke-width="1" opacity="0.4" />
+        <circle cx="50" cy="50" r="26" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="3 2" opacity="0.35" />
+        <circle cx="50" cy="50" r="14" stroke="#6C47FF" stroke-width="1.2" opacity="0.6" />
+
+        <!-- Interlaced 8-Point Star Girih Lattice -->
+        <rect x="24" y="24" width="52" height="52" stroke="#FFFFFF" stroke-width="1.4" opacity="0.4" />
+        <rect x="24" y="24" width="52" height="52" stroke="#6C47FF" stroke-width="1.4" transform="rotate(45 50 50)" opacity="0.6" />
+        <rect x="29" y="29" width="42" height="42" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" transform="rotate(22.5 50 50)" opacity="0.35" />
+        <rect x="29" y="29" width="42" height="42" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 2" transform="rotate(67.5 50 50)" opacity="0.35" />
+
+        <!-- 8 Radiating Star Points -->
+        <polygon points="50,4 54,20 66,8 60,24 76,20 66,34 82,38 68,46 84,54 68,58 80,70 64,68 70,84 56,76 50,92 44,76 30,84 36,68 20,70 32,58 16,54 32,46 18,38 34,34 24,20 40,24 34,8 46,20" stroke="#6C47FF" stroke-width="1.2" fill="rgba(108, 71, 255, 0.05)" opacity="0.75" />
+
+        <!-- Center Core Rosette -->
+        <circle cx="50" cy="50" r="4" fill="#6C47FF" />
+        <circle cx="50" cy="50" r="1.5" fill="#FFFFFF" />
+      </svg>
+    </div>
+
+    <!-- 04: Architectural Astrolabe & Meridian Dial (Lahore 31.5204° N, 74.3587° E) -->
+    <div class="memphis-shape heritage-shape shape-meridian" data-rot="-10" data-speed="-0.12" style="transform: translate3d(0px, 0px, 0px) rotate(-10deg);">
+      <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
+        <!-- Outer Graduated Azimuth Ring -->
+        <circle cx="55" cy="55" r="48" stroke="#FFFFFF" stroke-width="1.4" opacity="0.35" />
+        <circle cx="55" cy="55" r="44" stroke="#6C47FF" stroke-width="1" opacity="0.5" />
+        <circle cx="55" cy="55" r="34" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" />
+        <circle cx="55" cy="55" r="22" stroke="#6C47FF" stroke-width="1.2" opacity="0.5" />
+
+        <!-- Cardinal Meridian Axis Crosshairs -->
+        <line x1="55" y1="4" x2="55" y2="106" stroke="#6C47FF" stroke-width="1.5" opacity="0.6" />
+        <line x1="4" y1="55" x2="106" y2="55" stroke="#6C47FF" stroke-width="1.5" opacity="0.6" />
+        <line x1="19" y1="19" x2="91" y2="91" stroke="#FFFFFF" stroke-width="0.9" stroke-dasharray="3 3" opacity="0.3" />
+        <line x1="19" y1="91" x2="91" y2="19" stroke="#FFFFFF" stroke-width="0.9" stroke-dasharray="3 3" opacity="0.3" />
+
+        <!-- Cardinal Labels in JetBrains Mono -->
+        <text x="55" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="900" text-anchor="middle" opacity="0.8">N</text>
+        <text x="55" y="103" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="900" text-anchor="middle" opacity="0.6">S</text>
+        <text x="98" y="58" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="900" text-anchor="middle" opacity="0.6">E</text>
+        <text x="12" y="58" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7" font-weight="900" text-anchor="middle" opacity="0.6">W</text>
+
+        <!-- 16-Point Compass Rose Facets -->
+        <polygon points="55,18 58,45 55,55 52,45" fill="#6C47FF" opacity="0.85" />
+        <polygon points="55,18 55,55 52,45" fill="#FFFFFF" opacity="0.7" />
+        <polygon points="55,92 58,65 55,55 52,65" fill="#6C47FF" opacity="0.5" />
+        <polygon points="92,55 65,58 55,55 65,52" fill="#6C47FF" opacity="0.5" />
+        <polygon points="18,55 45,58 55,55 45,52" fill="#6C47FF" opacity="0.5" />
+
+        <!-- Center Pivot -->
+        <circle cx="55" cy="55" r="4" fill="#6C47FF" />
+        <circle cx="55" cy="55" r="1.5" fill="#FFFFFF" />
+      </svg>
+    </div>
+
+    <!-- 05: Badshahi Bulbous Melon Dome & Lotus Finial (Grand Mosque Elevation) -->
+    <div class="memphis-shape heritage-shape shape-dome" data-rot="6" data-speed="0.18" style="transform: translate3d(0px, 0px, 0px) rotate(6deg);">
+      <svg width="110" height="110" viewBox="0 0 110 110" fill="none">
+        <!-- Octagonal Drum Base with Arched Blind Arcades -->
+        <rect x="22" y="86" width="66" height="12" stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity="0.4" />
+        <path d="M28 98 V90 Q33 87 38 90 V98 M42 98 V90 Q47 87 52 90 V98 M58 98 V90 Q63 87 68 90 V98 M72 98 V90 Q77 87 82 90 V98" stroke="#6C47FF" stroke-width="1.2" fill="none" opacity="0.6" />
+        <line x1="14" y1="98" x2="96" y2="98" stroke="#FFFFFF" stroke-width="2" opacity="0.6" />
+        <line x1="18" y1="102" x2="92" y2="102" stroke="#6C47FF" stroke-width="1.5" opacity="0.5" />
+
+        <!-- Bulbous Marble Melon Dome Profile -->
+        <path d="M26 86 C16 68 18 48 38 34 C44 26 49 18 55 12 C61 18 66 26 72 34 C92 48 94 68 84 86 Z" stroke="#6C47FF" stroke-width="2.2" fill="rgba(108, 71, 255, 0.05)" opacity="0.8" />
+        
+        <!-- Fluted Melon Rib Lines Converging to Crest -->
+        <path d="M55 12 V86" stroke="#FFFFFF" stroke-width="1.4" opacity="0.6" />
+        <path d="M55 12 Q45 42 42 86" stroke="#FFFFFF" stroke-width="1.1" stroke-dasharray="4 2" opacity="0.45" />
+        <path d="M55 12 Q65 42 68 86" stroke="#FFFFFF" stroke-width="1.1" stroke-dasharray="4 2" opacity="0.45" />
+        <path d="M55 12 Q35 48 30 86" stroke="#6C47FF" stroke-width="1.2" opacity="0.55" />
+        <path d="M55 12 Q75 48 80 86" stroke="#6C47FF" stroke-width="1.2" opacity="0.55" />
+
+        <!-- Inverted Lotus Petal Band (Padma-Kosa) -->
+        <path d="M46 22 Q55 16 64 22 Q55 26 46 22 Z" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.2)" opacity="0.7" />
+
+        <!-- Tiered Brass Finial (Kalasa with Crescent Tip) -->
+        <line x1="55" y1="2" x2="55" y2="12" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.9" />
+        <circle cx="55" cy="8" r="2.5" fill="#6C47FF" />
+        <circle cx="55" cy="3" r="3" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.85" />
+      </svg>
+    </div>
+
+    <!-- 06: Mughal Muqarnas Vaulting (Honeycomb Corbeling Geometry) -->
+    <div class="memphis-shape heritage-shape shape-muqarnas" data-rot="-15" data-speed="-0.15" style="transform: translate3d(0px, 0px, 0px) rotate(-15deg);">
+      <svg width="100" height="80" viewBox="0 0 100 80" fill="none">
+        <!-- Top Apex Arch Crown -->
+        <path d="M12 70 Q50 14 88 70" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.4" />
+        <circle cx="50" cy="18" r="3.5" fill="#6C47FF" opacity="0.8" />
+        <line x1="50" y1="8" x2="50" y2="18" stroke="#FFFFFF" stroke-width="1.5" opacity="0.7" />
+
+        <!-- Tier 1 Top Squinch Cells -->
+        <path d="M38 28 L50 20 L62 28 L50 36 Z" stroke="#6C47FF" stroke-width="1.4" fill="rgba(108, 71, 255, 0.12)" opacity="0.7" />
+
+        <!-- Tier 2 Honeycomb Facets -->
+        <path d="M26 42 L38 32 L50 40 L38 50 Z" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.45" />
+        <path d="M74 42 L62 32 L50 40 L62 50 Z" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.45" />
+
+        <!-- Tier 3 Intersecting Facet Cells -->
+        <path d="M16 56 L28 46 L40 54 L28 64 Z" stroke="#6C47FF" stroke-width="1.3" fill="rgba(108, 71, 255, 0.08)" opacity="0.6" />
+        <path d="M84 56 L72 46 L60 54 L72 64 Z" stroke="#6C47FF" stroke-width="1.3" fill="rgba(108, 71, 255, 0.08)" opacity="0.6" />
+        <path d="M38 56 L50 46 L62 56 L50 66 Z" stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity="0.5" />
+
+        <!-- Bottom Pendant Stalactite Drops -->
+        <line x1="28" y1="64" x2="28" y2="72" stroke="#6C47FF" stroke-width="1.5" opacity="0.7" />
+        <circle cx="28" cy="73" r="2" fill="#6C47FF" />
+        <line x1="50" y1="66" x2="50" y2="76" stroke="#FFFFFF" stroke-width="1.8" opacity="0.8" />
+        <circle cx="50" cy="77" r="2.5" fill="#FFFFFF" />
+        <line x1="72" y1="64" x2="72" y2="72" stroke="#6C47FF" stroke-width="1.5" opacity="0.7" />
+        <circle cx="72" cy="73" r="2" fill="#6C47FF" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Site Navigation -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <a href="#" class="brand-logo" aria-label="Grabsty Home">
+          <img src="https://www.grabsty.com/brand/LOGOMARK/SVG/Logomark%20Purple.svg" alt="" class="brand-logomark" width="30" height="32">
+          <img src="https://www.grabsty.com/brand/LOGOTYPE/SVG/Logotype%20White.svg" alt="Grabsty" class="brand-logotype" height="22">
+        </a>
+        <!-- Ambient Lahore & Regional Waitlist Ticker -->
+        <div class="header-live-ticker" id="global-ticker" aria-hidden="true">
+          <span class="ticker-pulse-dot"></span>
+          <span class="ticker-text" id="ticker-text" style="opacity: 1;">Payments held in escrow until delivery</span>
+        </div>
+      </div>
+      
+      <div class="header-meta">
+        <!-- Audio Haptics Toggle -->
+        <button type="button" id="sfx-toggle-btn" class="header-sfx-btn" title="Toggle Tactile Sound Effects" aria-pressed="true">
+          <span id="sfx-icon">🔊</span> <span class="sfx-label">SFX: ON</span>
+        </button>
+        <a href="#waitlist-section" class="header-action-btn">JOIN WAITLIST</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <!-- Hero Section -->
+    <section class="hero-section" id="hero">
+      <!-- Lahore Heritage Coordinates & Archive Registry Tag -->
+      <div class="hero-heritage-tag animate-on-scroll reveal-rotate in-view">
+        <span class="heritage-pulse-dot"></span>
+        <span class="heritage-tag-text"><span class="font-kelsi-fill" style="margin-right: 4px;">LAHORE</span> • PAKISTAN'S ESCROW-PROTECTED RESALE MARKETPLACE</span>
+      </div>
+
+      <h1 class="hero-title tilt-3d-title" aria-label="Resale Fashion Stripped Of Clutter">
+        <span class="word-mask"><span class="word delay-100">RESALE</span></span>
+        <span class="word-mask"><span class="word delay-150">FASHION</span></span><br class="hero-br">
+        <span class="word-mask"><span class="word delay-200">STRIPPED</span></span>
+        <span class="word-mask"><span class="word delay-250">OF</span></span>
+        <span class="word-mask"><span class="word delay-300">CLUTTER.</span></span>
+      </h1>
+      
+      <div class="hero-subtitle-box animate-on-scroll reveal-rotate delay-350 in-view">
+        <p class="subtitle-text">
+          Buy and sell pre-loved clothes, sneakers and bags without sending money to strangers first. Your payment stays in escrow until your order arrives and you've had 48 hours to check it.
+        </p>
+      </div>
+
+      <!-- Tactile Brand Stickers (Photorealistic Physical Paper Badges) -->
+      <div class="hero-sticker-cluster" aria-hidden="true">
+        <div class="brand-sticker sticker-thrifter animate-on-scroll reveal-rotate in-view" title="Certified Thrifter">
+          <img src="https://www.grabsty.com/brand/STICKERS/PNG/8.png" alt="Certified Thrifter" width="168" height="74" loading="eager">
+        </div>
+        <div class="brand-sticker sticker-steal animate-on-scroll reveal-rotate in-view" title="Style on a Steal">
+          <img src="https://www.grabsty.com/brand/STICKERS/PNG/9.png" alt="Style on a Steal" width="176" height="84" loading="eager">
+        </div>
+      </div>
+
+      <!-- Funnel Form & Success State -->
+      <div class="funnel-container animate-on-scroll reveal-up delay-450 in-view" id="waitlist-section">
+        <div class="form-wrapper" id="form-container">
+          <!-- Referred-By Badge (Dynamically populated if ?ref= is present) -->
+          <div class="referral-banner hidden" id="referral-banner" aria-live="polite">
+            <span class="ref-badge-icon" aria-hidden="true">✦</span>
+            <span>Invited by <strong id="referrer-code">#GRB-1024</strong></span>
+          </div>
+
+          <!-- Waitlist Hub Badge (Accurate Location Banner) -->
+          <div class="waitlist-location-card">
+            <div class="waitlist-loc-left">
+              <div class="loc-arch-badge" aria-hidden="true">
+                <svg viewBox="0 0 32 32" fill="none" class="loc-arch-svg">
+                  <!-- Base Plinth -->
+                  <line x1="3" y1="28" x2="29" y2="28" stroke="#FFFFFF" stroke-width="1.6" opacity="0.7" />
+                  <line x1="4" y1="30" x2="28" y2="30" stroke="#6C47FF" stroke-width="1.4" />
+                  <!-- Flanking Defensive Bastion Turrets -->
+                  <rect x="5" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5" />
+                  <rect x="21" y="10" width="6" height="18" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.05)" opacity="0.5" />
+                  <!-- Turret Chhatri Domes -->
+                  <path d="M5 10 Q8 6 11 10 Z" fill="#6C47FF" stroke="#6C47FF" stroke-width="1" />
+                  <path d="M21 10 Q24 6 27 10 Z" fill="#6C47FF" stroke="#6C47FF" stroke-width="1" />
+                  <!-- Rampart Battlements / Crenellations -->
+                  <path d="M11 11 H21" stroke="#FFFFFF" stroke-width="1.2" opacity="0.6" />
+                  <rect x="12" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7" />
+                  <rect x="15" y="8" width="2" height="3" fill="#6C47FF" />
+                  <rect x="18" y="8" width="2" height="3" fill="#FFFFFF" opacity="0.7" />
+                  <!-- Central Grand Cusped Portal Arch -->
+                  <path d="M11 28 V19 Q11 14 16 12 Q21 14 21 19 V28" stroke="#6C47FF" stroke-width="1.8" fill="rgba(108, 71, 255, 0.15)" />
+                  <path d="M13 28 V20 Q13 16 16 15 Q19 16 19 20 V28" stroke="#FFFFFF" stroke-width="1" stroke-dasharray="2 1" fill="none" opacity="0.7" />
+                  <circle cx="16" cy="12" r="1" fill="#FFFFFF" />
+                </svg>
+              </div>
+              <div class="loc-text-col">
+                <span class="loc-title">WAITLIST HUB: LAHORE, PAKISTAN</span>
+                <span class="loc-sub">Walled City • Gulberg • DHA • Mall Road • Cantt</span>
+              </div>
+            </div>
+            <span class="loc-status-pill">OFFICIAL WAITLIST</span>
+          </div>
+
+          <!-- Waitlist Registration Form -->
+          <form id="waitlist-form" class="waitlist-form" novalidate>
+            <!-- Collector / Seller Role Selector -->
+            <div class="role-selector-wrap">
+              <span class="role-selector-label">I AM JOINING AS:</span>
+              <div class="role-pills" role="radiogroup" aria-label="Select your participant type">
+                <button type="button" role="radio" aria-checked="true" class="role-pill active" data-role="buyer">
+                  <span class="role-pill-indicator">◈</span> BUYER
+                </button>
+                <button type="button" role="radio" aria-checked="false" class="role-pill" data-role="seller">
+                  <span class="role-pill-indicator">◇</span> SELLER
+                </button>
+                <button type="button" role="radio" aria-checked="false" class="role-pill" data-role="both">
+                  <span class="role-pill-indicator">◆</span> BOTH
+                </button>
+              </div>
+              <input type="hidden" name="role" id="selected-role" value="buyer">
+            </div>
+
+            <!-- Focus / Interest Selector (Lahore Architecture Design & Fashion) -->
+            <div class="interest-selector-wrap">
+              <span class="role-selector-label">WHAT ARE YOU INTO?</span>
+              <div class="interest-pills" role="radiogroup" aria-label="Select what you want to buy or sell">
+                <button type="button" role="radio" aria-checked="false" class="interest-pill" data-interest="clothing">
+                  <span class="interest-icon-svg" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                      <path d="M2 14 V7 Q2 4 8 2 Q14 4 14 7 V14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                      <path d="M5 14 V8 Q5 6 8 5 Q11 6 11 8 V14" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1" />
+                      <line x1="1" y1="14" x2="15" y2="14" stroke="currentColor" stroke-width="1.4" />
+                      <circle cx="8" cy="2" r="1" fill="currentColor" />
+                    </svg>
+                  </span>
+                  CLOTHING
+                </button>
+                <button type="button" role="radio" aria-checked="false" class="interest-pill" data-interest="sneakers_bags">
+                  <span class="interest-icon-svg" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                      <path d="M12 2 L4 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                      <circle cx="12" cy="2" r="1.5" stroke="currentColor" stroke-width="1" />
+                      <path d="M3 12 Q6 10 9 13 T15 11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none" />
+                    </svg>
+                  </span>
+                  SNEAKERS &amp; BAGS
+                </button>
+                <button type="button" role="radio" aria-checked="true" class="interest-pill active" data-interest="both">
+                  <span class="interest-icon-svg" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                      <rect x="3" y="3" width="10" height="10" stroke="currentColor" stroke-width="1.2" fill="none" />
+                      <rect x="3" y="3" width="10" height="10" stroke="currentColor" stroke-width="1.2" transform="rotate(45 8 8)" fill="none" />
+                      <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                    </svg>
+                  </span>
+                  BOTH
+                </button>
+              </div>
+              <input type="hidden" name="interest" id="selected-interest" value="both">
+              <input type="hidden" name="city" id="selected-city" value="Lahore">
+            </div>
+
+            <!-- Form Inputs: Name, Phone Number, Optional Email -->
+            <div class="form-fields-grid">
+              <!-- Full Name (Required) -->
+              <div class="input-group">
+                <label for="name" class="field-label">FULL NAME <span class="field-req">*</span></label>
+                <input type="text" id="name" name="name" required autocomplete="name" placeholder="e.g. Zainab Malik" class="form-text-input" aria-describedby="name-error">
+                <div id="name-error" class="input-error-msg" aria-live="polite"></div>
+              </div>
+
+              <!-- Phone Number (Required) -->
+              <div class="input-group">
+                <label for="phone" class="field-label">PHONE NUMBER <span class="field-req">*</span></label>
+                <input type="tel" id="phone" name="phone" required autocomplete="tel" placeholder="e.g. +92 300 1234567" class="form-text-input" aria-describedby="phone-error">
+                <div id="phone-error" class="input-error-msg" aria-live="polite"></div>
+              </div>
+
+              <!-- Email (Optional) -->
+              <div class="input-group input-group-full">
+                <label for="email" class="field-label">EMAIL ADDRESS <span class="field-opt">(OPTIONAL)</span></label>
+                <input type="email" id="email" name="email" autocomplete="email" placeholder="name@example.com (optional)" class="form-text-input" aria-describedby="email-error">
+                <div id="email-error" class="input-error-msg" aria-live="polite"></div>
+              </div>
+            </div>
+
+            <div class="form-action-row">
+              <button type="submit" id="submit-btn" class="submit-btn">
+                <span class="btn-text">JOIN WAITLIST</span>
+                <span class="btn-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Canonical Escrow Buyer Protection Badge -->
+          <div class="trust-pill" title="Escrow-Backed Buyer Protection">
+            <svg class="canonical-shield" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="12" fill="#F2F3FE" />
+              <g transform="translate(-5.4, -5.4) scale(1.45)">
+                <path d="M12.033 6.8s-2.93 1.424-5.833 1.424v.168c0 .838.044 1.634.154 2.367.33 2.47 1.233 4.398 2.729 6.01l.066.084c.594.628 1.255 1.131 1.937 1.529.198.125.925.419.925.419s.726-.293.925-.419c.704-.377 1.343-.9 1.937-1.529l.066-.084c1.035-1.11 1.783-2.387 2.245-3.874.22-.67.33-1.361.44-2.136.088-.733.176-1.529.176-2.367v-.168c-2.833 0-5.767-1.424-5.767-1.424z" stroke="#5356EE" stroke-width="0.95" stroke-linejoin="round" />
+                <path d="M9.4 12.013l1.932 1.787 3.668-3.4" stroke="#5356EE" stroke-width="0.95" stroke-linecap="round" stroke-linejoin="round" />
+              </g>
+            </svg>
+            <span class="trust-label">Guaranteed Buyer Protection</span>
+            <span class="trust-bullet">•</span>
+            <span class="trust-sub">Funds in Escrow</span>
+          </div>
+
+          <!-- Status Lookup Switcher -->
+          <div class="lookup-toggle-wrap">
+            <button type="button" id="lookup-toggle-btn" class="lookup-toggle-btn">
+              Already joined on this device? See your invite link →
+            </button>
+          </div>
+        </div>
+
+        <!-- Success Confirmation Card -->
+        <div class="success-state hidden" id="success-container" aria-live="polite">
+          <div class="success-card" id="waitlist-success-card">
+            <div class="success-badge-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <div class="success-queue-tag" id="success-queue-tag">WAITLIST SPOT CONFIRMED</div>
+            <div class="success-sticker-badge" aria-hidden="true">
+              <img src="https://www.grabsty.com/brand/STICKERS/PNG/8.png" alt="Certified Thrifter" width="135" height="60">
+            </div>
+            <h2 class="success-title" id="success-title">You're On The Waitlist!</h2>
+            
+            <div class="success-details-box">
+              <div class="success-detail-item">
+                <span class="detail-label">NAME</span>
+                <span class="detail-value" id="confirmed-name">—</span>
+              </div>
+              <div class="success-detail-item">
+                <span class="detail-label">PHONE</span>
+                <span class="detail-value" id="confirmed-phone">—</span>
+              </div>
+              <div class="success-detail-item" id="confirmed-email-row">
+                <span class="detail-label">EMAIL</span>
+                <span class="detail-value" id="confirmed-email">—</span>
+              </div>
+              <div class="success-detail-item">
+                <span class="detail-label">LOCATION</span>
+                <span class="detail-value" id="confirmed-location">Lahore, Pakistan</span>
+              </div>
+              <div class="success-detail-item">
+                <span class="detail-label">JOINING AS</span>
+                <span class="detail-value" id="confirmed-role">BUYER • ALL CATEGORIES</span>
+              </div>
+            </div>
+
+            <p class="success-text" id="success-message">
+              We'll send your invite on WhatsApp or SMS as soon as Grabsty opens in your city.
+            </p>
+
+            <!-- Referral Station -->
+            <div class="referral-station">
+              <div class="ref-station-header">
+                <span class="ref-station-tag">COMMUNITY INVITATION</span>
+                <h3 class="ref-station-title">Invite friends who buy and sell</h3>
+                <p class="ref-station-desc">
+                  Share your link. Everyone who joins with it is counted below.
+                </p>
+              </div>
+
+              <div class="ref-link-box">
+                <input type="text" id="referral-link-input" class="ref-link-input" readonly value="https://grabsty.com/?ref=GRB-1001" aria-label="Your unique referral link">
+                <button type="button" id="copy-ref-btn" class="copy-ref-btn">
+                  <span class="copy-text">COPY LINK</span>
+                </button>
+              </div>
+
+              <div class="ref-share-actions">
+                <a id="share-wa-btn" class="ref-share-btn share-wa" href="#" target="_blank" rel="noopener noreferrer">
+                  WHATSAPP
+                </a>
+                <a id="share-x-btn" class="ref-share-btn share-x" href="#" target="_blank" rel="noopener noreferrer">
+                  SHARE ON 𝕏
+                </a>
+                <button type="button" id="native-share-btn" class="ref-share-btn share-native hidden">
+                  SHARE SHEET ↗
+                </button>
+              </div>
+
+              <div class="ref-tracker-pill">
+                <span class="ref-tracker-dot" aria-hidden="true"></span>
+                <span id="ref-count-text">0 Referrals Tracked</span>
+              </div>
+            </div>
+
+            <div class="success-footer-info">
+              <span class="ticket-id" id="ticket-number">#GRB-1001</span>
+              <span class="ticket-status">WAITLIST ENTRY CONFIRMED</span>
+            </div>
+
+            <div class="success-actions-row">
+              <button type="button" id="back-to-form-btn" class="back-link-btn">
+                ← Register Another Waitlist Member
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kinetic Marquee Section -->
+    <div class="marquee-section animate-on-scroll reveal-up delay-200 in-view" aria-hidden="true">
+      <div class="marquee-track" id="marquee-track" style="transform: translate3d(-149.737px, 0px, 0px);">
+        <div class="marquee-stream">
+          <span>LAHORE WAITLIST OPEN</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>GUARANTEED ESCROW PROTECTION</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/4.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>ZERO ADVANCE PAYMENT RISK</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/5.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>48-HOUR INSPECTION WINDOW</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/3.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>NO MORE INSTAGRAM SCAMS</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/6.svg" class="marquee-sticker" alt="" width="28" height="18">
+          <span>DUAL-CONFIRMED CASH ON DELIVERY</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24">
+        </div>
+        <div class="marquee-stream" aria-hidden="true">
+          <span>LAHORE WAITLIST OPEN</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>GUARANTEED ESCROW PROTECTION</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/4.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>ZERO ADVANCE PAYMENT RISK</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/5.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>48-HOUR INSPECTION WINDOW</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/3.svg" class="marquee-sticker" alt="" width="24" height="24">
+          <span>NO MORE INSTAGRAM SCAMS</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/6.svg" class="marquee-sticker" alt="" width="28" height="18">
+          <span>DUAL-CONFIRMED CASH ON DELIVERY</span>
+          <img src="https://www.grabsty.com/brand/STICKERS/SVG/2.svg" class="marquee-sticker" alt="" width="24" height="24">
+        </div>
+      </div>
+    </div>
+
+    <!-- Escrow Program Mechanics & The High Cost of the Status Quo -->
+    <section class="features-section" id="features">
+      <div class="section-tag animate-on-scroll reveal-rotate in-view">
+        <span>THE ESCROW PROGRAM</span>
+      </div>
+      
+      <h2 class="section-heading animate-on-scroll reveal-up delay-100 in-view">
+        WHAT YOU LOSE ON INSTAGRAM &amp; OLX.<br>AND HOW GRABSTY PROTECTS YOU.
+      </h2>
+
+      <div class="lahore-architecture-card animate-on-scroll reveal-up delay-150 tilt-3d in-view">
+        <div class="arch-card-header">
+          <div class="arch-badge-group">
+            <span class="arch-card-tag">ESCROW ENGINE</span>
+            <span class="arch-card-pill">BUYER PROTECTION • ESCROW PAYMENTS • TRACKED DELIVERY</span>
+          </div>
+          <div class="arch-study-switcher" role="tablist" aria-label="How escrow works">
+            <button type="button" class="arch-study-tab active" data-study="01" role="tab" aria-selected="true" id="tab-study-01">
+              PROGRAM 01: HOW ESCROW PROTECTS YOU
+            </button>
+            <button type="button" class="arch-study-tab" data-study="02" role="tab" aria-selected="false" id="tab-study-02">
+              PROGRAM 02: WHAT YOU LOSE WITHOUT IT
+            </button>
+          </div>
+        </div>
+
+        <div class="arch-card-content-grid">
+          <div class="arch-card-visual">
+            <div class="arch-blueprint-frame">
+              <!-- Blueprint Study 01: Grabsty Atomic Escrow Pipeline -->
+              <svg viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel" id="blueprint-study-01" aria-label="How a Grabsty order moves from offer to payout">
+                <!-- Technical Grid Pattern -->
+                <defs>
+                  <pattern id="archGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1" />
+                  </pattern>
+                  <marker id="arrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#6C47FF" />
+                  </marker>
+                  <marker id="arrowHeadMuted" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#FFFFFF" opacity="0.6" />
+                  </marker>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#archGridPattern)" />
+                
+                <!-- Header Status Line -->
+                <text x="18" y="24" fill="#6C47FF" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">HOW A GRABSTY ORDER WORKS</text>
+                <text x="442" y="24" fill="rgba(255,255,255,0.4)" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">OFFER TO PAYOUT</text>
+                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(255,255,255,0.15)" stroke-dasharray="3 3" stroke-width="1" />
+
+                <!-- Stage 01: In-Chat Offer -->
+                <g transform="translate(18, 52)">
+                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)" />
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)" />
+                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 CHAT</text>
+                  <!-- Tag Icon -->
+                  <path d="M26 38 L38 38 L46 46 L38 54 L26 54 Z" stroke="#6C47FF" stroke-width="1.2" fill="none" />
+                  <circle cx="30" cy="46" r="1.5" fill="#6C47FF" />
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BINDING</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">OFFER</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Instant Accept</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or Counter</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(108,71,255,0.2)" />
+                  <text x="36" y="130" fill="#6C47FF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">PROPOSED</text>
+                </g>
+
+                <!-- Connector 01 -> 02 -->
+                <line x1="90" y1="120" x2="103" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)" />
+
+                <!-- Stage 02: Escrow Vault (Hero Step) -->
+                <g transform="translate(105, 42)">
+                  <rect width="78" height="154" stroke="#6C47FF" stroke-width="2" fill="rgba(108,71,255,0.12)" />
+                  <rect x="0" y="0" width="78" height="22" fill="#6C47FF" />
+                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 VAULT</text>
+                  <!-- Padlock Icon -->
+                  <circle cx="39" cy="48" r="14" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="2 2" fill="none" />
+                  <rect x="31" y="44" width="16" height="13" stroke="#FFFFFF" stroke-width="1.4" fill="var(--ink)" />
+                  <path d="M34 44 V39 C34 36.5 36.5 34.5 39 34.5 C41.5 34.5 44 36.5 44 39 V44" stroke="#FFFFFF" stroke-width="1.4" fill="none" />
+                  <circle cx="39" cy="50.5" r="1.5" fill="#6C47FF" />
+                  <text x="39" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ESCROW</text>
+                  <text x="39" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LOCKED</text>
+                  <text x="39" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller NOT Paid</text>
+                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Funds In Vault</text>
+                  <rect x="6" y="132" width="66" height="14" fill="#6C47FF" />
+                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">SECURED_ESCROW</text>
+                </g>
+
+                <!-- Connector 02 -> 03 -->
+                <line x1="183" y1="120" x2="196" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)" />
+
+                <!-- Stage 03: Managed Doorstep Pickup & Tracking -->
+                <g transform="translate(198, 52)">
+                  <rect width="72" height="136" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="rgba(15,15,15,0.85)" />
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(255,255,255,0.08)" />
+                  <text x="36" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DISPATCH</text>
+                  <!-- Truck Courier Icon -->
+                  <rect x="23" y="40" width="16" height="12" stroke="#6C47FF" stroke-width="1.2" fill="none" />
+                  <path d="M39 44 H45 L48 48 V52 H39 V44 Z" stroke="#6C47FF" stroke-width="1.2" fill="none" />
+                  <circle cx="28" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1" />
+                  <circle cx="44" cy="53" r="2.5" stroke="#FFFFFF" stroke-width="1" />
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">DOORSTEP</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">PICKUP</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Live Courier</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Tracking Link</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(255,255,255,0.08)" />
+                  <text x="36" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IN_TRANSIT</text>
+                </g>
+
+                <!-- Connector 03 -> 04 -->
+                <line x1="270" y1="120" x2="283" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)" />
+
+                <!-- Stage 04: 72-Hour Physical Inspection (Hero Step) -->
+                <g transform="translate(285, 42)">
+                  <rect width="80" height="154" stroke="#FFFFFF" stroke-width="2" fill="rgba(255,255,255,0.05)" />
+                  <rect x="0" y="0" width="80" height="22" fill="#FFFFFF" />
+                  <text x="40" y="15" fill="#0F0F0F" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 INSPECT</text>
+                  <!-- Inspection Magnifier / Shield Icon -->
+                  <circle cx="37" cy="46" r="10" stroke="#6C47FF" stroke-width="1.5" fill="none" />
+                  <line x1="44" y1="53" x2="51" y2="60" stroke="#6C47FF" stroke-width="2" stroke-linecap="round" />
+                  <path d="M33 46 L36 49 L43 42" stroke="#FFFFFF" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                  <text x="40" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">48-HOUR</text>
+                  <text x="40" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">WINDOW</text>
+                  <text x="40" y="108" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Check The Item</text>
+                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">Verify Quality</text>
+                  <rect x="6" y="132" width="68" height="14" fill="rgba(255,255,255,0.15)" />
+                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">DELIVERED</text>
+                </g>
+
+                <!-- Connector 04 -> 05 -->
+                <line x1="365" y1="120" x2="378" y2="120" stroke="#6C47FF" stroke-width="1.5" marker-end="url(#arrowHead)" />
+
+                <!-- Stage 05: Atomic Funds Release -->
+                <g transform="translate(380, 52)">
+                  <rect width="66" height="136" stroke="#6C47FF" stroke-width="1.4" fill="rgba(15,15,15,0.95)" />
+                  <rect x="0" y="0" width="66" height="20" fill="#6C47FF" />
+                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 PAYOUT</text>
+                  <!-- Shield Check Icon -->
+                  <circle cx="33" cy="46" r="12" fill="#F2F3FE" />
+                  <path d="M29 46 L32 49 L38 43" stroke="#5356EE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  <text x="33" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">FUNDS</text>
+                  <text x="33" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RELEASED</text>
+                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Paid To Bank,</text>
+                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">JazzCash Or Easypaisa</text>
+                  <rect x="5" y="123" width="56" height="9" fill="#10B981" />
+                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">COMPLETED</text>
+                </g>
+
+                <!-- Footer Summary Label -->
+                <line x1="18" y1="216" x2="442" y2="216" stroke="#FFFFFF" stroke-width="1.5" opacity="0.4" />
+                <text x="230" y="238" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ESCROW PAYMENT • NO ADVANCE TRANSFERS • 48-HR INSPECTION</text>
+              </svg>
+
+              <!-- Blueprint Study 02: What You Lose on Instagram & OLX -->
+              <svg viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel hidden" id="blueprint-study-02" aria-label="What You Lose Without Escrow: The Instagram and OLX Trap">
+                <rect width="100%" height="100%" fill="url(#archGridPattern)" />
+                
+                <defs>
+                  <marker id="arrowFail" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#EF4444" />
+                  </marker>
+                </defs>
+
+                <!-- Header Warning Line -->
+                <text x="18" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">WITHOUT GRABSTY: PAYING A STRANGER UPFRONT</text>
+                <text x="442" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">BUYER_RISK = 100%</text>
+                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(239,68,68,0.35)" stroke-dasharray="3 3" stroke-width="1" />
+
+                <!-- Failure Step 01: Blind Bank Transfer -->
+                <g transform="translate(18, 52)">
+                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)" />
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)" />
+                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 ADVANCE</text>
+                  <!-- Send money icon -->
+                  <path d="M26 44 H46 M46 44 L39 37 M46 44 L39 51" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round" />
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RAAST /</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BANK PAY</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">100% Upfront</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Blind Transfer</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)" />
+                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IRREVERSIBLE</text>
+                </g>
+
+                <!-- Connector 01 -> 02 -->
+                <line x1="90" y1="120" x2="103" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)" />
+
+                <!-- Failure Step 02: Zero Holding Vault -->
+                <g transform="translate(105, 42)">
+                  <rect width="78" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)" />
+                  <rect x="0" y="0" width="78" height="22" fill="#EF4444" />
+                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 NO VAULT</text>
+                  <!-- Broken Lock Icon -->
+                  <circle cx="39" cy="48" r="14" stroke="#EF4444" stroke-width="1.2" stroke-dasharray="2 2" fill="none" />
+                  <path d="M31 46 H47 V58 H31 Z" stroke="#EF4444" stroke-width="1.4" fill="var(--ink)" />
+                  <path d="M34 44 V37 C34 34 39 34 42 37" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round" fill="none" />
+                  <line x1="33" y1="33" x2="45" y2="45" stroke="#EF4444" stroke-width="1.5" />
+                  <text x="39" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ZERO</text>
+                  <text x="39" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LEVERAGE</text>
+                  <text x="39" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller Has Cash</text>
+                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">You Have Zero</text>
+                  <rect x="6" y="132" width="66" height="14" fill="#EF4444" />
+                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_PROTECTION</text>
+                </g>
+
+                <!-- Connector 02 -> 03 -->
+                <line x1="183" y1="120" x2="196" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)" />
+
+                <!-- Failure Step 03: Replica, Fake, or Ghosting -->
+                <g transform="translate(198, 52)">
+                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)" />
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)" />
+                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DELIVERY</text>
+                  <!-- Warning triangle icon -->
+                  <polygon points="36,36 49,56 23,56" stroke="#EF4444" stroke-width="1.3" fill="none" />
+                  <text x="36" y="52" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">!</text>
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">REPLICA OR</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BLOCKED</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Fake Fabric</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or DM Ghost</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)" />
+                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">COUNTERFEIT</text>
+                </g>
+
+                <!-- Connector 03 -> 04 -->
+                <line x1="270" y1="120" x2="283" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)" />
+
+                <!-- Failure Step 04: "No Returns / Sold As-Is" -->
+                <g transform="translate(285, 42)">
+                  <rect width="80" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)" />
+                  <rect x="0" y="0" width="80" height="22" fill="#EF4444" />
+                  <text x="40" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 NO RETURN</text>
+                  <!-- Prohibited Icon -->
+                  <circle cx="40" cy="48" r="13" stroke="#EF4444" stroke-width="1.4" fill="none" />
+                  <line x1="31" y1="39" x2="49" y2="57" stroke="#EF4444" stroke-width="1.5" />
+                  <text x="40" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">"SOLD</text>
+                  <text x="40" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">AS-IS"</text>
+                  <text x="40" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Zero Inspection</text>
+                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">No Chargeback</text>
+                  <rect x="6" y="132" width="68" height="14" fill="#EF4444" />
+                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_EXCHANGE</text>
+                </g>
+
+                <!-- Connector 04 -> 05 -->
+                <line x1="365" y1="120" x2="378" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)" />
+
+                <!-- Failure Step 05: Total Loss -->
+                <g transform="translate(380, 52)">
+                  <rect width="66" height="136" stroke="#EF4444" stroke-width="1.4" fill="rgba(15,15,15,0.95)" />
+                  <rect x="0" y="0" width="66" height="20" fill="#EF4444" />
+                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 LOSS</text>
+                  <!-- Skull / Crossmark Icon -->
+                  <circle cx="33" cy="46" r="12" fill="rgba(239,68,68,0.2)" />
+                  <line x1="27" y1="40" x2="39" y2="52" stroke="#EF4444" stroke-width="1.6" />
+                  <line x1="39" y1="40" x2="27" y2="52" stroke="#EF4444" stroke-width="1.6" />
+                  <text x="33" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">TOTAL</text>
+                  <text x="33" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">LOSS</text>
+                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Money Gone</text>
+                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Zero Recourse</text>
+                  <rect x="5" y="123" width="56" height="9" fill="#EF4444" />
+                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">PERMANENT</text>
+                </g>
+
+                <!-- Footer Warning Summary -->
+                <line x1="18" y1="216" x2="442" y2="216" stroke="#EF4444" stroke-width="1.5" opacity="0.5" />
+                <text x="230" y="238" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ADVANCE TRANSFER • NO RETURNS • NO WAY TO GET YOUR MONEY BACK</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="arch-card-info">
+            <h3 class="arch-info-title">Stop sending advance payments to strangers</h3>
+            <p class="arch-info-desc">
+              Buying pre-loved clothes, sneakers or bags on Instagram, WhatsApp or OLX puts all the risk on you. Sellers demand advance payment via Raast or bank transfer before shipping. If the item is fake, damaged, or never shipped, your money is gone with zero recourse.
+            </p>
+            <p class="arch-info-desc">
+              On Grabsty, your payment is held in escrow when you buy. The seller isn't paid upfront. Once your tracked parcel is delivered, you have 48 hours to check the item. If it's damaged or not as described, report an issue and the payout stays on hold while support sorts it out.
+            </p>
+            <div class="arch-tags-list">
+              <span class="arch-tag-pill">
+                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="2" y="5" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.2" />
+                  <path d="M4 5 V3.5 C4 2 5.5 1 7 1 C8.5 1 10 2 10 3.5 V5" stroke="currentColor" stroke-width="1.2" />
+                  <circle cx="7" cy="9" r="1" fill="currentColor" />
+                </svg>
+                Escrow payments
+              </span>
+              <span class="arch-tag-pill">
+                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2" />
+                  <polyline points="7,4 7,7 9,8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                </svg>
+                48-hour inspection window
+              </span>
+              <span class="arch-tag-pill">
+                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <path d="M2 10 L5 13 L12 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                  <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1" stroke-dasharray="2 1" />
+                </svg>
+                Cash on delivery
+              </span>
+              <span class="arch-tag-pill">
+                <svg class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="1" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.2" />
+                  <path d="M9 6 H12 L13.5 8 V11 H9 V6 Z" stroke="currentColor" stroke-width="1.2" />
+                  <circle cx="4" cy="11" r="1.5" fill="currentColor" />
+                  <circle cx="11" cy="11" r="1.5" fill="currentColor" />
+                </svg>
+                Tracked delivery
+              </span>
+            </div>
+            <!-- Authentic Preloved Resale Price Tag & Protection Bag Stickers -->
+            <div class="arch-brand-stickers" aria-hidden="true">
+              <div class="brand-sticker sticker-price-tag" title="Grabsty Preloved Fashion Price Tag">
+                <img src="https://www.grabsty.com/brand/STICKERS/PNG/7.png" alt="Grabsty Preloved Fashion Price Tag Was Rs. 8,000 Now Rs. 3,000" width="210" height="118">
+              </div>
+              <div class="brand-sticker sticker-bag" title="Grabsty Got You">
+                <img src="https://www.grabsty.com/brand/STICKERS/PNG/1.png" alt="Grabsty Got You Crinkled Bag" width="118" height="160">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- What You Lose Without Grabsty: 3 Catastrophic Failure Points -->
+      <div class="arch-lineage-grid animate-on-scroll reveal-up delay-200 in-view">
+        <div class="lineage-card tilt-3d">
+          <div class="lineage-card-num">01</div>
+          <div class="lineage-card-body">
+            <h4 class="lineage-card-title">ADVANCE TRANSFER SCAMS</h4>
+            <p class="lineage-card-desc">
+              Many Instagram and WhatsApp sellers ask for full payment by bank transfer before they ship. If the seller blocks you, sends a replica or never posts the parcel, there is usually no way to get your money back.
+            </p>
+            <span class="lineage-badge">On Grabsty: payment held in escrow</span>
+          </div>
+        </div>
+
+        <div class="lineage-card tilt-3d">
+          <div class="lineage-card-num">02</div>
+          <div class="lineage-card-body">
+            <h4 class="lineage-card-title">"NO RETURNS" POLICIES</h4>
+            <p class="lineage-card-desc">
+              Most pages sell "as is" with no returns. If your item arrives stained, torn or fake, the loss is yours. On Grabsty you get 48 hours after delivery to check it before the seller is paid.
+            </p>
+            <span class="lineage-badge">On Grabsty: 48 hours to check it</span>
+          </div>
+        </div>
+
+        <div class="lineage-card tilt-3d">
+          <div class="lineage-card-num">03</div>
+          <div class="lineage-card-body">
+            <h4 class="lineage-card-title">SELLERS: FAKE COD ORDERS</h4>
+            <p class="lineage-card-desc">
+              Sellers lose money on fake cash-on-delivery orders and refused parcels. On Grabsty, both buyer and seller confirm cash-on-delivery payments, deliveries are tracked, and your payout is released as soon as the order is complete.
+            </p>
+            <span class="lineage-badge">On Grabsty: confirmed orders</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wide Metrics Banner Card -->
+      <article class="bento-card card-metrics full-width animate-on-scroll delay-200 tilt-3d in-view" style="margin-top: 2rem;">
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-value">100%</span>
+            <span class="metric-label">ESCROW PROTECTED</span>
+            <p class="metric-sub">The seller isn't paid until your order is delivered and checked</p>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric-item">
+            <span class="metric-value">48hr</span>
+            <span class="metric-label">INSPECTION WINDOW</span>
+            <p class="metric-sub">Time to check the fabric, fit, tags and authenticity after delivery</p>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric-item">
+            <span class="metric-value">Rs 0</span>
+            <span class="metric-label">SENT TO STRANGERS UPFRONT</span>
+            <p class="metric-sub">No more advance bank transfers to sellers you met in DMs</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Important & Relevant Queries (FAQ Accordion Section) -->
+    <section class="faq-section" id="faq">
+      <div class="section-tag animate-on-scroll reveal-rotate in-view">
+        <span>WAITLIST QUERIES</span>
+      </div>
+      <h2 class="section-heading animate-on-scroll reveal-up delay-100 in-view">
+        FREQUENTLY ANSWERED.
+      </h2>
+
+      <div class="faq-list animate-on-scroll reveal-up delay-200 in-view">
+        <!-- Core Query: Why Not Instagram/OLX -->
+        <details class="faq-item" open>
+          <summary class="faq-question">
+            <span>Why can’t I just keep buying and selling on Instagram or OLX?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              On Instagram and OLX, the buyer usually takes all the risk: sellers ask for advance payment by Raast or bank transfer and sell "no returns, no exchanges". If the item is fake, damaged or never shipped, your money is usually gone. On Grabsty, your payment is held in escrow, delivery is tracked, and you get 48 hours after delivery to check the item before the seller is paid.
+            </p>
+          </div>
+        </details>
+
+        <!-- Query 1 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>What is Grabsty and how does the waitlist work?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Grabsty is a marketplace for buying and selling pre-loved clothes, sneakers, bags and accessories in Pakistan, with every payment held in escrow. Join the waitlist and we will invite you on WhatsApp or SMS as soon as we open in your city.
+            </p>
+          </div>
+        </details>
+
+        <!-- Query 2 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>How does the Escrow Buyer Protection safeguard purchases?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              When you buy on Grabsty, your payment is held in escrow instead of going straight to the seller. Your order is shipped with tracking. After delivery you have 48 hours to check that the item matches the listing. If it does not, report an issue and the payout is paused while support looks into it. You can pay by card or cash on delivery.
+            </p>
+          </div>
+        </details>
+
+        <!-- Query 3 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>Why do you need my phone number?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              So we can send your invite on WhatsApp or SMS when Grabsty opens. We don't share it with anyone, and email is optional.
+            </p>
+          </div>
+        </details>
+
+        <!-- Query 4 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>What can I sell on Grabsty?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Pre-loved clothes, sneakers, bags and accessories, from everyday pieces to designer labels. Counterfeits and replicas are not allowed.
+            </p>
+          </div>
+        </details>
+
+        <!-- Query 5 -->
+        <details class="faq-item">
+          <summary class="faq-question">
+            <span>Does it cost anything?</span>
+            <span class="faq-arrow" aria-hidden="true">+</span>
+          </summary>
+          <div class="faq-answer">
+            <p>
+              Joining the waitlist is free. When you buy, a small Buyer Protection fee is shown at checkout before you pay.
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Bottom Action Funnel Banner -->
+    <section class="bottom-cta-section animate-on-scroll reveal-up in-view">
+      <div class="cta-banner-box tilt-3d">
+        <div class="cta-inner">
+          <div class="cta-sticker-sun animate-on-scroll reveal-rotate in-view" aria-hidden="true">
+            <img src="https://www.grabsty.com/brand/STICKERS/PNG/2.png" alt="" width="76" height="76">
+          </div>
+          <h2 class="cta-title">JOIN THE LAHORE WAITLIST.</h2>
+          <p class="cta-desc">Be one of the first to buy and sell on Grabsty when we open.</p>
+          <a href="#waitlist-section" class="cta-scroll-btn" id="bottom-cta-btn">GO TO WAITLIST FORM ↑</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Subtle Ambient Lahore Skyline Horizon Backdrop -->
+    <div class="lahore-skyline-backdrop" aria-hidden="true">
+      <svg viewBox="0 0 1440 160" fill="none" preserveAspectRatio="none" class="skyline-svg">
+        <!-- Architectural hairline silhouette of Badshahi Minarets, Mughal Domes, Alamgiri Gate, and Modern Brick Angles -->
+        <path d="M0 160 H1440 V130 L1380 130 V60 H1365 V130 L1320 130 L1300 100 L1280 130 L1210 130 L1210 80 Q1210 50 1235 40 Q1260 50 1260 80 V130 L1150 130 L1150 20 H1140 V130 L1080 130 L1050 95 L1020 130 L950 130 V75 Q950 45 975 35 Q1000 45 1000 75 V130 L880 130 L880 10 L870 10 V130 L780 130 L740 70 L700 130 L640 130 V85 Q640 55 670 42 Q700 55 700 85 V130 L560 130 L560 30 H550 V130 L480 130 L450 100 L420 130 L350 130 V80 Q350 50 375 38 Q400 50 400 80 V130 L280 130 L280 15 H270 V130 L200 130 L170 90 L140 130 L70 130 V70 Q70 40 95 30 Q120 40 120 70 V130 L0 130 Z" stroke="rgba(255, 255, 255, 0.09)" stroke-width="1.2" fill="rgba(108, 71, 255, 0.02)" />
+      </svg>
+    </div>
+  </main>
+  
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <img src="https://www.grabsty.com/brand/LOGOMARK/SVG/Logomark%20Purple.svg" alt="" class="footer-logomark" width="22" height="24">
+          <img src="https://www.grabsty.com/brand/LOGOTYPE/SVG/Logotype%20White.svg" alt="Grabsty" class="footer-logotype" height="17">
+          <span class="footer-copy-inline">© <span id="year">2026</span></span>
+        </div>
+        <div class="footer-tagline">PRE-LOVED FASHION • ESCROW PROTECTED</div>
+      </div>
+      <div class="footer-bottom">
+        <p class="footer-copy">All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- PostHog: env.js is written at build time from POSTHOG_KEY / POSTHOG_HOST (build-env.js). No key = no tracking. -->
+  <script type="text/javascript" crossorigin="anonymous" src="/relay-gs/static/1.442.1/posthog-recorder.js"></script><script type="text/javascript" crossorigin="anonymous" src="/relay-gs/static/1.442.1/surveys.js"></script><script type="text/javascript" crossorigin="anonymous" src="/relay-gs/array/phc_rEFiRj3zn4SSdVmbiQUbmSU864CrMSYdcpDurphhLoPP/config.js"></script><script type="text/javascript" crossorigin="anonymous" async src="/relay-gs/static/array.js"></script><script src="env.js"></script>
+  <script>
+    (function (cfg) {
+      if (!cfg || !cfg.key) return;
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify setPersonProperties reset get_distinct_id get_session_id alias set_config startSessionRecording stopSessionRecording captureException opt_in_capturing opt_out_capturing has_opted_out_capturing getFeatureFlag isFeatureEnabled onFeatureFlags debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      window.posthog.init(cfg.key, {
+        // Same-origin relay (vercel.json /relay-gs → PostHog US) so ad-blockers
+        // don't drop events; local previews talk to PostHog directly.
+        api_host: location.hostname === 'localhost' ? (cfg.host || 'https://us.i.posthog.com') : '/relay-gs',
+        ui_host: 'https://us.posthog.com',
+        person_profiles: 'identified_only',
+        capture_pageview: true,
+        capture_pageleave: true,
+        // Replay with every input masked: the form collects name/phone/email.
+        session_recording: { maskAllInputs: true },
+      });
+    })(window.__POSTHOG__);
+  </script>
+  <script src="script.js?v=20261015-01"></script>
+  <script type="module" src="scene3d.js?v=20261015-01"></script>
+
+
+
+</body>
+</html>

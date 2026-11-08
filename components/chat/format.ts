@@ -10,7 +10,6 @@ import type { ChatMessage } from '@/lib/chat';
  *  one group: one tail, one meta line, tight spacing between the bubbles. */
 export const GROUP_WINDOW_MS = 5 * 60_000;
 
-const DAY_MS = 86_400_000;
 
 function startOfDay(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
@@ -24,13 +23,6 @@ export function isSameDay(a: string, b: string): boolean {
 export function timeOfDay(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
-
-/** "11 Jul 21:03" — once a message is older than today, the day comes along. */
-export function dateAndTime(iso: string): string {
-  const day = new Date(iso).toLocaleDateString([], { day: 'numeric', month: 'short' });
-  return `${day} ${timeOfDay(iso)}`;
-}
-
 /** The stamp printed under a bubble group: e.g. "20:55" or "16:14" */
 export function bubbleStamp(iso: string): string {
   return timeOfDay(iso);

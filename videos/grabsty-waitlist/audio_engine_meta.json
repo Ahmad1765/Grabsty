@@ -1,0 +1,131 @@
+{
+  "tts_provider": "heygen",
+  "voice_id": "05f19352e8f74b0392a8f411eba40de1",
+  "bgm": {
+    "path": "assets/bgm/track.mp3",
+    "volume": 0.9,
+    "query": "confident modern hip-hop / trap-lite instrumental, punchy kick, urban fashion energy, no vocals, 95–105 BPM",
+    "mode": "retrieve",
+    "duration_s": 50
+  },
+  "bgm_pending": false,
+  "bgm_provider": "heygen",
+  "bgm_pid": null,
+  "bgm_log": null,
+  "bgm_mode": "retrieve",
+  "bgm_target_duration_s": null,
+  "bgm_seed_duration_s": null,
+  "bgm_loop_count": null,
+  "voices": [],
+  "sfx": [
+    {
+      "id": "01",
+      "name": "message-send whoosh",
+      "file": "assets/sfx/message-send-whoosh.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.288,
+      "volume": 0.35
+    },
+    {
+      "id": "01",
+      "name": "message-receive pop",
+      "file": "assets/sfx/message-receive-pop.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.576,
+      "volume": 0.35
+    },
+    {
+      "id": "01",
+      "name": "error thud",
+      "file": "assets/sfx/error-thud.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.864,
+      "volume": 0.35
+    },
+    {
+      "id": "02",
+      "name": "impact hit ×3 (escalating)",
+      "file": "assets/sfx/impact-hit-3-escalating.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 3.454,
+      "volume": 0.35
+    },
+    {
+      "id": "03",
+      "name": "riser into a soft bass drop on the G landing",
+      "file": "assets/sfx/riser-into-a-soft-bass-drop-on-the-g-lan.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 4.364,
+      "volume": 0.35
+    },
+    {
+      "id": "04",
+      "name": "soft click per step ×3",
+      "file": "assets/sfx/soft-click-per-step-3.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.768,
+      "volume": 0.35
+    },
+    {
+      "id": "04",
+      "name": "success chime on final chip",
+      "file": "assets/sfx/success-chime-on-final-chip.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 4.755,
+      "volume": 0.35
+    },
+    {
+      "id": "05",
+      "name": "whoosh",
+      "file": "assets/sfx/whoosh.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 1.58,
+      "volume": 0.35
+    },
+    {
+      "id": "05",
+      "name": "rubber stamp thud",
+      "file": "assets/sfx/rubber-stamp-thud.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.864,
+      "volume": 0.35
+    },
+    {
+      "id": "06",
+      "name": "impact on headline",
+      "file": "assets/sfx/impact-on-headline.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 5.387,
+      "volume": 0.35
+    },
+    {
+      "id": "06",
+      "name": "tick for spot counter",
+      "file": "assets/sfx/tick-for-spot-counter.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 7.778,
+      "volume": 0.35
+    },
+    {
+      "id": "06",
+      "name": "UI click on button",
+      "file": "assets/sfx/ui-click-on-button.mp3",
+      "source": "heygen",
+      "offset_s": 0,
+      "duration_s": 0.768,
+      "volume": 0.35
+    }
+  ],
+  "total_duration_s": 0
+}

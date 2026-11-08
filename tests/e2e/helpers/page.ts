@@ -79,6 +79,41 @@ export function discoverSearch(page: Page) {
   return page.getByPlaceholder(/^Search (items, brands, sellers|aesthetics|brands|people)$/);
 }
 
+// Home's search field. Phones/narrow web render HomeHeader ("Search items,
+// brands…" under 380px, "What are you
+// looking for?", "…today?" on wide phones); >=1024px renders DesktopTopNav
+// ("Search for items, brands or members"). Discover was folded into this
+// search (app/(tabs)/discover.tsx now redirects to /).
+export function homeSearch(page: Page) {
+  return page
+    .getByPlaceholder(/^(What are you looking for( today)?\?|Search items, brands…|Search for items, brands or members)$/)
+    .first();
+}
+
+/**
+ * Open Home search like a user would. On phones the header field is a
+ * read-only input inside a button that opens the search overlay (clicks on the
+ * input itself are intercepted); on desktop the top-nav input is typeable.
+ */
+export async function openHomeSearch(page: Page) {
+  if (await hasTopNav(page)) {
+    await homeSearch(page).click();
+  } else {
+    await page.getByRole('button', { name: /^(What are you looking for( today)?\?|Search items, brands…)$/ }).first().click();
+  }
+}
+
+/** True when the desktop top nav (>=1024px) is rendered instead of the tab bar. */
+export async function hasTopNav(page: Page) {
+  return (await page.getByTestId('topnav-search').count()) > 0;
+}
+
+// Search results with a query, opened by deep link (HomeSearchView reads these
+// params). Zero results render 'No listings found matching "<q>"'.
+export function searchUrl(q: string) {
+  return `/?searchOpen=1&searchQuery=${encodeURIComponent(q)}`;
+}
+
 // The password field's placeholder states the minimum length ("At least 8
 // characters"), so it changes every time that policy does — the specs pinned
 // "At least 6 characters" and broke silently when the minimum moved to 8.

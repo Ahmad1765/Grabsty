@@ -1,10 +1,10 @@
 // Home (the former "My Feed" screen — it took over "/" when the old search-
 // header Home was removed) structural checks. We run against the real
 // Supabase backend in the unsigned-in state, so we only assert what every
-// visitor sees: the search field, cold-start banner, the "For you" chip, and
+// visitor sees: the search field, the "For you" chip, and
 // the fallback grid that always renders when there are no personal signals.
 
-import { test, expect, waitForAppReady, priceText } from './helpers/page';
+import { test, expect, waitForAppReady, priceText, homeSearch } from './helpers/page';
 
 test.describe('Home (personalized feed)', () => {
   test.beforeEach(async ({ page }) => {
@@ -13,13 +13,7 @@ test.describe('Home (personalized feed)', () => {
   });
 
   test('renders the feed search field', async ({ page }) => {
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
-  });
-
-  test('signed-out viewer sees the sign-in prompt banner', async ({ page }) => {
-    await expect(
-      page.getByText(/Sign in and like a few items to see this feed personalize itself/i),
-    ).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
   });
 
   test('shows the For you chip', async ({ page }) => {

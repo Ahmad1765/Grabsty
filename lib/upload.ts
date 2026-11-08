@@ -340,74 +340,6 @@ export async function uploadListingImages(
   return out;
 }
 
-/** A crop region in SOURCE pixel coordinates. */
-export type CropRect = { originX: number; originY: number; width: number; height: number };
-
-// Native crop via expo-image-manipulator. Rect is in source pixels; the caller
-// has already clamped it to the image, but round defensively because a
-// sub-pixel origin makes the native module throw rather than nudge.
-async function cropNative(image: LocalImage, rect: CropRect): Promise<LocalImage> {
-  try {
-    const context = ImageManipulator.manipulate(image.uri).crop({
-      originX: Math.max(0, Math.round(rect.originX)),
-      originY: Math.max(0, Math.round(rect.originY)),
-      width: Math.max(1, Math.round(rect.width)),
-      height: Math.max(1, Math.round(rect.height)),
-    });
-    const rendered = await context.renderAsync();
-    const result = await rendered.saveAsync({
-      compress: BANNER_QUALITY,
-      format: SaveFormat.JPEG,
-      base64: true,
-    });
-    return { uri: result.uri, base64: result.base64 ?? null };
-  } catch (e) {
-    console.warn('[upload] native crop failed; using the uncropped image', e);
-    return image;
-  }
-}
-
-async function cropOnWeb(image: LocalImage, rect: CropRect): Promise<LocalImage> {
-  if (typeof window === 'undefined' || typeof document === 'undefined') return image;
-  try {
-    const bitmap = await decodeInBrowser(image);
-    // Clamp into the source so a rounding error at the edges can't ask the
-    // canvas for pixels that don't exist (which would letterbox with black).
-    const sw = Math.max(1, Math.min(Math.round(rect.width), bitmap.naturalWidth));
-    const sh = Math.max(1, Math.min(Math.round(rect.height), bitmap.naturalHeight));
-    const sx = Math.max(0, Math.min(Math.round(rect.originX), bitmap.naturalWidth - sw));
-    const sy = Math.max(0, Math.min(Math.round(rect.originY), bitmap.naturalHeight - sh));
-
-    const canvas = document.createElement('canvas');
-    canvas.width = sw;
-    canvas.height = sh;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return image;
-    ctx.drawImage(bitmap, sx, sy, sw, sh, 0, 0, sw, sh);
-    const dataUrl = canvas.toDataURL('image/jpeg', BANNER_QUALITY);
-    const comma = dataUrl.indexOf(',');
-    return { uri: dataUrl, base64: comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl };
-  } catch {
-    return image;
-  }
-}
-
-/**
- * Crop a picked image to `rect` (source pixels), on any platform.
- *
- * Every platform routes through the app's own <BannerCropper> rather than the
- * OS picker's crop UI, because neither alternative is usable here: the web build
- * of expo-image-picker ignores `allowsEditing`/`aspect` entirely, and on iOS
- * `aspect` is Android-only — `allowsEditing` there yields a SQUARE crop, which
- * is the wrong shape for a 16:9 banner.
- *
- * Returns the input unchanged on any failure — a crop is never a reason to lose
- * the user's photo.
- */
-export function cropImage(image: LocalImage, rect: CropRect): Promise<LocalImage> {
-  return Platform.OS === 'web' ? cropOnWeb(image, rect) : cropNative(image, rect);
-}
-
 export async function uploadAvatar(image: LocalImage, userId: string): Promise<string> {
   const compressed = await compressImage(image, AVATAR_MAX_EDGE, AVATAR_QUALITY);
   return uploadOne('avatars', compressed, userId, 0);
@@ -452,12 +384,6 @@ export function useVerificationPhotoUrl(value?: string | null): string | null {
   }, [value, direct]);
   return direct ? (value ?? null) : signed;
 }
-
-export async function uploadBanner(image: LocalImage, userId: string): Promise<string> {
-  const compressed = await compressImage(image, BANNER_MAX_EDGE, BANNER_QUALITY);
-  return uploadOne('avatars', compressed, userId, 0);
-}
-
 export async function deleteListingImages(urls: string[]): Promise<void> {
   const paths = urls.map((url) => {
     const parts = url.split('/listing-images/');

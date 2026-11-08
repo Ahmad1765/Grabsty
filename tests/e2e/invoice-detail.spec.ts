@@ -65,7 +65,7 @@ test.describe('Invoice', () => {
     // Assert the POSITIVE state first. Two toHaveCount(0) checks alone would
     // also pass against a blank screen, which is the classic way an absence
     // assertion rots into decoration.
-    await expect(page.getByText('Pending', { exact: true })).toBeVisible();
+    await expect(page.getByText('Pending', { exact: true }).first()).toBeVisible();
     // Sold flag set, no order row => not paid.
     await expect(page.getByText('Paid', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Download invoice')).toHaveCount(0);

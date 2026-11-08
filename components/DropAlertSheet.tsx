@@ -80,10 +80,7 @@ export function DropAlertSheet({ visible, userId, onClose, onCreated }: Props) {
           toast.show("Couldn't create the alert", { variant: 'default', icon: 'alert-triangle' });
           return;
         }
-        toast.show(`Alert created for "${q}"`, {
-          variant: 'success',
-          icon: 'bell',
-        });
+        toast.done(`Alert created for "${q}"`, 'bell');
         reset();
         onCreated();
         onClose();

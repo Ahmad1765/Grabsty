@@ -63,9 +63,6 @@ export function CategoriesTabIcon({ size = 24, color, active = false }: TabIconP
     </Svg>
   );
 }
-
-export const BrowseTabIcon = CategoriesTabIcon;
-
 // ---------------------------------------------------------------------------
 // Sell — Plus in a circle.
 // Reference: thin-walled circle, centred + crosshairs.

@@ -35,8 +35,14 @@ import {
   useLikedListingsQuery,
   useSavedListingsQuery,
 } from '@/lib/queries';
-import { colors } from '@/lib/theme';
-import { useTabBarClearance, useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
+import {
+  useTabBarClearance,
+  useGridDimensions,
+  useDesktopGutter,
+  useIsDesktop,
+  GRID_DRAW_DISTANCE,
+  DESKTOP_PROFILE_MAX,
+} from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
 import type { Listing } from '@/types';
 import { useToast } from '@/lib/toast';
@@ -54,11 +60,13 @@ import {
 } from '@/components/profile';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 
+import { useTheme } from '@/context/ThemeContext';
 const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 const EMPTY_LISTINGS: Listing[] = [];
 
 function ProfileScreenInner() {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ tab?: string }>();
   const { profile, user, refreshProfile } = useAuth();
@@ -85,12 +93,15 @@ function ProfileScreenInner() {
   const heroFade = useFadeIn(0, 320);
   const tabClear = useTabBarClearance();
 
-  const { columns, cardWidth: cardW } = useGridDimensions({
+  const isDesktop = useIsDesktop();
+  const gutter = useDesktopGutter(DESKTOP_PROFILE_MAX);
+  const { columns, cardWidth: cardW, onLayout: onGridLayout } = useGridDimensions({
     min: 2,
     max: 4,
-    thresholds: [560, 900, 1200],
+    thresholds: isDesktop ? [560, 760, 960] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? DESKTOP_PROFILE_MAX : undefined,
   });
 
   // The session user id is known immediately; waiting for the profile row
@@ -250,7 +261,7 @@ function ProfileScreenInner() {
         icon: 'alert-triangle',
       });
     } else if (shared) {
-      toast.show('Profile shared successfully!', { variant: 'success', icon: 'check-circle' });
+      toast.done('Profile shared successfully!');
     }
   }, [profileId, profileUsername, toast]);
 
@@ -320,6 +331,7 @@ function ProfileScreenInner() {
   return (
     <SafeContainer edges={['top', 'left', 'right']} backgroundColor={colors.background} style={{ flex: 1 }}>
       <FlashList
+        onLayout={onGridLayout}
         data={gridRows}
         renderItem={renderRow}
         keyExtractor={rowKey}
@@ -330,6 +342,7 @@ function ProfileScreenInner() {
         }
         contentContainerStyle={{
           paddingBottom: Math.max(insets.bottom, 12) + tabClear + 16,
+          paddingHorizontal: gutter,
         }}
         ListHeaderComponent={
           <>

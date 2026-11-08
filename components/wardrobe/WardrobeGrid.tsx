@@ -8,6 +8,7 @@ import { GRID_DRAW_DISTANCE } from '@/lib/responsive';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import type { WardrobePost } from '@/lib/wardrobe';
 
+import { useTheme } from '@/context/ThemeContext';
 const COLUMNS = 2;
 const GAP = 10;
 const PAD = 20;
@@ -33,6 +34,7 @@ export function WardrobeGrid({
   paddingTop?: number;
   paddingBottom?: number;
 }) {
+  const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const tile = (Math.min(width, 560) - PAD * 2 - GAP) / COLUMNS;
 
@@ -52,8 +54,8 @@ export function WardrobeGrid({
   if (posts.length === 0) {
     return (
       <View style={{ alignItems: 'center', paddingTop: paddingTop + 60, paddingBottom: 60 }}>
-        <Feather name="image" size={28} color="rgba(15,15,15,0.3)" />
-        <Text style={{ marginTop: 10, color: 'rgba(15,15,15,0.5)' }}>Nothing here yet</Text>
+        <Feather name="image" size={28} color={theme.muteSoft} />
+        <Text style={{ marginTop: 10, color: theme.mute }}>Nothing here yet</Text>
       </View>
     );
   }
@@ -109,6 +111,7 @@ const WardrobeTile = memo(function WardrobeTile({
   tile: number;
   onDelete?: (id: string) => void;
 }) {
+  const { theme } = useTheme();
   const handleDelete = useCallback(() => onDelete?.(post.id), [onDelete, post.id]);
   return (
     <View
@@ -117,7 +120,7 @@ const WardrobeTile = memo(function WardrobeTile({
         height: tile * 1.3,
         borderRadius: 14,
         overflow: 'hidden',
-        backgroundColor: '#F2F2F4',
+        backgroundColor: theme.surface,
       }}
     >
       <Image

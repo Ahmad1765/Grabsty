@@ -11,14 +11,6 @@ import { captureError } from '@/lib/sentry';
 type Listener = (listing: Listing) => void;
 
 const createdListeners = new Set<Listener>();
-
-export function onListingCreated(fn: Listener): () => void {
-  createdListeners.add(fn);
-  return () => {
-    createdListeners.delete(fn);
-  };
-}
-
 export function emitListingCreated(listing: Listing): void {
   const snapshot = Array.from(createdListeners);
   for (const fn of snapshot) {

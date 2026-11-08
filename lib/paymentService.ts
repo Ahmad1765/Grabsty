@@ -77,23 +77,6 @@ export function normalizeAddressInput(input: any): any {
     coordinates: input.coordinates ?? null,
   };
 }
-
-export function toSnakeCaseAddress(addr: ValidatedShippingAddress | null | undefined): Record<string, any> | null {
-  if (!addr) return null;
-  return {
-    recipient_name: addr.recipientName,
-    phone: addr.phone,
-    line1: addr.line1,
-    line2: addr.line2 ?? null,
-    city: addr.city,
-    state: addr.state,
-    postal_code: addr.postalCode,
-    country: addr.country,
-    delivery_notes: addr.deliveryInstructions ?? null,
-    coordinates: addr.coordinates ?? null,
-  };
-}
-
 // ── Cash on Delivery Provider ──────────────────────────────────────────────────
 export class CodPaymentProvider implements PaymentProvider {
   readonly id = 'cod' as const;
@@ -448,9 +431,9 @@ export class PaymentService {
   }
 
   /**
-   * Dual Buyer & Seller action to confirm Cash on Delivery payment.
-   * Both parties must select "Confirm COD Payment" to finalize the order.
-   * Clears escrow and marks fulfillment as completed via atomic Security Definer RPC once both confirm.
+   * Buyer confirms a Cash on Delivery order was received and paid. Completes the
+   * order and releases funds (complete_cod_order RPC; the server rejects sellers).
+   * Unconfirmed orders auto-complete 24h after delivery.
    */
   async markCodOrderPaid(orderId: string, role?: 'seller' | 'buyer'): Promise<Order> {
     const params: { p_order_id: string; p_role?: string } = { p_order_id: orderId };

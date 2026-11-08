@@ -165,6 +165,6 @@ const styles = StyleSheet.create({
   },
   image: { width: '100%', aspectRatio: 4 / 5, borderRadius: 12, overflow: 'hidden' },
   footer: { paddingHorizontal: 24, paddingBottom: 16 },
-  primary: { marginTop: 28, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  primary: { marginTop: 28, height: 52, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   secondary: { marginTop: 12, height: 44, alignItems: 'center', justifyContent: 'center' },
 });

@@ -71,6 +71,13 @@ Deno.serve(async (req: Request) => {
     return json({ error: 'Method not allowed' }, 405, origin);
   }
 
+  // Launch is Cash on Delivery only. Card flow gaps to close before setting this:
+  // cancelled orders are never refunded, no shipping address or bundle items reach
+  // the order, no delivery fee is charged, and a card payment can race a COD order.
+  if (Deno.env.get('CARD_PAYMENTS_ENABLED') !== 'true') {
+    return json({ error: 'Card payments are not available yet' }, 503, origin);
+  }
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');

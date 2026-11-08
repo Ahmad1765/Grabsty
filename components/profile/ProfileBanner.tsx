@@ -3,19 +3,13 @@ import { Image } from 'expo-image';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { colors, shadow } from '@/lib/theme';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { shadow } from '@/lib/theme';
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { getOptimizedImageUrl } from '@/lib/images';
 
+import { useTheme } from '@/context/ThemeContext';
 export const AVATAR_SIZE = 96;
-
-export const BANNER_ASPECT = 16 / 9;
-
-export function bannerSizeFor(viewportWidth: number): { width: number; height: number } {
-  const width = Math.min(viewportWidth, CONTENT_MAX_WIDTH);
-  return { width, height: Math.round(width / BANNER_ASPECT) };
-}
 
 export type BannerAction = {
   icon: string;
@@ -54,6 +48,7 @@ export function ProfileBanner({
   actions,
   onBack,
 }: Props) {
+  const { theme: colors } = useTheme();
   const avatar = avatarUrl ? getOptimizedImageUrl(avatarUrl, { width: 192, quality: 80 }) : null;
   const outer = AVATAR_SIZE;
 
@@ -190,11 +185,12 @@ export function ProfileBanner({
                 right: -2,
                 bottom: -2,
                 borderRadius: 14,
+                backgroundColor: colors.background,
                 borderWidth: 2,
                 borderColor: colors.background,
               }}
             >
-              <ShieldCheckIcon size={24} />
+              <VerifiedBadge size={22} />
             </View>
           ) : null}
 

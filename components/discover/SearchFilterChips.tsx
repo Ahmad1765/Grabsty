@@ -927,7 +927,7 @@ export const SearchFilterChips = memo(function SearchFilterChips({
               style={({ pressed }) => ({
                 marginTop: 14,
                 height: 46,
-                borderRadius: radii.pill,
+                borderRadius: 10,
                 backgroundColor: theme.purple,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1934,7 +1934,7 @@ function createStyles(theme: ThemeTokens, isDark: boolean) {
     modalDoneBtn: {
       flex: 1,
       paddingVertical: 11,
-      borderRadius: radii.pill,
+      borderRadius: 10,
       backgroundColor: theme.purple,
       alignItems: 'center',
     },
@@ -2044,7 +2044,7 @@ function createStyles(theme: ThemeTokens, isDark: boolean) {
     },
     infoGotItBtn: {
       paddingVertical: 12,
-      borderRadius: radii.pill,
+      borderRadius: 10,
       backgroundColor: theme.purple,
       alignItems: 'center',
     },

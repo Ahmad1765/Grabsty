@@ -20,13 +20,15 @@
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useGuestGate } from '@/components/GuestGate';
 import { reportListing, reportUser, REPORT_REASONS, SELLER_REPORT_REASONS } from '@/lib/reports';
-import { blockUser, unblockUser } from '@/lib/blocks';
+import { blockUser, unblockUser, refreshAfterBlockChange } from '@/lib/blocks';
 import { capture } from '@/lib/analytics';
 import { tap } from '@/lib/haptics';
+import { SUPPORT_BOT_USER_ID } from '@/lib/support';
 
 type SafetyActionOptions = {
   onBlocked?: (blockedUserId: string) => void;
@@ -38,6 +40,7 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
   const { user } = useAuth();
   const toast = useToast();
   const guestGate = useGuestGate();
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
   // ── 1. Report User Action ────────────────────────────────────────────────
@@ -74,10 +77,7 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
 
                 if (ok) {
                   capture('user_reported', { reported_user_id: targetUserId, reason: r.id });
-                  toast.show('Thanks — our team will review this report.', {
-                    variant: 'success',
-                    icon: 'check',
-                  });
+                  toast.done('Thanks — our team will review this report.');
                   options.onReported?.();
                 } else {
                   toast.show("Couldn't submit report. Please try again.", {
@@ -129,10 +129,7 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
 
                 if (ok) {
                   capture('listing_reported', { listing_id: listingId, reason: r.id });
-                  toast.show('Thanks — our team will review this listing.', {
-                    variant: 'success',
-                    icon: 'check',
-                  });
+                  toast.done('Thanks — our team will review this listing.');
                   options.onReported?.();
                 } else {
                   toast.show("Couldn't submit report", {
@@ -168,12 +165,16 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
         toast.show("You can't block yourself", { variant: 'default', icon: 'info' });
         return;
       }
+      if (targetUserId === SUPPORT_BOT_USER_ID) {
+        toast.show("Grabsty Support can't be blocked", { variant: 'default', icon: 'info' });
+        return;
+      }
 
       const userLabel = targetUsername ? `@${targetUsername}` : 'this user';
 
       Alert.alert(
         `Block ${userLabel}?`,
-        'They will not be able to message you or view your listings. Any active chats will be hidden.',
+        "You won't see each other's listings, and they can't message you, make offers or buy from you. Orders already in progress will continue.",
         [
           { text: 'Cancel', style: 'cancel' as const },
           {
@@ -185,12 +186,12 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
                 const ok = await blockUser({
                   blockerId: user.id,
                   blockedId: targetUserId,
-                  blockedUsername: targetUsername,
                 });
 
                 if (ok) {
                   capture('user_blocked', { blocked_user_id: targetUserId });
-                  toast.show(`Blocked ${userLabel}`, { variant: 'info', icon: 'slash' });
+                  toast.done(`Blocked ${userLabel}`, 'slash');
+                  refreshAfterBlockChange(queryClient);
                   options.onBlocked?.(targetUserId);
                 } else {
                   toast.show("Couldn't block user", { variant: 'default', icon: 'alert-triangle' });
@@ -203,7 +204,7 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
         ],
       );
     },
-    [user, guestGate, toast, options],
+    [user, guestGate, toast, options, queryClient],
   );
 
   // ── 4. Unblock User Action ───────────────────────────────────────────────
@@ -228,7 +229,8 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
                 });
 
                 if (ok) {
-                  toast.show(`Unblocked ${userLabel}`, { variant: 'success', icon: 'check' });
+                  toast.done(`Unblocked ${userLabel}`);
+                  refreshAfterBlockChange(queryClient);
                   options.onUnblocked?.(targetUserId);
                 } else {
                   toast.show("Couldn't unblock user", {
@@ -244,7 +246,7 @@ export function useUserSafetyActions(options: SafetyActionOptions = {}) {
         ],
       );
     },
-    [user, toast, options],
+    [user, toast, options, queryClient],
   );
 
   // ── 5. Safety Sheet Hub Action ───────────────────────────────────────────

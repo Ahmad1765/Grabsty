@@ -1,0 +1,180 @@
+[span] Payments held in escrow until delivery
+[span] SFX: ON
+[a] JOIN WAITLIST
+[span] LAHORE
+[span] • PAKISTAN'S ESCROW-PROTECTED RESALE MARKETPLACE
+[span] RESALE
+[span] FASHION
+[span] STRIPPED
+[span] CLUTTER.
+[p] Buy and sell pre-loved clothes, sneakers and bags without sending money to strangers first. Your payment stays in escrow until your order arrives and you've had 48 hours to check it.
+[span] Invited by
+[strong] #GRB-1024
+[span] WAITLIST HUB: LAHORE, PAKISTAN
+[span] Walled City • Gulberg • DHA • Mall Road • Cantt
+[span] OFFICIAL WAITLIST
+[span] I AM JOINING AS:
+[button] BUYER
+[button] SELLER
+[button] BOTH
+[span] WHAT ARE YOU INTO?
+[button] CLOTHING
+[button] SNEAKERS & BAGS
+[button] BOTH
+[label] FULL NAME
+[label] PHONE NUMBER
+[label] EMAIL ADDRESS
+[span] (OPTIONAL)
+[span] JOIN WAITLIST
+[span] Guaranteed Buyer Protection
+[span] Funds in Escrow
+[button] Already joined on this device? See your invite link →
+[div] WAITLIST SPOT CONFIRMED
+[h2] You're On The Waitlist!
+[span] NAME
+[span] PHONE
+[span] EMAIL
+[span] LOCATION
+[span] Lahore, Pakistan
+[span] JOINING AS
+[span] BUYER • ALL CATEGORIES
+[p] We'll send your invite on WhatsApp or SMS as soon as Grabsty opens in your city.
+[span] COMMUNITY INVITATION
+[h3] Invite friends who buy and sell
+[p] Share your link. Everyone who joins with it is counted below.
+[span] COPY LINK
+[a] WHATSAPP
+[a] SHARE ON 𝕏
+[span] 0 Referrals Tracked
+[span] #GRB-1001
+[span] WAITLIST ENTRY CONFIRMED
+[button] ← Register Another Waitlist Member
+[span] LAHORE WAITLIST OPEN
+[span] GUARANTEED ESCROW PROTECTION
+[span] ZERO ADVANCE PAYMENT RISK
+[span] 48-HOUR INSPECTION WINDOW
+[span] NO MORE INSTAGRAM SCAMS
+[span] DUAL-CONFIRMED CASH ON DELIVERY
+[span] LAHORE WAITLIST OPEN
+[span] GUARANTEED ESCROW PROTECTION
+[span] ZERO ADVANCE PAYMENT RISK
+[span] 48-HOUR INSPECTION WINDOW
+[span] NO MORE INSTAGRAM SCAMS
+[span] DUAL-CONFIRMED CASH ON DELIVERY
+[span] THE ESCROW PROGRAM
+[h2] WHAT YOU LOSE ON INSTAGRAM & OLX.
+[h2] AND HOW GRABSTY PROTECTS YOU.
+[span] ESCROW ENGINE
+[span] BUYER PROTECTION • ESCROW PAYMENTS • TRACKED DELIVERY
+[button] PROGRAM 01: HOW ESCROW PROTECTS YOU
+[button] PROGRAM 02: WHAT YOU LOSE WITHOUT IT
+[text] HOW A GRABSTY ORDER WORKS
+[text] OFFER TO PAYOUT
+[text] 01 CHAT
+[text] BINDING
+[text] OFFER
+[text] Instant Accept
+[text] Or Counter
+[text] PROPOSED
+[text] 02 VAULT
+[text] ESCROW
+[text] LOCKED
+[text] Seller NOT Paid
+[text] Funds In Vault
+[text] SECURED_ESCROW
+[text] 03 DISPATCH
+[text] DOORSTEP
+[text] PICKUP
+[text] Live Courier
+[text] Tracking Link
+[text] IN_TRANSIT
+[text] 04 INSPECT
+[text] 48-HOUR
+[text] WINDOW
+[text] Check The Item
+[text] Verify Quality
+[text] DELIVERED
+[text] 05 PAYOUT
+[text] FUNDS
+[text] RELEASED
+[text] Paid To Bank,
+[text] JazzCash Or Easypaisa
+[text] COMPLETED
+[text] ESCROW PAYMENT • NO ADVANCE TRANSFERS • 48-HR INSPECTION
+[text] WITHOUT GRABSTY: PAYING A STRANGER UPFRONT
+[text] BUYER_RISK = 100%
+[text] 01 ADVANCE
+[text] RAAST /
+[text] BANK PAY
+[text] 100% Upfront
+[text] Blind Transfer
+[text] IRREVERSIBLE
+[text] 02 NO VAULT
+[text] ZERO
+[text] LEVERAGE
+[text] Seller Has Cash
+[text] You Have Zero
+[text] NO_PROTECTION
+[text] 03 DELIVERY
+[text] REPLICA OR
+[text] BLOCKED
+[text] Fake Fabric
+[text] Or DM Ghost
+[text] COUNTERFEIT
+[text] 04 NO RETURN
+[text] "SOLD
+[text] AS-IS"
+[text] Zero Inspection
+[text] No Chargeback
+[text] NO_EXCHANGE
+[text] 05 LOSS
+[text] TOTAL
+[text] LOSS
+[text] Money Gone
+[text] Zero Recourse
+[text] PERMANENT
+[text] ADVANCE TRANSFER • NO RETURNS • NO WAY TO GET YOUR MONEY BACK
+[h3] Stop sending advance payments to strangers
+[p] Buying pre-loved clothes, sneakers or bags on Instagram, WhatsApp or OLX puts all the risk on you. Sellers demand advance payment via Raast or bank transfer before shipping. If the item is fake, damaged, or never shipped, your money is gone with zero recourse.
+[p] On Grabsty, your payment is held in escrow when you buy. The seller isn't paid upfront. Once your tracked parcel is delivered, you have 48 hours to check the item. If it's damaged or not as described, report an issue and the payout stays on hold while support sorts it out.
+[span] Escrow payments
+[span] 48-hour inspection window
+[span] Cash on delivery
+[span] Tracked delivery
+[h4] ADVANCE TRANSFER SCAMS
+[p] Many Instagram and WhatsApp sellers ask for full payment by bank transfer before they ship. If the seller blocks you, sends a replica or never posts the parcel, there is usually no way to get your money back.
+[span] On Grabsty: payment held in escrow
+[h4] "NO RETURNS" POLICIES
+[p] Most pages sell "as is" with no returns. If your item arrives stained, torn or fake, the loss is yours. On Grabsty you get 48 hours after delivery to check it before the seller is paid.
+[span] On Grabsty: 48 hours to check it
+[h4] SELLERS: FAKE COD ORDERS
+[p] Sellers lose money on fake cash-on-delivery orders and refused parcels. On Grabsty, both buyer and seller confirm cash-on-delivery payments, deliveries are tracked, and your payout is released as soon as the order is complete.
+[span] On Grabsty: confirmed orders
+[span] 100%
+[span] ESCROW PROTECTED
+[p] The seller isn't paid until your order is delivered and checked
+[span] 48hr
+[span] INSPECTION WINDOW
+[p] Time to check the fabric, fit, tags and authenticity after delivery
+[span] Rs 0
+[span] SENT TO STRANGERS UPFRONT
+[p] No more advance bank transfers to sellers you met in DMs
+[span] WAITLIST QUERIES
+[h2] FREQUENTLY ANSWERED.
+[span] Why can’t I just keep buying and selling on Instagram or OLX?
+[p] On Instagram and OLX, the buyer usually takes all the risk: sellers ask for advance payment by Raast or bank transfer and sell "no returns, no exchanges". If the item is fake, damaged or never shipped, your money is usually gone. On Grabsty, your payment is held in escrow, delivery is tracked, and you get 48 hours after delivery to check the item before the seller is paid.
+[span] What is Grabsty and how does the waitlist work?
+[p] Grabsty is a marketplace for buying and selling pre-loved clothes, sneakers, bags and accessories in Pakistan, with every payment held in escrow. Join the waitlist and we will invite you on WhatsApp or SMS as soon as we open in your city.
+[span] How does the Escrow Buyer Protection safeguard purchases?
+[p] When you buy on Grabsty, your payment is held in escrow instead of going straight to the seller. Your order is shipped with tracking. After delivery you have 48 hours to check that the item matches the listing. If it does not, report an issue and the payout is paused while support looks into it. You can pay by card or cash on delivery.
+[span] Why do you need my phone number?
+[p] So we can send your invite on WhatsApp or SMS when Grabsty opens. We don't share it with anyone, and email is optional.
+[span] What can I sell on Grabsty?
+[p] Pre-loved clothes, sneakers, bags and accessories, from everyday pieces to designer labels. Counterfeits and replicas are not allowed.
+[span] Does it cost anything?
+[p] Joining the waitlist is free. When you buy, a small Buyer Protection fee is shown at checkout before you pay.
+[h2] JOIN THE LAHORE WAITLIST.
+[p] Be one of the first to buy and sell on Grabsty when we open.
+[a] GO TO WAITLIST FORM ↑
+[div] PRE-LOVED FASHION • ESCROW PROTECTED
+[p] All rights reserved.

@@ -55,7 +55,7 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
     <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 }}>
       <View
         style={{
-          backgroundColor: theme.white,
+          backgroundColor: theme.paper,
           borderRadius: 18,
           borderWidth: 1,
           borderColor: theme.border,
@@ -120,7 +120,6 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
                 fontSize: 15,
                 fontWeight: '600',
                 color: theme.ink,
-                letterSpacing: -0.2,
               }}
               numberOfLines={1}
             >
@@ -128,9 +127,9 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
             </Text>
             <Text
               style={{
-                fontSize: 12.5,
+                fontSize: 13,
                 color: theme.mute,
-                marginTop: 1.5,
+                marginTop: 2,
                 fontWeight: '400',
               }}
               numberOfLines={1}
@@ -201,7 +200,7 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
                 paddingHorizontal: 12,
                 paddingVertical: 5.5,
                 borderRadius: 999,
-                backgroundColor: followed ? theme.white : theme.ink,
+                backgroundColor: followed ? theme.paper : theme.ink,
                 borderWidth: 1,
                 borderColor: followed ? theme.border : theme.ink,
                 alignItems: 'center',

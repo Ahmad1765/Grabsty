@@ -12,12 +12,13 @@ import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { colors } from '@/lib/theme';
 import { useIsOffline } from '@/lib/offline';
 
+import { useTheme } from '@/context/ThemeContext';
 const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 export function OfflineBanner() {
+  const { theme: colors } = useTheme();
   const offline = useIsOffline();
   const insets = useSafeAreaInsets();
   // With a real status bar, live inside that strip so the banner never covers
@@ -73,11 +74,11 @@ export function OfflineBanner() {
         }}
       >
         {offline && inStatusBar ? <StatusBar style="light" /> : null}
-        <Feather name="wifi-off" size={14} color={colors.white} />
+        <Feather name="wifi-off" size={14} color={colors.background} />
         <Text
           accessibilityRole="alert"
           accessibilityLabel="No internet connection"
-          style={{ color: colors.white, fontSize: 13, fontWeight: '700', letterSpacing: 0.1 }}
+          style={{ color: colors.background, fontSize: 13, fontWeight: '700', letterSpacing: 0.1 }}
         >
           {/* Short in the status-bar strip so it clears the clock and icons. */}
           {inStatusBar ? 'Offline' : 'No internet connection'}

@@ -114,11 +114,65 @@ const TERMS: Doc = {
   ],
 };
 
+// Public URL for Google Play's "account deletion" requirement:
+// app.grabsty.com/legal/delete-account — must work without installing the app.
+const DELETE_ACCOUNT: Doc = {
+  title: 'Delete your account',
+  updated: 'October 2026',
+  sections: [
+    {
+      h: `Deleting your ${BRAND} account`,
+      p: [
+        `This page explains how to delete your ${BRAND} account (the ${BRAND} app by ${BRAND}) and the data linked to it.`,
+      ],
+    },
+    {
+      h: 'Option 1: In the app or on the web',
+      p: [
+        `1. Open the ${BRAND} app, or go to app.grabsty.com and sign in.`,
+        '2. Go to Profile → Settings → Security.',
+        '3. Tap Delete account and confirm.',
+        'Your account is deleted immediately.',
+      ],
+    },
+    {
+      h: 'Option 2: By email',
+      p: [
+        `Email ${SUPPORT_EMAIL} from the address you signed up with, with the subject "Delete my account". We will confirm it is you and delete your account within 30 days.`,
+      ],
+    },
+    {
+      h: 'Delete some data without deleting your account',
+      p: [
+        'Listings: open your listing and tap the delete (bin) button. Its photos are removed too.',
+        'Delivery address: Settings → Shipping address → Remove address.',
+        'Profile photo, bio and phone number: Settings → Edit profile, then clear or change them.',
+        'Usage analytics and screen recordings: Settings → General → turn off Share usage data.',
+        `Anything else (for example messages, offers or your analytics history): email ${SUPPORT_EMAIL} from your account email saying which data to delete. We will delete it within 30 days.`,
+      ],
+    },
+    {
+      h: 'What is deleted',
+      p: [
+        'Your profile (name, username, photo, bio, phone number), your listings and their photos, your likes and saved items, your messages and conversations, your offers, your saved delivery addresses, your push-notification tokens and your usage-analytics profile.',
+      ],
+    },
+    {
+      h: 'What we keep, and for how long',
+      p: [
+        'Records of completed or disputed orders (item, price, date and delivery details) are kept for up to 5 years where needed for accounting, fraud prevention and resolving disputes, then deleted.',
+        'A record that you asked for deletion (your account ID and email) is kept to show the request was completed.',
+        'Crash reports are deleted automatically within 90 days.',
+      ],
+    },
+  ],
+};
+
 export default function LegalScreen() {
   const { doc } = useLocalSearchParams<{ doc: string }>();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const d = doc === 'terms' ? TERMS : PRIVACY;
+  const d = doc === 'terms' ? TERMS : doc === 'delete-account' ? DELETE_ACCOUNT : PRIVACY;
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>

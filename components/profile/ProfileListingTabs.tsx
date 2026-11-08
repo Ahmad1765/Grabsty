@@ -12,7 +12,6 @@ import { View, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { colors } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { EmptyState } from '@/components/ui';
 import type { SaveList } from '@/lib/saves';
@@ -59,6 +58,7 @@ export const ProfileListingTabs = memo(function ProfileListingTabs({
   availableCount = 0,
   soldCount = 0,
 }: ProfileListingTabsProps) {
+  const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
   // A status filter is narrowing a non-empty list (vs. the list itself being empty).
   const filtered = activeTab !== 'collections' && statusFilter !== 'all' && totalCount > 0;

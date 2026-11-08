@@ -127,13 +127,12 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
 
       <Text
         style={{
-          fontSize: 28,
-          fontFamily: 'Inter_700Bold',
+          fontSize: 24,
+          fontFamily: 'Inter_600SemiBold',
           color: theme.ink,
-          lineHeight: 33,
-          letterSpacing: -0.7,
+          lineHeight: 30,
+          letterSpacing: -0.3,
         }}
-        numberOfLines={2}
       >
         {listing.title}
       </Text>
@@ -178,10 +177,11 @@ export const ProductOverviewHeader = memo(function ProductOverviewHeader({
         <Text
           style={{
             fontSize: 28,
-            fontFamily: 'Inter_700Bold',
+            fontFamily: 'Inter_600SemiBold',
             color: theme.ink,
             lineHeight: 34,
-            letterSpacing: -0.6,
+            letterSpacing: -0.4,
+            fontVariant: ['tabular-nums'],
           }}
         >
           {formatPrice(itemPrice, { whole: true })}

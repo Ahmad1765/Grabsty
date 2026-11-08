@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 260" fill="none" class="arch-blueprint-svg arch-study-panel hidden" id="blueprint-study-02" aria-label="What You Lose Without Escrow: The Instagram and OLX Trap">
+                <rect width="100%" height="100%" fill="url(#archGridPattern)"></rect>
+                
+                <defs>
+                  <marker id="arrowFail" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                    <path d="M0,0 L6,3 L0,6 Z" fill="#EF4444"></path>
+                  </marker>
+                </defs>
+
+                <!-- Header Warning Line -->
+                <text x="18" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="900" letter-spacing="0.1em">WITHOUT GRABSTY: PAYING A STRANGER UPFRONT</text>
+                <text x="442" y="24" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" text-anchor="end">BUYER_RISK = 100%</text>
+                <line x1="18" y1="32" x2="442" y2="32" stroke="rgba(239,68,68,0.35)" stroke-dasharray="3 3" stroke-width="1"></line>
+
+                <!-- Failure Step 01: Blind Bank Transfer -->
+                <g transform="translate(18, 52)">
+                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"></rect>
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)"></rect>
+                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">01 ADVANCE</text>
+                  <!-- Send money icon -->
+                  <path d="M26 44 H46 M46 44 L39 37 M46 44 L39 51" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round"></path>
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">RAAST /</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BANK PAY</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">100% Upfront</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Blind Transfer</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)"></rect>
+                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">IRREVERSIBLE</text>
+                </g>
+
+                <!-- Connector 01 -> 02 -->
+                <line x1="90" y1="120" x2="103" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"></line>
+
+                <!-- Failure Step 02: Zero Holding Vault -->
+                <g transform="translate(105, 42)">
+                  <rect width="78" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)"></rect>
+                  <rect x="0" y="0" width="78" height="22" fill="#EF4444"></rect>
+                  <text x="39" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">02 NO VAULT</text>
+                  <!-- Broken Lock Icon -->
+                  <circle cx="39" cy="48" r="14" stroke="#EF4444" stroke-width="1.2" stroke-dasharray="2 2" fill="none"></circle>
+                  <path d="M31 46 H47 V58 H31 Z" stroke="#EF4444" stroke-width="1.4" fill="var(--ink)"></path>
+                  <path d="M34 44 V37 C34 34 39 34 42 37" stroke="#EF4444" stroke-width="1.4" stroke-linecap="round" fill="none"></path>
+                  <line x1="33" y1="33" x2="45" y2="45" stroke="#EF4444" stroke-width="1.5"></line>
+                  <text x="39" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">ZERO</text>
+                  <text x="39" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">LEVERAGE</text>
+                  <text x="39" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Seller Has Cash</text>
+                  <text x="39" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">You Have Zero</text>
+                  <rect x="6" y="132" width="66" height="14" fill="#EF4444"></rect>
+                  <text x="39" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_PROTECTION</text>
+                </g>
+
+                <!-- Connector 02 -> 03 -->
+                <line x1="183" y1="120" x2="196" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"></line>
+
+                <!-- Failure Step 03: Replica, Fake, or Ghosting -->
+                <g transform="translate(198, 52)">
+                  <rect width="72" height="136" stroke="rgba(239,68,68,0.5)" stroke-width="1.2" fill="rgba(15,15,15,0.85)"></rect>
+                  <rect x="0" y="0" width="72" height="20" fill="rgba(239,68,68,0.15)"></rect>
+                  <text x="36" y="14" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="800" text-anchor="middle">03 DELIVERY</text>
+                  <!-- Warning triangle icon -->
+                  <polygon points="36,36 49,56 23,56" stroke="#EF4444" stroke-width="1.3" fill="none"></polygon>
+                  <text x="36" y="52" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">!</text>
+                  <text x="36" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">REPLICA OR</text>
+                  <text x="36" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">BLOCKED</text>
+                  <text x="36" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Fake Fabric</text>
+                  <text x="36" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Or DM Ghost</text>
+                  <rect x="6" y="123" width="60" height="9" fill="rgba(239,68,68,0.2)"></rect>
+                  <text x="36" y="130" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="800" text-anchor="middle">COUNTERFEIT</text>
+                </g>
+
+                <!-- Connector 03 -> 04 -->
+                <line x1="270" y1="120" x2="283" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"></line>
+
+                <!-- Failure Step 04: "No Returns / Sold As-Is" -->
+                <g transform="translate(285, 42)">
+                  <rect width="80" height="154" stroke="#EF4444" stroke-width="1.8" fill="rgba(239,68,68,0.08)"></rect>
+                  <rect x="0" y="0" width="80" height="22" fill="#EF4444"></rect>
+                  <text x="40" y="15" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="900" text-anchor="middle">04 NO RETURN</text>
+                  <!-- Prohibited Icon -->
+                  <circle cx="40" cy="48" r="13" stroke="#EF4444" stroke-width="1.4" fill="none"></circle>
+                  <line x1="31" y1="39" x2="49" y2="57" stroke="#EF4444" stroke-width="1.5"></line>
+                  <text x="40" y="78" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">"SOLD</text>
+                  <text x="40" y="90" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8.5" font-weight="900" text-anchor="middle">AS-IS"</text>
+                  <text x="40" y="108" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="6.5" font-weight="700" text-anchor="middle">Zero Inspection</text>
+                  <text x="40" y="119" fill="rgba(255,255,255,0.6)" font-family="'JetBrains Mono', monospace" font-size="6" text-anchor="middle">No Chargeback</text>
+                  <rect x="6" y="132" width="68" height="14" fill="#EF4444"></rect>
+                  <text x="40" y="142" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="6" font-weight="900" text-anchor="middle">NO_EXCHANGE</text>
+                </g>
+
+                <!-- Connector 04 -> 05 -->
+                <line x1="365" y1="120" x2="378" y2="120" stroke="#EF4444" stroke-width="1.5" marker-end="url(#arrowFail)"></line>
+
+                <!-- Failure Step 05: Total Loss -->
+                <g transform="translate(380, 52)">
+                  <rect width="66" height="136" stroke="#EF4444" stroke-width="1.4" fill="rgba(15,15,15,0.95)"></rect>
+                  <rect x="0" y="0" width="66" height="20" fill="#EF4444"></rect>
+                  <text x="33" y="14" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="900" text-anchor="middle">05 LOSS</text>
+                  <!-- Skull / Crossmark Icon -->
+                  <circle cx="33" cy="46" r="12" fill="rgba(239,68,68,0.2)"></circle>
+                  <line x1="27" y1="40" x2="39" y2="52" stroke="#EF4444" stroke-width="1.6"></line>
+                  <line x1="39" y1="40" x2="27" y2="52" stroke="#EF4444" stroke-width="1.6"></line>
+                  <text x="33" y="74" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">TOTAL</text>
+                  <text x="33" y="86" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="8" font-weight="800" text-anchor="middle">LOSS</text>
+                  <text x="33" y="104" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Money Gone</text>
+                  <text x="33" y="115" fill="rgba(255,255,255,0.5)" font-family="'JetBrains Mono', monospace" font-size="6.5" text-anchor="middle">Zero Recourse</text>
+                  <rect x="5" y="123" width="56" height="9" fill="#EF4444"></rect>
+                  <text x="33" y="130" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="5.5" font-weight="900" text-anchor="middle">PERMANENT</text>
+                </g>
+
+                <!-- Footer Warning Summary -->
+                <line x1="18" y1="216" x2="442" y2="216" stroke="#EF4444" stroke-width="1.5" opacity="0.5"></line>
+                <text x="230" y="238" fill="#EF4444" font-family="'JetBrains Mono', monospace" font-size="9" text-anchor="middle" font-weight="800" letter-spacing="0.08em">ADVANCE TRANSFER • NO RETURNS • NO WAY TO GET YOUR MONEY BACK</text>
+              </svg>

@@ -5,11 +5,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii, tabularNumberStyle } from '@/lib/theme';
+import { radii, tabularNumberStyle } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { safeBack } from '@/lib/nav';
 
 export default function RatingsScreen() {
+  const { theme: colors } = useTheme();
   const { theme } = useTheme();
   const { profile, refreshProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);

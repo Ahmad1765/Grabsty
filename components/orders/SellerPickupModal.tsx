@@ -43,7 +43,7 @@ export function SellerPickupModal({
   defaultContactName = '',
 }: SellerPickupModalProps) {
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
 
   const [recipientName, setRecipientName] = useState('');
   const [phone, setPhone] = useState('');
@@ -146,7 +146,7 @@ export function SellerPickupModal({
                 width: '100%',
                 maxWidth: 480,
                 maxHeight: '90%',
-                backgroundColor: theme.white,
+                backgroundColor: theme.paper,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 borderRadius: Platform.OS === 'web' ? 24 : 0,
@@ -230,9 +230,9 @@ export function SellerPickupModal({
             {validationError && (
               <View
                 style={{
-                  backgroundColor: '#FEF2F2',
+                  backgroundColor: isDark ? 'rgba(239,68,68,0.12)' : '#FEF2F2',
                   borderWidth: 1,
-                  borderColor: '#FECACA',
+                  borderColor: isDark ? 'rgba(239,68,68,0.35)' : '#FECACA',
                   borderRadius: 10,
                   padding: 10,
                   marginBottom: 12,
@@ -241,7 +241,7 @@ export function SellerPickupModal({
                 }}
               >
                 <Feather name="alert-circle" size={16} color="#EF4444" style={{ marginRight: 6 }} />
-                <Text style={{ fontSize: 13, color: '#991B1B', fontFamily: typography.family.sansMedium }}>
+                <Text style={{ fontSize: 13, color: isDark ? '#FCA5A5' : '#991B1B', fontFamily: typography.family.sansMedium }}>
                   {validationError}
                 </Text>
               </View>

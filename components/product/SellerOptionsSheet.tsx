@@ -71,7 +71,7 @@ export function SellerOptionsSheet({
           }
         }
         await Clipboard.setStringAsync(sellerUrl);
-        toast.show('Profile link copied to clipboard!', { variant: 'success', icon: 'copy' });
+        toast.done('Profile link copied to clipboard!', 'copy');
       } else {
         await Share.share({
           message: `Check out @${seller.username}'s shop on ${BRAND}!\n${sellerUrl}`,
@@ -120,7 +120,7 @@ export function SellerOptionsSheet({
       onClose();
 
       if (ok) {
-        toast.show('Thanks — our team will take a look.', { variant: 'success', icon: 'flag' });
+        toast.done('Thanks — our team will take a look.', 'flag');
       } else {
         toast.show('Could not submit report. Please try again.', { variant: 'default', icon: 'alert-triangle' });
       }

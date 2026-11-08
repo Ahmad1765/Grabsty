@@ -1,0 +1,49 @@
+{
+  "lines": [
+    {
+      "id": "01",
+      "sfx": [
+        "message-send whoosh",
+        "message-receive pop",
+        "error thud"
+      ]
+    },
+    {
+      "id": "02",
+      "sfx": [
+        "impact hit ×3 (escalating)"
+      ]
+    },
+    {
+      "id": "03",
+      "sfx": [
+        "riser into a soft bass drop on the G landing"
+      ]
+    },
+    {
+      "id": "04",
+      "sfx": [
+        "soft click per step ×3",
+        "success chime on final chip"
+      ]
+    },
+    {
+      "id": "05",
+      "sfx": [
+        "whoosh",
+        "rubber stamp thud"
+      ]
+    },
+    {
+      "id": "06",
+      "sfx": [
+        "impact on headline",
+        "tick for spot counter",
+        "UI click on button"
+      ]
+    }
+  ],
+  "bgm": {
+    "mode": "none"
+  }
+}

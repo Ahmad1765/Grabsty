@@ -29,8 +29,14 @@ import { getOrCreateConversation } from '@/lib/chat';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii } from '@/lib/theme';
-import { useGridDimensions, GRID_DRAW_DISTANCE } from '@/lib/responsive';
+import { radii } from '@/lib/theme';
+import {
+  useGridDimensions,
+  useDesktopGutter,
+  useIsDesktop,
+  GRID_DRAW_DISTANCE,
+  DESKTOP_PROFILE_MAX,
+} from '@/lib/responsive';
 import { useFadeIn } from '@/lib/motion';
 import type { Listing } from '@/types';
 import { EmptyState } from '@/components/ui';
@@ -45,6 +51,8 @@ import { ListingCard } from '@/components/ListingCard';
 import { ProfileQrSheet } from '@/components/profile/ProfileQrSheet';
 import { StatusFilterChips } from '@/components/profile/StatusFilterChips';
 import { useUserSafetyActions } from '@/hooks/useUserSafetyActions';
+import { useQuery } from '@tanstack/react-query';
+import { getBlockRelation } from '@/lib/blocks';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 
 type SellerTab = 'shop' | 'liked' | 'collections';
@@ -54,6 +62,7 @@ const HORIZONTAL_PAD = 12;
 const GRID_GAP = 8;
 
 export default function UserProfileScreen() {
+  const { theme: colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const userId = typeof id === 'string' ? id : '';
   const insets = useSafeAreaInsets();
@@ -62,7 +71,6 @@ export default function UserProfileScreen() {
   const toast = useToast();
   const [shopFilter, setShopFilter] = useState<'all' | 'available' | 'sold'>('all');
   const [likedFilter, setLikedFilter] = useState<'all' | 'available' | 'sold'>('all');
-  const [savedFilter, setSavedFilter] = useState<'all' | 'available' | 'sold'>('all');
   const [activeTab, setActiveTab] = useState<SellerTab>('shop');
 
   const fade = useFadeIn(0, 320);
@@ -73,12 +81,15 @@ export default function UserProfileScreen() {
   );
   const isInputUuid = useMemo(() => UUID_RE.test(userId), [UUID_RE, userId]);
 
-  const { columns, cardWidth: cardW } = useGridDimensions({
+  const isDesktop = useIsDesktop();
+  const gutter = useDesktopGutter(DESKTOP_PROFILE_MAX);
+  const { columns, cardWidth: cardW, onLayout: onGridLayout } = useGridDimensions({
     min: 2,
     max: 4,
-    thresholds: [560, 900, 1200],
+    thresholds: isDesktop ? [560, 760, 960] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? DESKTOP_PROFILE_MAX : undefined,
   });
 
   const listRef = useRef<FlashListRef<Listing[]>>(null);
@@ -136,6 +147,16 @@ export default function UserProfileScreen() {
       safeBack();
     },
   });
+
+  const blockRelationQ = useQuery({
+    queryKey: ['blockRelation', authUser?.id, profileId],
+    enabled: !!authUser && !!profileId && authUser.id !== profileId,
+    queryFn: () => getBlockRelation(authUser!.id, profileId!),
+    // Never trust a cached or restored answer: this decides which actions show.
+    staleTime: 0,
+    gcTime: 0,
+  });
+  const isBlockedByMe = blockRelationQ.data === 'blocked_by_me';
 
   const [moreOptionsOpen, setMoreOptionsOpen] = useState(false);
   const [showQrSheet, setShowQrSheet] = useState(false);
@@ -221,30 +242,13 @@ export default function UserProfileScreen() {
     [likedListings, likedFilter],
   );
 
-  const savedAvailableCount = useMemo(
-    () => visibleSavedListings.filter((l) => !l.is_sold).length,
-    [visibleSavedListings],
-  );
-  const savedSoldCount = useMemo(
-    () => visibleSavedListings.length - savedAvailableCount,
-    [visibleSavedListings, savedAvailableCount],
-  );
-  const visibleFilteredSavedListings = useMemo(
-    () =>
-      savedFilter === 'available'
-        ? visibleSavedListings.filter((l) => !l.is_sold)
-        : savedFilter === 'sold'
-          ? visibleSavedListings.filter((l) => l.is_sold)
-          : visibleSavedListings,
-    [visibleSavedListings, savedFilter],
-  );
 
   const gridRows = useMemo(() => {
     let list: Listing[] = [];
     if (activeTab === 'shop') list = visibleListings;
     else if (activeTab === 'liked') list = visibleLikedListings;
     else if (activeTab === 'collections') {
-      list = isCollectionsPublic ? visibleFilteredSavedListings : [];
+      list = isCollectionsPublic ? visibleSavedListings : [];
     }
     if (list.length === 0) return [] as Listing[][];
     const out: Listing[][] = [];
@@ -252,7 +256,7 @@ export default function UserProfileScreen() {
       out.push(list.slice(i, i + columns));
     }
     return out;
-  }, [activeTab, visibleListings, visibleLikedListings, isCollectionsPublic, visibleFilteredSavedListings, columns]);
+  }, [activeTab, visibleListings, visibleLikedListings, isCollectionsPublic, visibleSavedListings, columns]);
 
   const renderRow = useCallback(
     ({ item }: { item: Listing[] }) => <GridRow row={item} columns={columns} cardW={cardW} />,
@@ -276,7 +280,8 @@ export default function UserProfileScreen() {
     );
   }
 
-  if (!profile) {
+  // Someone who blocked you reads as a profile that isn't there.
+  if (!profile || blockRelationQ.data === 'blocked_me') {
     return (
       <SafeContainer edges={['top', 'left', 'right']} backgroundColor={colors.background} style={{ flex: 1 }}>
         <View style={{ padding: 14, flexDirection: 'row', alignItems: 'center' }}>
@@ -298,6 +303,7 @@ export default function UserProfileScreen() {
   return (
     <SafeContainer edges={['top', 'left', 'right']} backgroundColor={colors.background} style={{ flex: 1 }}>
       <FlashList
+        onLayout={onGridLayout}
         ref={listRef}
         data={gridRows}
         renderItem={renderRow}
@@ -307,6 +313,7 @@ export default function UserProfileScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.purple} />}
         contentContainerStyle={{
           paddingBottom: Math.max(insets.bottom, 12) + 60,
+          paddingHorizontal: gutter,
         }}
         ListHeaderComponent={
           <>
@@ -351,9 +358,6 @@ export default function UserProfileScreen() {
                   <Text style={{ fontSize: 13.5, color: colors.mute, fontWeight: '500' }}>
                     @{profile.username}
                   </Text>
-                  {profile.is_verified && (
-                    <ShieldCheckIcon size={15} />
-                  )}
                 </View>
 
               </View>
@@ -427,6 +431,27 @@ export default function UserProfileScreen() {
               >
                 {!isSelf ? (
                   <>
+                    {isBlockedByMe ? (
+                    <Pressable
+                      testID="profile-unblock"
+                      onPress={() => safety.unblockUser(profile.id, profile.username)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Unblock"
+                      style={({ pressed }) => ({
+                        height: 36,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
+                        borderRadius: radii.pill,
+                        backgroundColor: colors.ink,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: pressed ? 0.75 : 1,
+                      })}
+                    >
+                      <Text style={{ fontSize: 14.5, fontWeight: '600', color: colors.background }}>Unblock</Text>
+                    </Pressable>
+                    ) : (
+                    <>
                     <Pressable
                       onPress={handleFollowToggle}
                       disabled={followBusy}
@@ -434,17 +459,19 @@ export default function UserProfileScreen() {
                       accessibilityLabel={followed ? 'Unfollow' : 'Follow'}
                       style={({ pressed }) => ({
                         height: 36,
-                        paddingHorizontal: 26,
-                        borderRadius: 20,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
+                        borderRadius: 10,
+                        flexDirection: 'row',
+                        gap: 6,
                         backgroundColor: followed ? colors.surface : colors.purple,
-                        borderWidth: followed ? 1 : 0,
-                        borderColor: colors.border,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        opacity: pressed || followBusy ? 0.75 : 1,
+                        opacity: pressed ? 0.75 : 1,
                         transform: [{ scale: pressed ? 0.97 : 1 }],
                       })}
                     >
+                      {followed ? <Feather name="check" size={15} color={colors.ink} /> : null}
                       <Text
                         style={{
                           fontSize: 14.5,
@@ -463,8 +490,9 @@ export default function UserProfileScreen() {
                       accessibilityLabel="Message seller"
                       style={({ pressed }) => ({
                         height: 36,
-                        paddingHorizontal: 22,
-                        borderRadius: 20,
+                        minWidth: 116,
+                        paddingHorizontal: 20,
+                        borderRadius: 10,
                         backgroundColor: colors.surface,
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -480,6 +508,9 @@ export default function UserProfileScreen() {
                         </Text>
                       )}
                     </Pressable>
+
+                    </>
+                    )}
 
                     <Pressable
                       onPress={handleShare}
@@ -895,20 +926,8 @@ export default function UserProfileScreen() {
               <View style={{ paddingVertical: 40, alignItems: 'center' }}>
                 <EmptyState
                   icon="bookmark"
-                  title={
-                    savedFilter === 'sold'
-                      ? 'Nothing sold yet'
-                      : savedFilter === 'available' && visibleSavedListings.length > 0
-                        ? 'No available items'
-                        : 'No saved items yet'
-                  }
-                  description={
-                    savedFilter === 'sold'
-                      ? 'Sold items will show up here.'
-                      : savedFilter === 'available' && visibleSavedListings.length > 0
-                        ? 'All saved items have been sold.'
-                        : `${displayName} hasn't added any items to their collection yet.`
-                  }
+                  title="No saved items yet"
+                  description={`${displayName} hasn't added any items to their collection yet.`}
                 />
               </View>
             )}
@@ -975,6 +994,8 @@ export default function UserProfileScreen() {
 
           {!isSelf ? (
             <>
+              {!isBlockedByMe && (
+              <>
               {/* Follow / Unfollow */}
               <Pressable
                 onPress={() => {
@@ -1057,6 +1078,9 @@ export default function UserProfileScreen() {
                 <Feather name="chevron-right" size={16} color={colors.mute} />
               </Pressable>
 
+              </>
+              )}
+
               {/* Report User */}
               <Pressable
                 onPress={() => {
@@ -1102,7 +1126,8 @@ export default function UserProfileScreen() {
               <Pressable
                 onPress={() => {
                   setMoreOptionsOpen(false);
-                  safety.blockUser(profile.id, profile.username);
+                  if (isBlockedByMe) safety.unblockUser(profile.id, profile.username);
+                  else safety.blockUser(profile.id, profile.username);
                 }}
                 style={({ pressed }) => ({
                   flexDirection: 'row',
@@ -1130,10 +1155,10 @@ export default function UserProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 15, fontWeight: '700', color: '#EF4444' }}>
-                    Block user
+                    {isBlockedByMe ? 'Unblock user' : 'Block user'}
                   </Text>
                   <Text style={{ fontSize: 12.5, color: colors.mute }}>
-                    Hide all items and prevent future messages
+                    {isBlockedByMe ? 'Allow messages, offers and purchases again' : 'Hide all items and prevent future messages'}
                   </Text>
                 </View>
                 <Feather name="chevron-right" size={16} color="#EF4444" />

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { FulfillmentStatus, FulfillmentType, OrderStatus } from '@/types';
+import type { FulfillmentStatus } from '@/types';
 import { orderBadge } from '@/lib/orders';
 
 describe('Order Lifecycle & Fulfillment State Machine Specification', () => {

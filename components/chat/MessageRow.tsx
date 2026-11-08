@@ -121,7 +121,7 @@ function SystemNotice({ msg }: { msg: ChatMessage }) {
       <View style={{ paddingHorizontal: 16, marginVertical: 12 }}>
         <View
           style={{
-            backgroundColor: theme.white,
+            backgroundColor: theme.paper,
             borderRadius: 12,
             borderWidth: 1,
             borderColor: theme.border,
@@ -954,7 +954,7 @@ function ReactionChip({ reactions, mine }: { reactions: string[]; mine: boolean 
 // ── Row ───────────────────────────────────────────────────────────────────
 
 function MessageRowImpl(props: MessageRowProps) {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const { msg, mine, grouped, lastOfGroup, senderName, senderAvatar, reactions, onRetry, onLongPress } = props;
   const bubbleRef = useRef<View>(null);
 

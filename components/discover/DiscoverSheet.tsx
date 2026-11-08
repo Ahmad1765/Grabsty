@@ -34,7 +34,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from 'react-native';
-import { Text, TextInput } from '@/lib/rnText';
+import { TextInput } from '@/lib/rnText';
 import Animated, {
   Easing,
   runOnJS,
@@ -45,18 +45,20 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Feather from '@expo/vector-icons/Feather';
-import { router, useGlobalSearchParams } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BRAND } from '@/lib/brand';
-import { buildTopicCovers } from '@/lib/discover';
 import { useFeedListingsQuery } from '@/lib/queries';
-import { colors, radii, type } from '@/lib/theme';
-import { HIT_SLOP_8 } from '@/lib/responsive';
+import { radii } from '@/lib/theme';
+import { isDesktopWidth, useIsDesktop } from '@/lib/responsive';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
 import { SearchLiveResults } from './SearchLiveResults';
-import { SearchLanding, type BrowseAction, type TopicAction } from './SearchLanding';
+import { SearchLanding, SHEET_MAX, type TopicAction } from './SearchLanding';
+import type { SortKey } from '@/lib/listings';
+import type { DiscoverTab } from './SearchTabs';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
+import { useActivityUnreadCount } from '@/lib/queries/useFeedQueries';
+import { FeedSearch } from '@/components/home/HomeHeader';
 
 // Every navigation out of the sheet carries a monotonic `n`. Without it,
 // picking the same chip twice produces an identical URL, expo-router hands
@@ -79,11 +81,6 @@ export function useDiscoverSheet(): DiscoverSheetApi {
   if (!ctx) return { open: () => router.push('/discover') };
   return ctx;
 }
-
-export const useBrowseSheet = useDiscoverSheet;
-export const BrowseSheetProvider = DiscoverSheetProvider;
-export type BrowseSheetApi = DiscoverSheetApi;
-
 export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
   const searchInputRef = useRef<TextInput>(null);
@@ -96,6 +93,13 @@ export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
   }, []);
   const close = useCallback(() => setVisible(false), []);
   const api = useMemo(() => ({ open }), [open]);
+
+  // Listing cards in the sheet navigate on their own; close when the route changes.
+  const pathname = usePathname();
+  useEffect(() => {
+    setVisible(false);
+  }, [pathname]);
+  const isDesktop = useIsDesktop();
 
   // Keep the viewport and document pinned to top (0, 0) when the soft keyboard
   // opens on mobile web, preventing Safari from scrolling the search bar offscreen.
@@ -128,7 +132,8 @@ export function DiscoverSheetProvider({ children }: { children: ReactNode }) {
       {children}
       <Modal
         visible={visible}
-        animationType="slide"
+        // Desktop shows the sheet as a centred dialog (see SheetShell).
+        animationType={isDesktop ? 'fade' : 'slide'}
         transparent
         onRequestClose={close}
         statusBarTranslucent
@@ -173,7 +178,6 @@ type SheetSkin = {
   radius: number;
   handleW: number;
   handleH: number;
-  handleColor: string;
   padTop: number;
   gap: number;
 };
@@ -182,7 +186,6 @@ const DEFAULT_HANDLE: SheetSkin = {
   radius: radii['3xl'],
   handleW: 38,
   handleH: 4,
-  handleColor: colors.hairline,
   padTop: 10,
   gap: 14,
 };
@@ -201,8 +204,10 @@ function SheetShell({
   skin: SheetSkin;
   children: ReactNode;
 }) {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { height: winHeight } = useWindowDimensions();
+  const { height: winHeight, width: winWidth } = useWindowDimensions();
+  const desktop = isDesktopWidth(winWidth);
   const translateY = useSharedValue(0);
   // Scrim fades in rather than arriving with the slide — the Modal animates
   // this whole view up, so a fully-opaque scrim would read as a dark band
@@ -272,23 +277,44 @@ function SheetShell({
         style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.28)' }, scrimStyle]}
       />
 
-      {/* The gap itself — tapping outside a sheet closes it. */}
+      {/* The gap itself — tapping outside a sheet closes it.
+          Web: RN-web's Modal focus trap focuses the first focusable child on
+          open, which was this strip — and global.css's :focus-visible ring
+          drew a purple line across the top of the sheet. The strip and the
+          grabber are pointer affordances (Escape / back close the sheet), so
+          both stay out of the tab order and never draw a ring. */}
       <Pressable
         onPress={onClose}
         accessibilityRole="button"
         accessibilityLabel="Dismiss search"
-        style={{ height: topGap }}
+        tabIndex={-1}
+        style={
+          (desktop
+            ? [StyleSheet.absoluteFill, { outlineStyle: 'none' }]
+            : { height: topGap, outlineStyle: 'none' }) as any
+        }
       />
 
       <Animated.View
         style={[
-          {
-            flex: 1,
-            backgroundColor: colors.white,
-            borderTopLeftRadius: skin.radius,
-            borderTopRightRadius: skin.radius,
-            overflow: 'hidden',
-          },
+          desktop
+            ? {
+                // Desktop: a centred dialog over the page, not a phone sheet.
+                width: 680,
+                maxWidth: '92%',
+                height: Math.min(winHeight * 0.82, 760),
+                margin: 'auto',
+                backgroundColor: colors.background,
+                borderRadius: skin.radius,
+                overflow: 'hidden',
+              }
+            : {
+                flex: 1,
+                backgroundColor: colors.background,
+                borderTopLeftRadius: skin.radius,
+                borderTopRightRadius: skin.radius,
+                overflow: 'hidden',
+              },
           sheetStyle,
         ]}
       >
@@ -307,12 +333,14 @@ function SheetShell({
               accessibilityRole="button"
               accessibilityLabel="Close search"
               hitSlop={{ top: 12, bottom: 12, left: 60, right: 60 }}
+              tabIndex={-1}
               style={{
                 width: skin.handleW,
                 height: skin.handleH,
                 borderRadius: 50,
-                backgroundColor: skin.handleColor,
-              }}
+                backgroundColor: colors.hairline,
+                outlineStyle: 'none',
+              } as any}
             />
           </View>
         </GestureDetector>
@@ -323,17 +351,20 @@ function SheetShell({
   );
 }
 
-function DiscoverSheetBody({
+// Also rendered as the Browse tab page (app/(tabs)/discover.tsx), where
+// onClose is a no-op and contentBottom clears the floating tab bar.
+export function DiscoverSheetBody({
   onClose,
   searchInputRef,
+  contentBottom,
 }: {
   onClose: () => void;
   searchInputRef?: RefObject<TextInput | null>;
+  contentBottom?: number;
 }) {
   const insets = useSafeAreaInsets();
-  const { theme, isDark } = useTheme();
   const { user } = useAuth();
-  const searchBg = isDark ? theme.surface : '#F0F1F5';
+  const unreadNotifications = useActivityUnreadCount(user?.id ?? null);
   const [query, setQuery] = useState('');
 
   const internalRef = useRef<TextInput>(null);
@@ -345,17 +376,6 @@ function DiscoverSheetBody({
   // photos cross-fade in after. Usually a cache hit anyway — Discover's idle
   // grid uses this exact key — so the wait is invisible.
   const [settled, setSettled] = useState(false);
-  const params = useGlobalSearchParams();
-  const activeBrowseChipId = useMemo(() => {
-    if (params.sort === 'newest') return 'new';
-    if (params.sort === 'popular') return 'trending';
-    if (params.sort === 'price_asc') return 'cheapest';
-    if (params.tab === 'aesthetics') return 'aesthetics';
-    if (params.tab === 'brands') return 'brands';
-    if (params.tab === 'users') return 'sellers';
-    return null;
-  }, [params.sort, params.tab]);
-
   useEffect(() => {
     // Backstop timer alongside the interaction handle: if any animation handle
     // leaks, runAfterInteractions never fires and the Topics tiles would sit
@@ -369,15 +389,6 @@ function DiscoverSheetBody({
   }, []);
 
   const gridQ = useFeedListingsQuery({ tab: 'popular', limit: 60, enabled: settled });
-  const covers = useMemo(() => buildTopicCovers(gridQ.data ?? []), [gridQ.data]);
-
-  const go = useCallback(
-    (path: string) => {
-      onClose();
-      router.push(withNonce(path) as any);
-    },
-    [onClose],
-  );
 
   const submit = useCallback(() => {
     const q = query.trim();
@@ -387,28 +398,32 @@ function DiscoverSheetBody({
     router.push(withNonce(`/?searchOpen=1&searchQuery=${encodeURIComponent(q)}`) as any);
   }, [query, onClose]);
 
-  const onBrowse = useCallback(
-    (action: BrowseAction, chip?: { label: string; icon: keyof typeof Feather.glyphMap }) => {
-      if (action.kind === 'saved') {
-        go(`/?tab=saved&chipLabel=${encodeURIComponent('Saved')}&chipIcon=bookmark`);
-        return;
-      }
-      const label = chip?.label ?? (action.kind === 'sort' ? action.sort : action.tab);
-      const icon = chip?.icon ?? 'filter';
-      if (action.kind === 'tab') {
-        go(`/?tab=${action.tab}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`);
-        return;
-      }
-      go(`/?sort=${action.sort}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`);
-    },
-    [go],
-  );
-
   const onTopic = useCallback(
     (action: TopicAction) => {
       onClose();
       const cat = action.kind === 'all' ? 'all' : action.category;
       router.push(withNonce(`/?searchOpen=1&searchCategory=${cat}`) as any);
+    },
+    [onClose],
+  );
+
+  const onSort = useCallback(
+    (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => {
+      onClose();
+      router.push(withNonce(`/?sort=${sort}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
+    },
+    [onClose],
+  );
+
+  const onTab = useCallback(
+    (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => {
+      onClose();
+      // Home has no `tab=users` feed; sellers live on search's Members tab.
+      if (tab === 'users') {
+        router.push(withNonce('/?searchOpen=1&searchTab=seller') as any);
+        return;
+      }
+      router.push(withNonce(`/?tab=${tab}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
     },
     [onClose],
   );
@@ -427,85 +442,27 @@ function DiscoverSheetBody({
     [onClose],
   );
 
-  const handlePopulateSuggestion = useCallback(
-    (term: string) => {
-      setQuery(term.trim() + ' ');
-      searchRef.current?.focus?.();
-    },
-    [],
-  );
-
-  const searchBar = (
-    <View
-      style={{
-        height: 44,
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: radii.pill,
-        paddingLeft: 14,
-        paddingRight: 10,
-        borderWidth: 0,
-        backgroundColor: searchBg,
-      }}
-    >
-      <Feather name="search" size={16} color={theme.mute} style={{ flexShrink: 0 }} />
-      <TextInput
-        ref={searchRef}
-        value={query}
-        onChangeText={setQuery}
-        onSubmitEditing={submit}
-        placeholder={`Search ${BRAND}...`}
-        placeholderTextColor={theme.muteSoft}
-        autoCorrect={false}
-        autoCapitalize="none"
-        returnKeyType="search"
-        accessibilityLabel={`Search ${BRAND}`}
-        onFocus={() => {
-          if (Platform.OS === 'web' && typeof window !== 'undefined') {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-          }
-        }}
-        style={[
-          {
-            flex: 1,
-            marginLeft: 8,
-            marginRight: 6,
-            fontSize: 15,
-            fontFamily: type.family.sans,
-            color: theme.ink,
-            padding: 0,
-          },
-          Platform.OS === 'web' ? ({ outlineStyle: 'none', outlineWidth: 0 } as any) : null,
-        ]}
-      />
-      {query.length > 0 ? (
-        <Pressable
-          hitSlop={HIT_SLOP_8}
-          onPress={() => setQuery('')}
-          accessibilityRole="button"
-          accessibilityLabel="Clear search"
-          style={({ pressed }) => ({
-            width: 24,
-            height: 24,
-            borderRadius: radii.pill,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.6 : 1,
-          })}
-        >
-          <Feather name="x" size={16} color={theme.mute} />
-        </Pressable>
-      ) : null}
-    </View>
-  );
-
   return (
-    <View style={{ flex: 1, width: '100%', maxWidth: 600, alignSelf: 'center' }}>
-      {/* Search bar pinned at top of sheet, full width without remounting */}
-      <View style={{ marginHorizontal: 16, marginTop: 4, marginBottom: 8 }}>
-        {searchBar}
+    <View style={{ flex: 1, width: '100%', maxWidth: SHEET_MAX, alignSelf: 'center' }}>
+      {/* Same search bar as Home (FeedSearch), bell included. */}
+      <View style={{ marginBottom: 8 }}>
+        <FeedSearch
+          value={query}
+          onChangeText={setQuery}
+          onSubmitEditing={submit}
+          inputRef={searchRef}
+          focused={false}
+          onFocus={() => {
+            if (Platform.OS === 'web' && typeof window !== 'undefined') {
+              window.scrollTo(0, 0);
+              document.body.scrollTop = 0;
+              document.documentElement.scrollTop = 0;
+            }
+          }}
+          onBlur={() => {}}
+          resultCount={null}
+          unreadNotificationsCount={unreadNotifications}
+        />
       </View>
 
       {query.trim().length > 0 ? (
@@ -528,20 +485,23 @@ function DiscoverSheetBody({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          contentContainerStyle={{ paddingBottom: 24 + insets.bottom }}
+          contentContainerStyle={{ paddingBottom: contentBottom ?? 24 + insets.bottom }}
         >
           <SearchLanding
-            covers={covers}
             listings={gridQ.data ?? []}
             userId={user?.id ?? null}
-            onBrowse={onBrowse}
             onTopic={onTopic}
+            onSort={onSort}
+            onTab={onTab}
             onSearch={handleSelectSuggestion}
             onSelectSeller={(seller) => {
               onClose();
               router.push(`/user/${seller}` as any);
             }}
-            activeChipId={activeBrowseChipId}
+            onSeeAllSellers={() => {
+              onClose();
+              router.push('/top-sellers' as any);
+            }}
           />
         </ScrollView>
       )}

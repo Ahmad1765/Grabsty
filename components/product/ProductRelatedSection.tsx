@@ -10,10 +10,12 @@
 import { memo } from 'react';
 import { View, Pressable, type LayoutChangeEvent } from 'react-native';
 import { Text } from '@/lib/rnText';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleSection } from '@/components/product/BundleSection';
 import { ListingCard } from '@/components/ListingCard';
+import { useFittedCardWidth } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import {
   CARD_GAP,
   CARD_OUTER_PAD,
@@ -56,7 +58,12 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
   onLayout,
 }: ProductRelatedSectionProps) {
   const { theme } = useTheme();
-  const { cardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth, columns } = useProductDimensions();
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
+    horizontalPadding: CARD_OUTER_PAD,
+    gap: CARD_GAP,
+    columns,
+  });
 
   const effectiveTab = relatedTab;
 
@@ -79,14 +86,14 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
                 paddingHorizontal: 16,
                 paddingVertical: 9,
                 borderRadius: 999,
-                backgroundColor: active ? theme.selected : theme.white,
+                backgroundColor: active ? theme.selected : theme.paper,
                 borderWidth: 1,
                 borderColor: theme.border,
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}
             >
-              <Ionicons
-                name={tab === 'members' ? 'person' : 'sparkles'}
+              <Feather
+                name={tab === 'members' ? 'user' : 'grid'}
                 size={13}
                 color={theme.ink}
                 style={{ marginRight: 6 }}
@@ -94,7 +101,7 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
               <Text
                 style={{
                   fontSize: 13,
-                  fontWeight: '700',
+                  fontWeight: '600',
                   color: theme.ink,
                 }}
               >
@@ -127,22 +134,19 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
               </Text>
             </View>
           ) : (
-            <View
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                paddingHorizontal: CARD_OUTER_PAD,
-                columnGap: CARD_GAP,
-                rowGap: 16,
-              }}
+            <CardGrid
+              gridRef={gridRef}
+              onLayout={onGridLayout}
+              columns={columns}
+              cardWidth={cardWidth}
+              padding={CARD_OUTER_PAD}
+              gap={CARD_GAP}
+              rowGap={16}
             >
               {similarItems.map((item) => (
-                <View key={item.id} style={{ width: cardWidth }}>
-                  <ListingCard listing={item} width={cardWidth} />
-                </View>
+                <ListingCard key={item.id} listing={item} width={cardWidth} />
               ))}
-            </View>
+            </CardGrid>
           )}
         </View>
       )}

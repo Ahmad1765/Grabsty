@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { orderTotal, buyerProtectionFee, getParcelDeliveryFee } from '@/lib/fees';
+import { buyerProtectionFee, getParcelDeliveryFee } from '@/lib/fees';
 import { computeCheckoutItemPrice } from '@/lib/bundle';
-import { canAdvanceEscrow, ESCROW_TRANSITION_MAP, getEscrowStatusStyle } from './escrowService';
+import { canAdvanceEscrow, getEscrowStatusStyle } from './escrowService';
 import type { EscrowStatus, Order, Transaction } from '@/types';
 
 vi.mock('react-native', () => ({
@@ -138,7 +138,7 @@ describe('Foolproof Buying & Selling Lifecycle (End-to-End)', () => {
     it('advances from IN_TRANSIT to DELIVERED when courier drops off at recipient', () => {
       expect(canAdvanceEscrow(currentEscrowStatus, 'DELIVERED')).toBe(true);
       currentEscrowStatus = 'DELIVERED';
-      expect(getEscrowStatusStyle(currentEscrowStatus).label).toBe('Delivered (48h Window)');
+      expect(getEscrowStatusStyle(currentEscrowStatus).label).toBe('Delivered (24h Window)');
     });
   });
 

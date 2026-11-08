@@ -4,8 +4,7 @@
 // brand palette, and the listing→related-card mapping.
 import { Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { cardImageUrl } from '@/lib/images';
-import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
+import { CONTENT_MAX_WIDTH, isDesktopWidth } from '@/lib/responsive';
 import type { Listing } from '@/types';
 
 export const IS_IOS = Platform.OS === 'ios';
@@ -29,8 +28,43 @@ export function getProductDimensions(windowWidth: number) {
   return {
     contentWidth,
     imageHeight,
+    columns: 2,
     cardWidth,
     cardImageHeight,
+  };
+}
+
+// Desktop web: gallery on the left, a fixed-width details column on the
+// right, related items in a wide grid underneath. `contentWidth` is then the
+// gallery width (the carousel and skeleton size from it) and `cardWidth` is
+// sized for 4–5 columns across the whole frame.
+export const DESKTOP_DETAILS_WIDTH = 400;
+export const DESKTOP_COLUMN_GAP = 48;
+const DESKTOP_PAGE_PAD = 32;
+const DESKTOP_GALLERY_MAX = 680;
+
+// Space above and below the photo on desktop: header (108), breadcrumbs and
+// page padding (~92). The photo is sized so all of it fits on screen at once.
+const DESKTOP_CHROME_HEIGHT = 200;
+const DESKTOP_GALLERY_MIN = 420;
+
+export function getDesktopProductDimensions(areaWidth: number, areaHeight: number) {
+  const available = areaWidth - DESKTOP_PAGE_PAD * 2;
+  const fitsHeight = Math.floor((areaHeight - DESKTOP_CHROME_HEIGHT) / 1.25);
+  const contentWidth = Math.max(
+    DESKTOP_GALLERY_MIN,
+    Math.min(DESKTOP_GALLERY_MAX, fitsHeight, available - DESKTOP_DETAILS_WIDTH - DESKTOP_COLUMN_GAP),
+  );
+  const frameWidth = contentWidth + DESKTOP_COLUMN_GAP + DESKTOP_DETAILS_WIDTH;
+  const columns = frameWidth >= 1000 ? 5 : 4;
+  const cardWidth = Math.floor((frameWidth - CARD_OUTER_PAD * 2 - CARD_GAP * (columns - 1)) / columns);
+  return {
+    contentWidth,
+    imageHeight: Math.round(contentWidth * 1.25),
+    columns,
+    cardWidth,
+    cardImageHeight: Math.round(cardWidth * 1.25),
+    frameWidth,
   };
 }
 
@@ -40,11 +74,15 @@ export function getProductDimensions(windowWidth: number) {
  */
 export function useProductDimensions() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const dims = getProductDimensions(windowWidth);
+  const desktop = isDesktopWidth(windowWidth);
+  const dims = desktop
+    ? getDesktopProductDimensions(windowWidth, windowHeight)
+    : { ...getProductDimensions(windowWidth), frameWidth: 0 };
 
   return {
     windowWidth,
     windowHeight,
+    desktop,
     ...dims,
   };
 }
@@ -56,19 +94,6 @@ export function tap(style: 'light' | 'medium' | 'selection' = 'selection') {
   else if (style === 'light') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
-
-export const iosShadow = IS_IOS
-  ? {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-    }
-  : {
-      shadowColor: '#000',
-      elevation: 3,
-    };
-
 export const CONDITION_LABELS: Record<string, string> = {
   new_with_tags: 'New with tags',
   like_new: 'Like new',
@@ -77,16 +102,8 @@ export const CONDITION_LABELS: Record<string, string> = {
 };
 
 // Category labels now live in the single-source taxonomy (lib/categories).
-export { CATEGORY_LABELS } from '@/lib/categories';
-
-export const ITEM_COLOR = { name: 'Grabsty purple', hex: '#6C47FF' };
-
 // Unified brand palette (matches home tabs + PromoBanner + LiveActivityTicker)
 export const BRAND_PURPLE = '#6C47FF';
-export const BRAND_PURPLE_SOFT = 'rgba(108,71,255,0.10)';
-export const BRAND_LIME = '#6C47FF';
-
-export const LINK_PURPLE = BRAND_PURPLE;
 
 // Fallback shape used while the real listing is loading; render is gated on
 // `listing` being non-null, so this is never visible in the UI.
@@ -105,17 +122,6 @@ export const FALLBACK_SELLER = {
 // Stable empty reference for the React Query rail fallbacks (seller/similar
 // items), so downstream memos don't churn before the queries resolve.
 export const EMPTY_LISTINGS: Listing[] = [];
-
-export type RelatedItem = {
-  id: string;
-  images: string[];
-  brand: string;
-  meta: string;
-  price: number;
-  inclPrice: number;
-  likes: number;
-};
-
 export function conditionLabel(c: Listing['condition']) {
   switch (c) {
     case 'new_with_tags':
@@ -149,25 +155,6 @@ export function timeAgo(iso: string): string {
   if (weeks < 5) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
   return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
 }
-
-export function listingToRelated(row: Listing): RelatedItem {
-  const meta = [row.size, conditionLabel(row.condition)].filter(Boolean).join(' · ');
-  // Every surface a RelatedItem reaches — the related rail, the bundle picker,
-  // the locked-in base card — is a ~171px tile, so they get the stored
-  // thumbnails (640px long edge) rather than the 1440px originals. Mapped by
-  // index because `thumbnails` can be shorter than `images` on a row whose
-  // thumbnail generation partly failed; cardImageUrl falls back per index.
-  return {
-    id: row.id,
-    images: (row.images ?? []).map((_, i) => cardImageUrl(row, i)),
-    brand: row.brand || row.title,
-    meta: meta || row.category,
-    price: Number(row.price ?? 0),
-    inclPrice: Number(row.price ?? 0),
-    likes: Number(row.likes ?? 0),
-  };
-}
-
 // Bundle tiers + the discount math live in lib/bundle.ts (pure + unit-tested).
 // Re-exported here so the product components keep a single import surface.
 export { BUNDLE_TIERS, BUNDLE_MIN_ITEMS, computeBundlePricing } from '@/lib/bundle';

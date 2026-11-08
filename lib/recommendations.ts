@@ -86,6 +86,14 @@ export function logListingView(listingId: string): void {
     });
 }
 
+// Fire-and-forget "seller opened from search" hit for Most searched. The RPC
+// ignores anon/self and keeps one row per seller+searcher+day.
+export function logSellerSearch(sellerId: string): void {
+  supabase.rpc('log_seller_search', { p_seller_id: sellerId }).then(({ error }) => {
+    if (error) console.warn('[recs] log_seller_search', error.message);
+  });
+}
+
 // The signed-in user's recent views (own rows only via RLS), hydrated to
 // full listings for the "Recently viewed" rail. Sold items are kept out:
 // the rail is a "pick up where you left off" affordance, not a history page.

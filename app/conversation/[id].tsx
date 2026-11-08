@@ -45,6 +45,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { formatPrice } from '@/lib/currency';
 import { confirm } from '@/lib/confirm';
 import { isImageMessage, type ChatMessage } from '@/lib/chat';
+import { SUPPORT_BOT_USER_ID } from '@/lib/support';
 import { EmptyState, SafeContainer } from '@/components/ui';
 import { explainCoverage } from '@/components/SafetyBanner';
 import { HIT_SLOP_8 } from '@/lib/responsive';
@@ -312,7 +313,7 @@ export default function ConversationScreen() {
         ? formatPrice(msg.metadata.amount)
         : msg.content;
     await Clipboard.setStringAsync(text);
-    toast.show('Copied', { variant: 'success', icon: 'check' });
+    toast.done('Copied', 'copy');
   }, [pressed?.msg, toast]);
 
   const handleDeleteMessage = useCallback(async () => {
@@ -333,7 +334,7 @@ export default function ConversationScreen() {
     if (!success) {
       toast.show("Couldn't delete message", { variant: 'default', icon: 'alert-triangle' });
     } else {
-      toast.show(isImage ? 'Photo deleted' : 'Message deleted', { variant: 'success', icon: 'check' });
+      toast.done(isImage ? 'Photo deleted' : 'Message deleted', 'trash-2');
     }
   }, [pressed?.msg, thread, toast, user]);
 
@@ -448,7 +449,7 @@ export default function ConversationScreen() {
             },
           ]
         : []),
-      ...(thread.other?.id
+      ...(thread.other?.id && thread.other.id !== SUPPORT_BOT_USER_ID
         ? [
             {
               id: 'block',
@@ -657,6 +658,7 @@ export default function ConversationScreen() {
       >
         <ThreadHeader
           name={thread.senderName}
+          verified={thread.other?.is_verified}
           subtitle={thread.other?.username ? `@${thread.other.username}` : null}
           avatar={thread.otherAvatar}
           onBack={() => safeBack()}

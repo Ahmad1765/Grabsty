@@ -269,7 +269,7 @@ export default function NewConversationScreen() {
           Alert.alert('Could not send message', 'Please try again.');
           return;
         }
-        toast.show('Message sent to Support', { variant: 'success', icon: 'check' });
+        toast.done('Message sent to Support', 'send');
         router.replace(`/conversation/${conv.id}` as any);
       } catch (err) {
         captureError(err, { fn: 'conversationNew.sendSupport' });
@@ -306,7 +306,7 @@ export default function NewConversationScreen() {
           Alert.alert('Could not send message', 'Please try again.');
           return;
         }
-        toast.show('Message sent', { variant: 'success', icon: 'check' });
+        toast.done('Message sent', 'send');
         router.replace(`/conversation/${conv.id}` as any);
       } catch (err) {
         captureError(err, { fn: 'conversationNew.sendDirect' });
@@ -366,10 +366,7 @@ export default function NewConversationScreen() {
         Alert.alert('Could not send', 'Please try again.');
         return;
       }
-      toast.show(mode === 'offer' ? (isBundle ? 'Bundle offer sent' : 'Offer sent') : 'Message sent', {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(mode === 'offer' ? (isBundle ? 'Bundle offer sent' : 'Offer sent') : 'Message sent', 'send');
       router.replace(`/conversation/${conv.id}` as any);
     } catch (err) {
       captureError(err, { fn: 'conversationNew.send' });

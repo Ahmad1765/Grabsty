@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face{font-family:"Bricolage Grotesque";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque-Bold.ttf") format("truetype");}
+        @font-face{font-family:"Bricolage Grotesque";font-weight:500;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque-Medium.ttf") format("truetype");}
+        @font-face{font-family:"Bricolage Grotesque";font-weight:400;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque-Regular.ttf") format("truetype");}
+        @font-face{font-family:"Bricolage Grotesque 96pt";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque96pt-Bold.ttf") format("truetype");}
+        @font-face{font-family:"JetBrains Mono";font-weight:400 800;font-style:normal;font-display:block;src:url("assets/fonts/JetBrainsMono-latin.woff2") format("woff2");}
+
+        #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; color: #FFFFFF; font-family: "Bricolage Grotesque", sans-serif; }
+        .f1-bg { position: absolute; inset: 0; background-color: #0F0F0F;
+          background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 72px 72px; }
+        .f1-stage { position: absolute; inset: 0; }
+
+        .f1-thread { position: absolute; left: 0; top: 0; width: 1080px; height: 1600px; }
+        .f1-header { position: absolute; left: 72px; top: 150px; width: 936px; height: 150px; display: flex; align-items: center; gap: 32px; border-bottom: 2px solid rgba(255,255,255,0.14); padding-bottom: 28px; }
+        .f1-avatar { width: 112px; height: 112px; border-radius: 56px; background: #2A2A2A; border: 3px solid #FFFFFF; flex: none; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 44px; color: #FFFFFF; }
+        .f1-handle { font-weight: 700; font-size: 50px; line-height: 1.1; }
+        .f1-status { font-family: "JetBrains Mono", monospace; font-size: 26px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-top: 8px; }
+
+        .f1-bubble { position: absolute; max-width: 780px; padding: 34px 40px; border-radius: 10px; font-weight: 500; font-size: 54px; line-height: 1.22; }
+        .f1-buyer { right: 72px; top: 400px; background: #6C47FF; color: #FFFFFF; box-shadow: 10px 10px 0 #FFFFFF; }
+        .f1-buyer .f1-amt { display: block; font-weight: 700; font-size: 72px; margin-top: 6px; }
+        .f1-seen { position: absolute; right: 72px; top: 690px; font-family: "JetBrains Mono", monospace; font-size: 26px; letter-spacing: 0.14em; color: rgba(255,255,255,0.6); }
+        .f1-seller { left: 72px; top: 780px; background: #1F1F1F; border: 3px solid rgba(255,255,255,0.85); color: #FFFFFF; }
+
+        .f1-composer { position: absolute; left: 72px; top: 1330px; width: 936px; height: 140px; border: 3px solid #FFFFFF; background: #171717; display: flex; align-items: center; padding: 0 36px; box-shadow: 10px 10px 0 #6C47FF; }
+        .f1-typed { font-weight: 500; font-size: 46px; white-space: nowrap; }
+        .f1-caret { display: inline-block; width: 5px; height: 54px; background: #6C47FF; margin-left: 4px; vertical-align: middle; }
+
+        .f1-block { position: absolute; left: 72px; top: 1060px; width: 936px; padding: 30px 36px; border: 4px solid #EF4444; background: #0F0F0F; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 36px; letter-spacing: 0.08em; color: #EF4444; text-align: center; box-shadow: 10px 10px 0 #EF4444; }
+        .f1-big { position: absolute; left: 0; top: 470px; width: 1080px; text-align: center; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 220px; line-height: 0.9; letter-spacing: -0.02em; text-transform: uppercase; color: #FFFFFF; text-shadow: 12px 12px 0 #EF4444; }
+        .f1-disabled { position: absolute; left: 72px; top: 1330px; width: 936px; height: 140px; border: 3px solid rgba(255,255,255,0.25); background: #0F0F0F; display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 28px; letter-spacing: 0.1em; color: rgba(255,255,255,0.45); text-transform: uppercase; }
+      </style>
+
+      <div data-hf-id="hf-3afk" id="root" data-composition-id="01-the-dm" data-width="1080" data-height="1920" data-start="0" data-duration="4">
+        <div data-hf-id="hf-306w" id="f1-bg" class="f1-bg clip" data-start="0" data-duration="4" data-track-index="0"></div>
+        <div data-hf-id="hf-9ai5" id="f1-stage" class="f1-stage clip" data-start="0" data-duration="4" data-track-index="1">
+          <div data-hf-id="hf-8bii" class="f1-thread" id="f1-thread">
+            <div data-hf-id="hf-c21n" class="f1-header">
+              <div data-hf-id="hf-ktqg" class="f1-avatar" id="f1-avatar">T</div>
+              <div data-hf-id="hf-yeow">
+                <div data-hf-id="hf-pwik" class="f1-handle">@thrift.drops.pk</div>
+                <div data-hf-id="hf-tnkc" class="f1-status" style="position: relative;"><span data-hf-id="hf-pfeg" id="f1-status-on">Active now</span><span data-hf-id="hf-x72o" id="f1-status-off" style="position: absolute; left: 0; top: 0; white-space: nowrap; opacity: 0;">Account unavailable</span></div>
+              </div>
+            </div>
+            <div data-hf-id="hf-ildg" class="f1-bubble f1-buyer" id="f1-buyer">Bhai payment bhej di hai<span data-hf-id="hf-9phh" class="f1-amt">Rs 6,500</span></div>
+            <div data-hf-id="hf-yc93" class="f1-seen" id="f1-seen">SEEN</div>
+            <div data-hf-id="hf-9w31" class="f1-bubble f1-seller" id="f1-seller">Done, kal ship kar dunga</div>
+            <div data-hf-id="hf-3gf6" class="f1-composer" id="f1-composer"><span data-hf-id="hf-11kj" class="f1-typed" id="f1-typed"></span><span data-hf-id="hf-y2qn" class="f1-caret" id="f1-caret"></span></div>
+          </div>
+          <div data-hf-id="hf-1x2v" class="f1-disabled" id="f1-disabled">You can't reply to this chat</div>
+          <div data-hf-id="hf-b6tu" class="f1-block" id="f1-block">YOU CAN'T MESSAGE THIS ACCOUNT</div>
+          <div data-hf-id="hf-nx0g" class="f1-big" id="f1-big">Blocked.</div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+        const typedEl = document.getElementById("f1-typed");
+        const line = "Bhai payment bhej di hai — Rs 6,500";
+        const proxy = { n: 0 };
+
+        // Scene 1 — buyer types, then sends
+        tl.fromTo(".f1-header", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0);
+        tl.fromTo("#f1-composer", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0);
+        tl.fromTo(proxy, { n: 0 }, { n: line.length, duration: 0.9, ease: "none",
+          onUpdate: () => { typedEl.textContent = line.slice(0, Math.round(proxy.n)); } }, 0.1);
+        for (let t = 0.1; t < 1.15; t += 0.3) {
+          tl.set("#f1-caret", { opacity: 1 }, t);
+          tl.set("#f1-caret", { opacity: 0.15 }, t + 0.15);
+        }
+        tl.set("#f1-typed", { opacity: 0 }, 1.12);
+        tl.set("#f1-caret", { opacity: 0 }, 1.12);
+        tl.fromTo("#f1-buyer", { opacity: 0, y: 520, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: "expo.out" }, 1.1);
+        tl.fromTo("#f1-seen", { opacity: 0 }, { opacity: 1, duration: 0.2 }, 1.45);
+
+        // Scene 2 — seller replies
+        tl.fromTo("#f1-seller", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.6);
+
+        // Scene 3 — blocked: thread dims, red line stays sharp
+        tl.to("#f1-composer", { opacity: 0, duration: 0.12 }, 2.35);
+        tl.fromTo("#f1-disabled", { opacity: 0 }, { opacity: 1, duration: 0.15 }, 2.4);
+        tl.fromTo("#f1-block", { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.3, ease: "expo.out" }, 2.4);
+        tl.fromTo("#f1-thread", { opacity: 1, filter: "blur(0px) grayscale(0)" }, { opacity: 0.4, filter: "blur(3px) grayscale(1)", duration: 0.5, ease: "power3.out" }, 2.4);
+        tl.fromTo("#f1-status-on", { opacity: 1 }, { opacity: 0, duration: 0.01 }, 2.4);
+        tl.fromTo("#f1-status-off", { opacity: 0 }, { opacity: 1, duration: 0.01 }, 2.4);
+        tl.fromTo("#f1-block", { x: 0 }, { x: -10, duration: 0.05, ease: "none" }, 2.72);
+        tl.to("#f1-block", { x: 8, duration: 0.05, ease: "none" }, 2.77);
+        tl.to("#f1-block", { x: 0, duration: 0.06, ease: "none" }, 2.82);
+        tl.fromTo("#f1-big", { opacity: 0, scale: 1.8 }, { opacity: 1, scale: 1, duration: 0.32, ease: "expo.out" }, 2.95);
+
+        window.__timelines["01-the-dm"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

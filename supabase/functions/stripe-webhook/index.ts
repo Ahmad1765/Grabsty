@@ -38,7 +38,8 @@ const SIGNATURE_TOLERANCE_SECONDS = 300; // 5 min, same default as Stripe SDKs
 // same person as the client-side funnel.
 async function capturePurchase(distinctId: string, props: Record<string, unknown>) {
   const key = Deno.env.get('POSTHOG_KEY');
-  const host = Deno.env.get('POSTHOG_HOST') ?? 'https://eu.i.posthog.com';
+  // US region: the project lives there, and the EU host silently drops events.
+  const host = Deno.env.get('POSTHOG_HOST') ?? 'https://us.i.posthog.com';
   if (!key) return;
   try {
     await fetch(`${host}/i/v0/e/`, {

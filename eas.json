@@ -10,14 +10,20 @@
       "distribution": "internal",
       "channel": "development",
       "environment": "development",
-      "ios": { "simulator": true },
-      "android": { "buildType": "apk" }
+      "ios": {
+        "simulator": true
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
       "environment": "preview",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "channel": "production",
@@ -26,6 +32,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascAppId": "6832227343",
+        "ascApiKeyPath": "D:/Softwares/grabsty-release-keys/AuthKey_9LS3TL7XJC.p8",
+        "ascApiKeyIssuerId": "48e98322-b9cc-495e-b1c3-a573aec5b21b",
+        "ascApiKeyId": "9LS3TL7XJC"
+      }
+    }
   }
 }

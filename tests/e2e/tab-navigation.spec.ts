@@ -6,7 +6,7 @@
 // is icon-only (AnimatedTabBar renders glyphs and labels, and the label also
 // serves as the button's aria-label).
 
-import { test, expect, waitForAppReady, discoverSearch } from './helpers/page';
+import { test, expect, waitForAppReady, homeSearch, hasTopNav } from './helpers/page';
 
 test.describe('Tab navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -17,7 +17,7 @@ test.describe('Tab navigation', () => {
   // Home now renders what used to live at /feed (the personalized feed) —
   // the old search-header Home screen was removed and this became "/".
   test('Home is the default route', async ({ page }) => {
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
   });
 
   test('Activity tab routes to the activity inbox', async ({ page }) => {
@@ -28,27 +28,25 @@ test.describe('Tab navigation', () => {
     ).toBeVisible();
   });
 
-  // The Discover tab no longer routes — like Sell, it opens a sheet over the
-  // current screen (components/discover/DiscoverSheet.tsx). Picking something
-  // in the sheet is what navigates, so this asserts both halves.
-  // Located by role/aria-label, not text: the tab bar is icon-only.
+  // The Browse tab opens a search sheet over Home; picking a category opens
+  // Home's search results filtered to it. Desktop (>=1024px) has no tab bar —
+  // its top nav owns category browsing instead.
   test('Browse tab opens the search sheet, which routes on pick', async ({ page }) => {
-    await page.getByRole('button', { name: /Browse|Categories/i }).click();
-    await expect(page.getByPlaceholder(/^Search \w+\.\.\.$/)).toBeVisible();
-    await expect(page.getByText('Browse', { exact: true })).toBeVisible();
-    await expect(page.getByText('Topics', { exact: true })).toBeVisible();
+    test.skip(await hasTopNav(page), 'desktop top nav has no Browse tab');
+    await page.getByRole('button', { name: 'Browse', exact: true }).click();
+    await expect(page.getByPlaceholder('Search Grabsty...')).toBeVisible();
+    await expect(page.getByText('Categories', { exact: true })).toBeVisible();
     // Still on Home — the sheet is an overlay, not a route.
     await expect(page).toHaveURL(/\/(\?.*)?$/);
 
-    await page.getByText('Bags', { exact: true }).first().click();
-    await page.waitForURL(/category=bags/);
-    await expect(discoverSearch(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Browse Clothing' }).click();
+    await page.waitForURL(/searchCategory=clothing/);
   });
 
   test('Sell tab routes (gate or upload form depending on auth)', async ({ page }) => {
-    await page.getByRole('button', { name: 'Sell' }).click();
+    await page.getByRole('button', { name: 'Sell', exact: true }).first().click();
     await expect(
-      page.getByText(/Upload listing|Your story[\s\S]*starts now\.|Continue as guest/i).first(),
+      page.getByText(/Upload listing|Sign in to sell|Continue as guest/i).first(),
     ).toBeVisible();
   });
 

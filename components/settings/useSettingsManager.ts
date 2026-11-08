@@ -31,7 +31,6 @@ import {
 import { confirm } from '@/lib/confirm';
 import { tap } from '@/lib/haptics';
 import { analyticsReady, isOptedOut, setAnalyticsOptOut } from '@/lib/analytics';
-import { APP_URL } from '@/lib/brand';
 import type {
   AddressForm,
   PayoutForm,
@@ -40,8 +39,6 @@ import type {
 import type { PayoutMethod, ShippingAddress, Verification } from '@/types';
 
 export const SUPPORT_EMAIL = 'support@grabsty.com';
-export const TERMS_URL = `${APP_URL}/legal/terms`;
-export const PRIVACY_URL = `${APP_URL}/legal/privacy`;
 
 export type Section =
   | 'general'
@@ -374,7 +371,7 @@ export function useSettingsManager() {
     setBusy('logout');
     try {
       await signOut();
-      toast.show('Signed out', { variant: 'default', icon: 'log-out' });
+      toast.done('Signed out', 'log-out');
       router.replace('/(tabs)');
     } catch (e: any) {
       toast.show(e?.message ?? 'Could not log out', {
@@ -412,7 +409,7 @@ export function useSettingsManager() {
       });
       if (error) throw error;
       setResetCooldown(60);
-      toast.show('Reset email sent — check your inbox', { variant: 'success', icon: 'mail' });
+      toast.done('Reset email sent — check your inbox', 'send');
     } catch (e: any) {
       const msg = e?.message ?? '';
       if (/rate_limit|over_email_send_rate_limit|429|too many/i.test(msg)) {
@@ -452,10 +449,18 @@ export function useSettingsManager() {
     setBusy('delete');
     try {
       const { data, error } = await supabase.functions.invoke('delete-account', { body: {} });
-      if (error) throw error;
+      if (error) {
+        // A running order isn't a failure to escalate: tell them what to finish.
+        const body = await (error as any).context?.json?.().catch(() => null);
+        if (body?.code === 'active_orders') {
+          toast.show(body.error, { variant: 'default', icon: 'alert-triangle', durationMs: 5000 });
+          return;
+        }
+        throw error;
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       await signOut().catch(() => {});
-      toast.show('Account deleted', { variant: 'default', icon: 'check' });
+      toast.done('Account deleted', 'trash-2');
       router.replace('/(tabs)');
     } catch (e: any) {
       const subject = encodeURIComponent('Account deletion request');
@@ -501,7 +506,7 @@ export function useSettingsManager() {
       }
 
       if (mounted.current) setAddress(data as ShippingAddress);
-      toast.show('Address saved', { variant: 'success', icon: 'check' });
+      toast.done('Address saved');
       return true;
     },
     [user?.id, address?.id, toast],
@@ -518,7 +523,7 @@ export function useSettingsManager() {
       return;
     }
     if (mounted.current) setAddress(null);
-    toast.show('Address removed', { variant: 'default', icon: 'trash-2' });
+    toast.done('Address removed', 'trash-2');
   }, [address?.id, toast]);
 
   const savePayout = useCallback(
@@ -588,7 +593,7 @@ export function useSettingsManager() {
       }
 
       if (mounted.current) setPayout(savedData);
-      toast.show('Payout method saved', { variant: 'success', icon: 'check' });
+      toast.done('Payout method saved');
       return true;
     },
     [user?.id, payout?.id, toast],
@@ -605,7 +610,7 @@ export function useSettingsManager() {
       return;
     }
     if (mounted.current) setPayout(null);
-    toast.show('Payout removed', { variant: 'default', icon: 'trash-2' });
+    toast.done('Payout removed', 'trash-2');
   }, [payout?.id, toast]);
 
   const saveVerification = useCallback(
@@ -653,7 +658,7 @@ export function useSettingsManager() {
         record.id_photo_url = record.notes;
       }
       if (mounted.current) setVerification(record);
-      toast.show('Verification submitted', { variant: 'success', icon: 'check' });
+      toast.done('Verification submitted');
       return true;
     },
     [user?.id, verification?.notes, toast],
@@ -670,7 +675,7 @@ export function useSettingsManager() {
         const { error } = await supabase.auth.updateUser({ data: { phone: clean } });
         if (error) throw error;
         if (mounted.current) setPhone(clean);
-        toast.show('Phone number saved', { variant: 'success', icon: 'check' });
+        toast.done('Phone number saved');
         return true;
       } catch (e: any) {
         toast.show(e?.message ?? 'Could not save phone number', {
@@ -689,7 +694,7 @@ export function useSettingsManager() {
       const { error } = await supabase.auth.updateUser({ data: { phone: null } });
       if (error) throw error;
       if (mounted.current) setPhone(null);
-      toast.show('Phone number removed', { variant: 'default', icon: 'trash-2' });
+      toast.done('Phone number removed', 'trash-2');
     } catch (e: any) {
       toast.show(e?.message ?? 'Could not remove phone', {
         variant: 'default',

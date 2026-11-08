@@ -5,10 +5,14 @@ import { Image } from 'expo-image';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, type } from '@/lib/theme';
+import { type } from '@/lib/theme';
 import { IMAGE_TRANSITION } from '@/lib/images';
 import { searchListings } from '@/lib/listings';
 import { searchUsers, type FollowListRow } from '@/lib/follows';
+import { logSellerSearch } from '@/lib/recommendations';
+import { formatPrice } from '@/lib/currency';
+import { categoryLabel } from '@/lib/categories';
+import { conditionLabel } from '@/components/product/shared';
 import type { Listing } from '@/types';
 import type { SearchSuggestion } from '@/lib/searchSuggestions';
 
@@ -35,6 +39,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
   onSelectSeller,
   onSelectTerm,
 }: SearchLiveResultsProps) {
+  const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<'items' | 'profiles'>('items');
   const [serverListings, setServerListings] = useState<Listing[]>([]);
@@ -83,13 +88,13 @@ export const SearchLiveResults = memo(function SearchLiveResults({
   // Instant in-memory client refinement combined with server results
   const displayListings = useMemo(() => {
     if (!q) return [];
-    const clientMatches = listings.filter((item) => {
-      const titleMatch = item.title?.toLowerCase().includes(q);
-      const brandMatch = item.brand?.toLowerCase().includes(q);
-      const catMatch = item.category?.toLowerCase().includes(q);
-      const tagMatch = item.tags?.some((t) => t.toLowerCase().includes(q));
-      return titleMatch || brandMatch || catMatch || tagMatch;
-    });
+    // Word-prefix match: "d" finds "Dark navy", not every title with a d in it.
+    const hit = (v?: string | null) => !!v && (` ${v.toLowerCase()}`).includes(` ${q}`);
+    const clientMatches = listings.filter(
+      (item) =>
+        !item.is_sold &&
+        (hit(item.title) || hit(item.brand) || hit(categoryLabel(item.category)) || item.tags?.some(hit)),
+    );
 
     const seen = new Set<string>();
     const merged: Listing[] = [];
@@ -104,7 +109,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
 
     // Merge server results from the wider catalog
     for (const item of serverListings) {
-      if (!seen.has(item.id)) {
+      if (!seen.has(item.id) && !item.is_sold && (hit(item.title) || hit(item.brand) || hit(item.description) || item.tags?.some(hit))) {
         seen.add(item.id);
         merged.push(item);
       }
@@ -122,13 +127,13 @@ export const SearchLiveResults = memo(function SearchLiveResults({
     listings.forEach((l) => {
       if (l.seller && l.seller.id) {
         const uName = (l.seller.username || '').toLowerCase();
-        const fName = (l.seller.full_name || '').toLowerCase();
-        if (uName.includes(q) || fName.includes(q)) {
+        const fName = ` ${(l.seller.full_name || '').toLowerCase()}`;
+        if (uName.startsWith(q) || fName.includes(` ${q}`)) {
           map.set(l.seller.id, {
             id: l.seller.id,
             name: l.seller.full_name || l.seller.username || 'Seller',
             username: l.seller.username || '',
-            avatar: l.seller.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+            avatar: l.seller.avatar_url || '',
             items: l.seller.total_sales || 1,
           });
         }
@@ -142,7 +147,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
           id: s.id,
           name: s.full_name || s.username || 'Member',
           username: s.username || '',
-          avatar: s.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80`,
+          avatar: s.avatar_url || '',
           items: s.listingCount || s.followers_count || 0,
         });
       }
@@ -153,74 +158,62 @@ export const SearchLiveResults = memo(function SearchLiveResults({
 
   // Quick match tag from suggestions
   const quickPill = useMemo(() => {
-    const matched = suggestions.find((s) => s.text.toLowerCase().includes(q));
-    return matched ? matched.text : query.trim();
-  }, [suggestions, q, query]);
+    if (!q) return '';
+    return suggestions.find((s) => s.text.toLowerCase().startsWith(q))?.text ?? '';
+  }, [suggestions, q]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
-      {/* ── Sub-tabs (Markets/Items vs Profiles) ────────────────────── */}
+      {/* ── Sub-tabs: same as Home search's Items / Members switcher ── */}
       <View
         style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 8,
           paddingHorizontal: 16,
-          paddingTop: 12,
-          paddingBottom: 8,
+          paddingTop: 8,
+          paddingBottom: 6,
         }}
       >
-        <Pressable
-          onPress={() => {
-            haptic();
-            setActiveTab('items');
-          }}
-          accessibilityRole="button"
-          style={{
-            paddingHorizontal: 14,
-            height: 32,
-            borderRadius: 16,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: activeTab === 'items' ? (isDark ? '#2C2C2E' : '#F0F1F5') : 'transparent',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              fontFamily: type.family.sansBold,
-              color: activeTab === 'items' ? theme.ink : theme.muteSoft,
-            }}
-          >
-            Markets
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => {
-            haptic();
-            setActiveTab('profiles');
-          }}
-          accessibilityRole="button"
-          style={{
-            paddingHorizontal: 14,
-            height: 32,
-            borderRadius: 16,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: activeTab === 'profiles' ? (isDark ? '#2C2C2E' : '#F0F1F5') : 'transparent',
-          }}
-        >
-          <Text
-            style={{
-              fontSize: 13,
-              fontFamily: type.family.sansBold,
-              color: activeTab === 'profiles' ? theme.ink : theme.muteSoft,
-            }}
-          >
-            Profiles
-          </Text>
-        </Pressable>
+        {([['items', 'Items'], ['profiles', 'Members']] as const).map(([key, label]) => {
+          const active = activeTab === key;
+          return (
+            <Pressable
+              key={key}
+              onPress={() => {
+                haptic();
+                setActiveTab(key);
+              }}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
+              style={({ pressed }) => ({
+                paddingHorizontal: 14,
+                paddingVertical: 6,
+                borderRadius: 8,
+                backgroundColor: active
+                  ? isDark ? '#222E34' : '#F4F4F5'
+                  : pressed
+                  ? isDark ? '#1C2428' : '#F9FAFB'
+                  : 'transparent',
+                justifyContent: 'center',
+                alignItems: 'center',
+              })}
+            >
+              <Text
+                style={{
+                  fontSize: 14,
+                  lineHeight: 18,
+                  fontWeight: '600',
+                  fontFamily: type.family.sansSemibold,
+                  color: active ? theme.text : isDark ? '#9CA3AF' : '#6B7280',
+                  letterSpacing: -0.2,
+                }}
+              >
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
 
         {loading && (
           <ActivityIndicator
@@ -275,7 +268,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
         {activeTab === 'items' ? (
           displayListings.length > 0 ? (
             displayListings.map((item) => {
-              const thumb = item.thumbnails?.[0] || item.images?.[0] || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&auto=format&fit=crop&q=80';
+              const thumb = item.thumbnails?.[0] || item.images?.[0];
               return (
                 <Pressable
                   key={item.id}
@@ -304,13 +297,13 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                       backgroundColor: isDark ? '#2C2C2E' : '#F3F4F6',
                     }}
                   >
-                    <Image
+                    {thumb ? <Image
                       source={{ uri: thumb }}
                       style={{ width: '100%', height: '100%' }}
                       contentFit="cover"
                       cachePolicy="memory-disk"
                       transition={IMAGE_TRANSITION}
-                    />
+                    /> : null}
                   </View>
 
                   {/* Title and Subtitle */}
@@ -334,9 +327,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                       }}
                       numberOfLines={1}
                     >
-                      {item.brand ? `${item.brand} • ` : ''}
-                      {item.category}
-                      {item.condition ? ` • ${item.condition.replace(/_/g, ' ')}` : ''}
+                      {[item.brand, categoryLabel(item.category), conditionLabel(item.condition)].filter(Boolean).join(' · ')}
                     </Text>
                   </View>
 
@@ -349,17 +340,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                         color: theme.ink,
                       }}
                     >
-                      ${item.price}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 10.5,
-                        fontFamily: type.family.sans,
-                        color: theme.muteSoft,
-                        marginTop: 2,
-                      }}
-                    >
-                      Instant buy
+                      {formatPrice(item.price, { whole: true })}
                     </Text>
                   </View>
                 </Pressable>
@@ -421,6 +402,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                 key={seller.id}
                 onPress={() => {
                   haptic();
+                  logSellerSearch(seller.id);
                   onSelectSeller(seller.username || seller.id);
                 }}
                 accessibilityRole="button"
@@ -446,13 +428,17 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                     borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB',
                   }}
                 >
-                  <Image
+                  {seller.avatar ? <Image
                     source={{ uri: seller.avatar }}
                     style={{ width: '100%', height: '100%' }}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                     transition={IMAGE_TRANSITION}
-                  />
+                  /> : (
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+                      <Feather name="user" size={18} color={theme.mute} />
+                    </View>
+                  )}
                 </View>
 
                 {/* Seller Name and Username */}
@@ -476,7 +462,7 @@ export const SearchLiveResults = memo(function SearchLiveResults({
                     }}
                     numberOfLines={1}
                   >
-                    @{seller.username || seller.name.toLowerCase()} • {seller.items} items
+                    @{seller.username || seller.name.toLowerCase()}
                   </Text>
                 </View>
 

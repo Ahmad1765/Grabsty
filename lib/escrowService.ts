@@ -61,7 +61,7 @@ export function getEscrowStatusStyle(status: EscrowStatus): EscrowStatusStyle {
       };
     case 'DELIVERED':
       return {
-        label: 'Delivered (48h Window)',
+        label: 'Delivered (24h Window)',
         bg: 'rgba(16, 185, 129, 0.14)',
         color: '#34D399',
         dotColor: '#10B981',

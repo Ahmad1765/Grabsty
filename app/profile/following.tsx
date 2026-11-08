@@ -10,10 +10,9 @@ import { useToast } from '@/lib/toast';
 import { safeBack } from '@/lib/nav';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { useTheme } from '@/context/ThemeContext';
-import { colors } from '@/lib/theme';
 import { HIT_SLOP_8 } from '@/lib/responsive';
 import { Button, EmptyState } from '@/components/ui';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   useFollowingMaskQuery,
   useFollowingQuery,
@@ -32,6 +31,7 @@ const keyById = (r: Row) => r.id;
 const EMPTY_ROWS: Row[] = [];
 
 export default function FollowingScreen() {
+  const { theme: colors } = useTheme();
   const { theme } = useTheme();
   const { user: authUser, profile: authProfile } = useAuth();
   const params = useLocalSearchParams<{ user?: string; username?: string }>();
@@ -250,7 +250,7 @@ function UserRow({
           <Text style={{ fontSize: 14, fontWeight: '800', color: theme.text }} numberOfLines={1}>
             {row.full_name || row.username}
           </Text>
-          {row.is_verified && <ShieldCheckIcon size={14} />}
+          {row.is_verified && <VerifiedBadge size={14} />}
         </View>
 
         <Text style={{ fontSize: 12.5, color: theme.mute, marginTop: 1 }} numberOfLines={1}>

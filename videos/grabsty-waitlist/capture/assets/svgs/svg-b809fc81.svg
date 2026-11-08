@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="110" height="130" viewBox="0 0 110 130" fill="none">
+        <!-- Outer Gateway Pishtaq Portal Frame -->
+        <rect x="8" y="12" width="94" height="110" stroke="#FFFFFF" stroke-width="1.2" opacity="0.35"></rect>
+        <rect x="14" y="18" width="82" height="104" stroke="#6C47FF" stroke-width="1.2" opacity="0.45"></rect>
+        <line x1="4" y1="122" x2="106" y2="122" stroke="#FFFFFF" stroke-width="2" opacity="0.6"></line>
+        <line x1="6" y1="126" x2="104" y2="126" stroke="#6C47FF" stroke-width="1.2" opacity="0.5"></line>
+        
+        <!-- Spandrel Corner Rosettes -->
+        <circle cx="28" cy="32" r="5" stroke="#FFFFFF" stroke-width="1" opacity="0.4"></circle>
+        <circle cx="28" cy="32" r="2" fill="#6C47FF" opacity="0.7"></circle>
+        <circle cx="82" cy="32" r="5" stroke="#FFFFFF" stroke-width="1" opacity="0.4"></circle>
+        <circle cx="82" cy="32" r="2" fill="#6C47FF" opacity="0.7"></circle>
+        
+        <!-- Multi-foil Cusped Arch with 9 Cusps -->
+        <path d="M22 122 V70 Q22 55 30 55 Q33 46 40 44 Q44 35 50 32 Q53 24 55 20 Q57 24 60 32 Q66 35 70 44 Q77 46 80 55 Q88 55 88 70 V122" stroke="#6C47FF" stroke-width="2.2" stroke-linecap="round" fill="rgba(108, 71, 255, 0.06)" opacity="0.85"></path>
+        <!-- Inner Decorative Cusped Contour -->
+        <path d="M30 122 V74 Q30 62 36 62 Q39 55 45 53 Q49 46 55 38 Q61 46 65 53 Q71 55 74 62 Q80 62 80 74 V122" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 2" fill="none" opacity="0.5"></path>
+        
+        <!-- Pilaster Columns & Fluted Grooves -->
+        <line x1="18" y1="122" x2="18" y2="68" stroke="#FFFFFF" stroke-width="1" opacity="0.3"></line>
+        <line x1="92" y1="122" x2="92" y2="68" stroke="#FFFFFF" stroke-width="1" opacity="0.3"></line>
+        <circle cx="55" cy="20" r="3" fill="#6C47FF"></circle>
+        <line x1="55" y1="8" x2="55" y2="20" stroke="#FFFFFF" stroke-width="1.2" opacity="0.6"></line>
+      </svg>

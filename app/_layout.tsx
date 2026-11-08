@@ -1,12 +1,13 @@
 import '../global.css';
-import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Platform, View } from 'react-native';
 import { disablePressableInterop } from '@/lib/pressableInterop';
 import { installAlertShim } from '@/lib/alertShim';
 import { initSentry } from '@/lib/sentry';
 import { initAnalytics, screen } from '@/lib/analytics';
 import { normalizeScreenName } from '@/lib/analyticsEvents';
 import { Stack, usePathname } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
@@ -27,13 +28,17 @@ import { attachResponseListener, configureNotifications } from '@/lib/notificati
 import { onOrderUpdated } from '@/lib/paymentService';
 import { LISTING_QUERY_PREFIXES } from '@/lib/queries/keys';
 import { AuthProvider } from '@/lib/auth';
+import { GoogleOneTap } from '@/lib/googleOneTap';
 import { ToastProvider } from '@/lib/toast';
+import { installKeyboardFocusRing } from '@/lib/keyboardFocusRing';
 import { GuestGateProvider } from '@/components/GuestGate';
 import { SellSheetProvider } from '@/components/sell/SellSheet';
 import { DiscoverSheetProvider } from '@/components/discover/DiscoverSheet';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { AnimatedSplash } from '@/components/AnimatedSplash';
+import { DesktopTopNav } from '@/components/navigation/DesktopTopNav';
+import { useIsDesktop, DESKTOP_READING_MAX } from '@/lib/responsive';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
 // FIRST, before any element is created: take Pressable out of NativeWind's
@@ -191,6 +196,39 @@ function usePreventViewportZoomOnWeb() {
 
 function RootLayoutNav() {
   const { theme, isDark, hydrated } = useTheme();
+  // Desktop: secondary pages render as a centred reading column; the wide
+  // pages below opt back out with `wide`.
+  const isDesktop = useIsDesktop();
+  const pageStyle = useMemo(
+    () => [
+      { backgroundColor: theme.background },
+      isDesktop && {
+        width: '100%' as const,
+        maxWidth: DESKTOP_READING_MAX,
+        alignSelf: 'center' as const,
+        borderLeftWidth: 1,
+        borderRightWidth: 1,
+        borderColor: theme.border,
+      },
+    ],
+    [isDesktop, theme.background, theme.border],
+  );
+  const wide = { contentStyle: { backgroundColor: theme.background } };
+  const navTheme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        // Desktop: a soft canvas shows around the centred reading columns.
+        background: isDesktop ? theme.surface : theme.background,
+        card: theme.background,
+        text: theme.text,
+        border: theme.border,
+        primary: theme.purple,
+      },
+    };
+  }, [isDark, isDesktop, theme]);
   const [ready, setReady] = useState(false);
   useFocusOutOfAriaHidden();
   usePreventViewportZoomOnWeb();
@@ -209,6 +247,8 @@ function RootLayoutNav() {
   useEffect(() => {
     return initOfflineSync();
   }, []);
+
+  useEffect(() => (Platform.OS === 'web' ? installKeyboardFocusRing() : undefined), []);
 
   useEffect(() => {
     // Gate first paint on the icon fonts. Note this is a best-effort gate, not
@@ -274,26 +314,36 @@ function RootLayoutNav() {
       <ErrorBoundary>
       <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <AuthProvider>
+        <GoogleOneTap />
         <ToastProvider>
         <GuestGateProvider>
         <SellSheetProvider>
         <DiscoverSheetProvider>
         {!ready || !hydrated ? null : (
+        // React Navigation paints its own theme background (#F2F2F2 by default)
+        // under every screen and tab scene; without this it flashes light grey
+        // behind transitions in dark mode.
+        <NavThemeProvider value={navTheme}>
+        {/* Desktop web (>= 1024px) header above every screen; on phones
+            DesktopTopNav renders nothing. */}
+        <View style={{ flex: 1 }}>
+        <DesktopTopNav />
+        <View style={{ flex: 1 }}>
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: theme.background },
+            contentStyle: pageStyle,
           }}
         >
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
+          <Stack.Screen name="(tabs)" options={wide} />
+          <Stack.Screen name="onboarding" options={{ ...wide, headerShown: false, gestureEnabled: false }} />
           <Stack.Screen
             name="product/[id]"
-            options={{ headerShown: false }}
+            options={{ ...wide, headerShown: false }}
           />
           <Stack.Screen
             name="user/[id]"
-            options={{ headerShown: false }}
+            options={{ ...wide, headerShown: false }}
           />
           <Stack.Screen
             name="conversation/[id]"
@@ -305,7 +355,7 @@ function RootLayoutNav() {
           />
           <Stack.Screen
             name="auth/login"
-            options={{ presentation: 'modal' }}
+            options={{ ...wide, presentation: 'modal' }}
           />
           <Stack.Screen
             name="profile/edit"
@@ -313,7 +363,7 @@ function RootLayoutNav() {
           />
           <Stack.Screen
             name="settings"
-            options={{ headerShown: false }}
+            options={{ ...wide, headerShown: false }}
           />
           <Stack.Screen
             name="news"
@@ -333,21 +383,24 @@ function RootLayoutNav() {
           />
           <Stack.Screen
             name="sell"
-            options={{ headerShown: false }}
+            options={{ ...wide, headerShown: false }}
           />
           <Stack.Screen
             name="listed/[id]"
-            options={{ headerShown: false, animation: 'fade' }}
+            options={{ ...wide, headerShown: false, animation: 'fade' }}
           />
           <Stack.Screen
             name="payment/[id]"
-            options={{ headerShown: false, presentation: 'modal' }}
+            options={{ ...wide, headerShown: false, presentation: 'modal' }}
           />
           <Stack.Screen
             name="admin"
-            options={{ headerShown: false }}
+            options={{ ...wide, headerShown: false }}
           />
         </Stack>
+        </View>
+        </View>
+        </NavThemeProvider>
         )}
         <OfflineBanner />
         {Platform.OS !== 'web' && <AnimatedSplash appReady={ready && hydrated} />}

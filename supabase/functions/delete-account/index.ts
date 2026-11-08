@@ -134,6 +134,16 @@ Deno.serve(async (req: Request) => {
       return json({ error: 'Failed to process deletion request audit log' }, 500);
     }
 
+    // Finished orders move to the "Deleted user" account; a running one refuses.
+    const { error: prepErr } = await admin.rpc('prepare_account_deletion', { p_user_id: user.id });
+    if (prepErr) {
+      if (prepErr.message === 'active_orders') {
+        return json({ error: 'You have an order in progress. Finish or cancel it, then delete your account.', code: 'active_orders' }, 409);
+      }
+      console.error('[delete-account] prepare failed', prepErr.message);
+      return json({ error: 'Could not delete the account. Please try again.' }, 500);
+    }
+
     // Perform deletion
     const { error: delErr } = await admin.auth.admin.deleteUser(user.id);
     if (delErr) {

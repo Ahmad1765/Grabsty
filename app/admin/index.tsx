@@ -47,8 +47,10 @@ import {
   canAdvanceEscrow,
   type EscrowLogisticsItem,
 } from '@/lib/escrowService';
-import type { EscrowStatus, Verification, User } from '@/types';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { AdminAnalytics } from '@/components/admin/AdminAnalytics';
+import { AdminUsers } from '@/components/admin/AdminUsers';
+import type { EscrowStatus, Verification } from '@/types';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   fetchAdminSupportConversations,
   fetchAdminSupportMessages,
@@ -59,7 +61,7 @@ import {
 import type { ChatMessage } from '@/lib/chat';
 import { useVerificationPhotoUrl } from '@/lib/upload';
 
-type AdminTab = 'overview' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
+type AdminTab = 'overview' | 'analytics' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
 type LogisticsFilter = 'all' | 'active' | 'IN_TRANSIT' | 'DELIVERED' | 'COMPLETED_FUNDS_RELEASED';
 
 const COURIER_PRESETS = ['Internal Fleet', 'TCS', 'Leopards', 'Trax', 'PostEx', 'M&P', 'Custom'];
@@ -68,6 +70,13 @@ const COURIER_PRESETS = ['Internal Fleet', 'TCS', 'Leopards', 'Trax', 'PostEx', 
 function KycPhoto({ value, style }: { value: string; style: React.ComponentProps<typeof Image>['style'] }) {
   const uri = useVerificationPhotoUrl(value);
   return <Image source={uri ? { uri } : undefined} style={style} contentFit="cover" />;
+}
+
+// A transaction still needs work unless it's finished — or its order already
+// died (failed card checkout, canceled) without the escrow row being closed.
+function isOpenTransaction(t: EscrowLogisticsItem): boolean {
+  if (['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status)) return false;
+  return !['failed', 'canceled', 'cancelled', 'refunded'].includes(t.order?.status ?? '');
 }
 
 function deriveRef(id: string): string {
@@ -98,7 +107,6 @@ export default function AdminConsoleScreen() {
   const isDesktop = width >= 960;
 
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Logistics & Escrow State
@@ -125,10 +133,6 @@ export default function AdminConsoleScreen() {
   const [verificationFilter, setVerificationFilter] = useState<'all' | 'submitted' | 'approved' | 'rejected'>('submitted');
   const [processingKycId, setProcessingKycId] = useState<string | null>(null);
 
-  // Users Directory State
-  const [users, setUsers] = useState<User[]>([]);
-  const [userSearch, setUserSearch] = useState('');
-
   // Support Team State
   const [supportConvs, setSupportConvs] = useState<AdminSupportConversation[]>([]);
   const [supportFilter, setSupportFilter] = useState<'all' | 'disputes' | 'general'>('all');
@@ -147,16 +151,14 @@ export default function AdminConsoleScreen() {
   const loadAllData = useCallback(async () => {
     if (!profile?.is_admin) return;
     try {
-      const [txs, kycRes, usersRes, supportConvsData] = await Promise.all([
+      const [txs, kycRes, supportConvsData] = await Promise.all([
         escrowService.fetchLogisticsTransactions('all', 100),
         supabase.rpc('admin_get_verifications', { p_status: 'all' }),
-        supabase.rpc('admin_get_users', { p_limit: 100 }),
         fetchAdminSupportConversations('all'),
       ]);
 
       setTransactions(txs);
       if (kycRes.data) setVerifications(kycRes.data as Verification[]);
-      if (usersRes.data) setUsers(usersRes.data as User[]);
       if (supportConvsData) {
         // A chat is a dispute when its user is party to a DISPUTED order. The old
         // signal (the word "dispute" in the latest message) vanished on any reply.
@@ -175,7 +177,6 @@ export default function AdminConsoleScreen() {
         icon: 'alert-triangle',
       });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   }, [profile?.is_admin, toast]);
@@ -185,7 +186,6 @@ export default function AdminConsoleScreen() {
 
   useEffect(() => {
     if (profile?.is_admin) {
-      setLoading(true);
       loadAllData();
     }
   }, [profile?.is_admin, loadAllData]);
@@ -235,19 +235,19 @@ export default function AdminConsoleScreen() {
   // ── Metrics Calculation ───────────────────────────────────────────────────
   const metrics = useMemo(() => {
     const totalTransactions = transactions.length;
-    const activeEscrow = transactions.filter(
-      (t) => !['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status),
-    );
+    const activeEscrow = transactions.filter(isOpenTransaction);
     const inTransit = transactions.filter((t) => t.status === 'IN_TRANSIT');
     const disputed = transactions.filter((t) => t.status === 'DISPUTED');
     const pendingKyc = verifications.filter((v) => v.status === 'submitted');
     const supportCount = supportConvs.length;
     const openSupportDisputes = supportConvs.filter((c) => c.is_dispute).length;
 
-    const totalEscrowVolume = activeEscrow.reduce(
-      (sum, t) => sum + (t.order?.amount_cents || t.amount_cents || 0),
-      0,
-    );
+    // Money held = buyer has actually paid (card captured, or COD cash
+    // collected) and it hasn't been released or refunded yet. Unpaid COD and
+    // abandoned card checkouts hold nothing.
+    const totalEscrowVolume = activeEscrow
+      .filter((t) => t.order?.payment_status === 'paid' || !!t.order?.cod_paid_at)
+      .reduce((sum, t) => sum + (t.order?.amount_cents || t.amount_cents || 0), 0);
 
     return {
       totalTransactions,
@@ -266,7 +266,7 @@ export default function AdminConsoleScreen() {
     let list = transactions;
 
     if (logisticsFilter === 'active') {
-      list = list.filter((t) => !['COMPLETED_FUNDS_RELEASED', 'CANCELLED'].includes(t.status));
+      list = list.filter(isOpenTransaction);
     } else if (logisticsFilter !== 'all') {
       list = list.filter((t) => t.status === logisticsFilter);
     }
@@ -298,18 +298,6 @@ export default function AdminConsoleScreen() {
     if (verificationFilter === 'all') return verifications;
     return verifications.filter((v) => v.status === verificationFilter);
   }, [verifications, verificationFilter]);
-
-  // ── Filtered Users ────────────────────────────────────────────────────────
-  const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return users;
-    const q = userSearch.toLowerCase().trim();
-    return users.filter(
-      (u) =>
-        u.username?.toLowerCase().includes(q) ||
-        u.full_name?.toLowerCase().includes(q) ||
-        u.id.toLowerCase().includes(q),
-    );
-  }, [users, userSearch]);
 
   // ── Filtered Support Conversations ────────────────────────────────────────
   const filteredSupportConvs = useMemo(() => {
@@ -379,7 +367,7 @@ export default function AdminConsoleScreen() {
       }
       await loadSupportMessages(selectedSupportConv.id);
 
-      toast.show('Reply sent to user', { variant: 'success', icon: 'check' });
+      toast.done('Reply sent to user', 'send');
 
       setSupportConvs((prev) =>
         prev.map((c) =>
@@ -406,7 +394,7 @@ export default function AdminConsoleScreen() {
   const copyText = async (text: string, label: string) => {
     tap('light');
     await Clipboard.setStringAsync(text);
-    toast.show(`${label} copied to clipboard`, { variant: 'default', icon: 'check' });
+    toast.done(`${label} copied to clipboard`, 'copy');
   };
 
   const dialPhone = (phone?: string | null) => {
@@ -449,10 +437,7 @@ export default function AdminConsoleScreen() {
         notes: extra.notes || null,
       });
 
-      toast.show(`Order updated to ${targetStatus.replace(/_/g, ' ')}`, {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(`Order updated to ${targetStatus.replace(/_/g, ' ')}`);
       setShowDispatchModal(false);
       setSelectedTx(null);
       loadAllData();
@@ -479,20 +464,14 @@ export default function AdminConsoleScreen() {
           targetStatus: 'COMPLETED_FUNDS_RELEASED',
           notes: `[ADMIN RESOLUTION - RELEASED TO SELLER]: ${disputeNotes}`,
         });
-        toast.show('Dispute resolved: Escrow released to seller', {
-          variant: 'success',
-          icon: 'check',
-        });
+        toast.done('Dispute resolved: Escrow released to seller');
       } else {
         await escrowService.advanceStatus({
           orderId: selectedTx.order_id,
           targetStatus: 'CANCELLED',
           cancelReason: `[ADMIN RESOLUTION - REFUNDED TO BUYER]: ${disputeNotes}`,
         });
-        toast.show('Dispute resolved: Escrow refunded to buyer', {
-          variant: 'success',
-          icon: 'check',
-        });
+        toast.done('Dispute resolved: Escrow refunded to buyer');
       }
 
       setShowDisputeModal(false);
@@ -520,10 +499,7 @@ export default function AdminConsoleScreen() {
       });
       if (error) throw error;
 
-      toast.show(`Seller verification ${decision}`, {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(`Seller verification ${decision}`);
       loadAllData();
     } catch (err: any) {
       toast.show(err?.message || 'Failed to update KYC status', {
@@ -800,6 +776,27 @@ export default function AdminConsoleScreen() {
             </Pressable>
 
             <Pressable
+              testID="admin-tab-analytics"
+              onPress={() => setActiveTab('analytics')}
+              style={({ pressed }) => ({
+                height: 38,
+                borderRadius: 8,
+                backgroundColor: activeTab === 'analytics' ? (isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                gap: 10,
+                opacity: pressed ? 0.8 : 1,
+                marginBottom: 2,
+              })}
+            >
+              <Feather name="bar-chart-2" size={16} color={activeTab === 'analytics' ? theme.text : theme.textMuted} />
+              <Text style={{ flex: 1, fontSize: 14, fontWeight: activeTab === 'analytics' ? '600' : '500', color: activeTab === 'analytics' ? theme.text : theme.textMuted }}>
+                Analytics
+              </Text>
+            </Pressable>
+
+            <Pressable
               onPress={() => setActiveTab('logistics')}
               style={({ pressed }) => ({
                 height: 38,
@@ -938,6 +935,7 @@ export default function AdminConsoleScreen() {
           >
             {[
               { key: 'overview', label: 'Overview', icon: 'activity' },
+              { key: 'analytics', label: 'Analytics', icon: 'bar-chart-2' },
               { key: 'logistics', label: `Orders (${metrics.activeEscrowCount})`, icon: 'truck' },
               { key: 'disputes', label: `Disputes (${metrics.disputedCount})`, icon: 'alert-circle' },
               { key: 'verifications', label: `KYC (${metrics.pendingKycCount})`, icon: 'shield' },
@@ -1032,6 +1030,8 @@ export default function AdminConsoleScreen() {
 
             </ScrollView>
           )}
+
+          {activeTab === 'analytics' && <AdminAnalytics />}
 
           {/* TAB 2: LOGISTICS & ESCROW ORDERS */}
           {activeTab === 'logistics' && (
@@ -1575,104 +1575,8 @@ export default function AdminConsoleScreen() {
           )}
 
           {/* TAB 5: USERS & SELLERS DIRECTORY */}
-          {activeTab === 'users' && (
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: isDesktop ? 'row' : 'column', gap: 10, marginBottom: 14, alignItems: isDesktop ? 'center' : 'stretch', justifyContent: 'space-between' }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: theme.panel, borderRadius: 8, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 10, minHeight: 38, width: isDesktop ? 300 : '100%' }}>
-                  <Feather name="search" size={14} color={theme.textMuted} />
-                  <TextInput
-                    value={userSearch}
-                    onChangeText={setUserSearch}
-                    placeholder="Search by username, full name, ID..."
-                    placeholderTextColor={theme.textMuted}
-                    style={{ flex: 1, marginLeft: 8, fontSize: 13, color: theme.text, paddingVertical: 6 }}
-                  />
-                  {userSearch ? (
-                    <Pressable onPress={() => setUserSearch('')} hitSlop={8}>
-                      <Feather name="x" size={14} color={theme.textMuted} />
-                    </Pressable>
-                  ) : null}
-                </View>
+          {activeTab === 'users' && <AdminUsers />}
 
-                <Text style={{ fontSize: 12, color: theme.textMuted }}>
-                  Total {filteredUsers.length} members
-                </Text>
-              </View>
-
-              <FlatList
-                data={filteredUsers}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={true}
-                renderItem={({ item }) => {
-                  const initial = (item.full_name || item.username || 'U').charAt(0).toUpperCase();
-
-                  return (
-                    <View
-                      style={{
-                        backgroundColor: theme.panel,
-                        borderRadius: 12,
-                        padding: 14,
-                        borderWidth: 1,
-                        borderColor: theme.border,
-                        marginBottom: 10,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
-                        <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: theme.surface, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                          {item.avatar_url ? (
-                            <Image
-                              source={{ uri: getOptimizedImageUrl(item.avatar_url, { width: 80 }) }}
-                              style={{ width: 40, height: 40 }}
-                              contentFit="cover"
-                            />
-                          ) : (
-                            <Text style={{ fontSize: 16, fontWeight: '800', color: theme.text }}>{initial}</Text>
-                          )}
-                        </View>
-
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={{ fontSize: 14, fontWeight: '700', color: theme.text }} numberOfLines={1}>
-                              {item.full_name || item.username}
-                            </Text>
-                            {item.is_verified && <ShieldCheckIcon size={14} />}
-                            {item.is_admin && (
-                              <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: isDark ? '#333' : '#E5E5E5' }}>
-                                <Text style={{ fontSize: 9, fontWeight: '800', color: theme.text }}>ADMIN</Text>
-                              </View>
-                            )}
-                          </View>
-                          <Text style={{ fontSize: 12, color: theme.textMuted }}>@{item.username} · {item.total_sales || 0} sales</Text>
-                        </View>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                        <Pressable
-                          onPress={() => router.push(`/user/${item.id}` as any)}
-                          style={({ pressed }) => ({
-                            width: 32,
-                            height: 32,
-                            borderRadius: 6,
-                            backgroundColor: theme.surface,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <Feather name="external-link" size={14} color={theme.text} />
-                        </Pressable>
-                      </View>
-                    </View>
-                  );
-                }}
-              />
-            </View>
-          )}
-
-          {/* TAB 6: SUPPORT CHATS & INQUIRIES WORKBENCH */}
           {activeTab === 'support' && (
             <View style={{ flex: 1 }}>
               {/* Header (hidden on phones while a chat is open, so the thread gets the screen) */}
@@ -2134,7 +2038,7 @@ export default function AdminConsoleScreen() {
                                           <Text style={{ fontSize: 11, fontWeight: '700', color: theme.purple }}>
                                             Grabsty Support
                                           </Text>
-                                          <ShieldCheckIcon size={12} />
+                                          <VerifiedBadge size={12} />
                                         </>
                                       ) : (
                                         <Text style={{ fontSize: 11, fontWeight: '600', color: theme.textMuted }}>

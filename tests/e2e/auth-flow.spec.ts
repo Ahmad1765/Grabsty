@@ -4,7 +4,7 @@
 // What we DO assert is that the inputs/buttons exist, validation rejects bad
 // shapes, and "Continue as guest" routes back to the tabs.
 
-import { test, expect, waitForAppReady, freshTestEmail, passwordField } from "./helpers/page";
+import { test, expect, waitForAppReady, freshTestEmail, passwordField, homeSearch } from "./helpers/page";
 
 test.describe("Auth modal", () => {
   test.beforeEach(async ({ page }) => {
@@ -17,7 +17,7 @@ test.describe("Auth modal", () => {
   }) => {
     await expect(page.getByText("Grabsty").first()).toBeVisible();
     await expect(
-      page.getByText(/Your story[\s\S]*starts now\./i),
+      page.getByText(/Your story[\s\S]*starts\s+now\./i),
     ).toBeVisible();
     await expect(page.getByText("Continue as guest")).toBeVisible();
     await expect(page.getByText("Sign up with email")).toBeVisible();
@@ -32,7 +32,7 @@ test.describe("Auth modal", () => {
     // Some path under the tab navigator — the home feed's search field is
     // unique enough to identify it.
     await expect(
-      page.getByPlaceholder("Search your feed"),
+      homeSearch(page),
     ).toBeVisible();
   });
 

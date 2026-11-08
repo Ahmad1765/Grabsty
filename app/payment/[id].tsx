@@ -22,6 +22,7 @@ import { queryClient } from '@/lib/queryClient';
 import { qk } from '@/lib/queries/keys';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
+import { isDeliverableCountry, NOT_DELIVERABLE_MESSAGE } from '@/lib/delivery';
 import { safeBack } from '@/lib/nav';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { supabase } from '@/lib/supabase';
@@ -39,7 +40,7 @@ import {
   type PaymentMethodOption,
   type SelectedPaymentMethod,
 } from '@/components/payment/PaymentOptionsModal';
-import { paymentService, normalizeAddressInput } from '@/lib/paymentService';
+import { paymentService, normalizeAddressInput, isDemoMode } from '@/lib/paymentService';
 import { ShippingAddressSchema } from '@/lib/schemas/order';
 import { getOrCreateConversation, cancelBundleOffersForSoldItem } from '@/lib/chat';
 import { SELECT_LISTING_WITH_SELLER } from '@/lib/listings';
@@ -114,7 +115,7 @@ export default function PaymentScreen() {
   const { user, profile, loading: authLoading } = useAuth();
   const toast = useToast();
 
-  const isDemo = id === 'demo' || !id;
+  const isDemo = isDemoMode() && (id === 'demo' || !id);
 
   const listingQ = useListingQuery(id && !isDemo ? String(id) : null);
   const fetchedListing = listingQ.data ?? null;
@@ -274,7 +275,6 @@ export default function PaymentScreen() {
   const [addressSheetOpen, setAddressSheetOpen] = useState(false);
 
   // Delivery Notes state (optional, defaults to empty)
-  const [deliveryNotes, setDeliveryNotes] = useState<string>('');
 
   // Payment method selection state
   const initialMethod: PaymentMethodOption =
@@ -491,7 +491,7 @@ export default function PaymentScreen() {
     setAddressSheetOpen(false);
 
     if (isDemo || !user?.id) {
-      toast.show('Shipping address updated', { variant: 'default', icon: 'check' });
+      toast.done('Shipping address updated');
       return;
     }
 
@@ -549,7 +549,7 @@ export default function PaymentScreen() {
       if (savedAddress) {
         setShippingAddress(savedAddress);
       }
-      toast.show('Shipping address saved', { variant: 'default', icon: 'check' });
+      toast.done('Shipping address saved');
     } catch (err: any) {
       setShippingAddress(previousAddress);
       toast.show(err?.message || 'Could not save address. Please try again.', {
@@ -612,6 +612,16 @@ export default function PaymentScreen() {
         return;
       }
 
+      // Mirrors the server rule (pakistan_only_orders) so the buyer hears it before paying.
+      if (!isDeliverableCountry(shippingAddress.country)) {
+        toast.show(NOT_DELIVERABLE_MESSAGE, {
+          variant: 'default',
+          icon: 'globe',
+        });
+        setAddressSheetOpen(true);
+        return;
+      }
+
       const cleanPhone = (shippingAddress.phone || '').replace(/[\s\-\(\)]/g, '');
       if (cleanPhone.length < 10 || cleanPhone.length > 15) {
         toast.show('Please enter a valid contact phone number (10 to 15 digits)', {
@@ -648,7 +658,6 @@ export default function PaymentScreen() {
         offerAmount: itemPrice,
         shippingAddress,
         shippingMethod: fulfillment === 'handshake' ? 'self_ship' : 'managed',
-        deliveryNotes: deliveryNotes.trim() || undefined,
         // The server recomputes the total and refuses to charge anything else.
         expectedTotal: finalTotal,
       });
@@ -714,7 +723,7 @@ export default function PaymentScreen() {
     } catch (e: any) {
       // Seller deleted/sold the item while the buyer sat on checkout: say so
       // plainly and leave, instead of a cut-off DB message on a dead screen.
-      if (/not found|already sold|been sold/i.test(e?.message ?? '')) {
+      if (/not found|already sold|been sold|no longer available/i.test(e?.message ?? '')) {
         queryClient.invalidateQueries({ queryKey: qk.listing(String(listing.id)) });
         toast.show('This item is no longer available', { variant: 'default', icon: 'alert-triangle' });
         router.back();

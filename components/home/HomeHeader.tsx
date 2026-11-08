@@ -7,8 +7,9 @@
 // Saved, and custom alerts), and zero-layout-shift cold start guidance banners.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { memo, useRef, useMemo } from 'react';
+import { memo, useRef, useMemo, type RefObject } from 'react';
 import { View, Pressable, ScrollView, Platform, useWindowDimensions } from 'react-native';
+import { useIsDesktop } from '@/lib/responsive';
 import { Text, TextInput } from '@/lib/rnText';
 import { router } from 'expo-router';
 import Feather from '@expo/vector-icons/Feather';
@@ -43,6 +44,8 @@ type FeedSearchProps = {
   onPressNotifications?: () => void;
   onOpenShareProfile?: () => void;
   placeholder?: string;
+  onSubmitEditing?: () => void;
+  inputRef?: RefObject<any>;
 };
 
 export const FeedSearch = memo(function FeedSearch({
@@ -59,10 +62,13 @@ export const FeedSearch = memo(function FeedSearch({
   onPressNotifications,
   onOpenShareProfile,
   placeholder = 'What are you looking for today?',
+  onSubmitEditing,
+  inputRef: inputRefProp,
 }: FeedSearchProps) {
   const { theme, isDark } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
-  const inputRef = useRef<any>(null);
+  const localRef = useRef<any>(null);
+  const inputRef = inputRefProp ?? localRef;
   const searching = value.trim().length > 0;
   const searchBg = isDark ? theme.surface : '#F0F1F5';
 
@@ -126,6 +132,7 @@ export const FeedSearch = memo(function FeedSearch({
               }
             }}
             onBlur={onBlur}
+            onSubmitEditing={onSubmitEditing}
             placeholder={resolvedPlaceholder}
             placeholderTextColor={theme.muteSoft}
             accessibilityLabel={resolvedPlaceholder}
@@ -465,9 +472,11 @@ export const HomeHeader = memo(function HomeHeader({
   searchProps,
   chipProps,
 }: HomeHeaderProps) {
+  // Desktop search and notifications live in DesktopTopNav.
+  const isDesktop = useIsDesktop();
   return (
     <>
-      <FeedSearch {...searchProps} />
+      {isDesktop ? <View style={{ height: 8 }} /> : <FeedSearch {...searchProps} />}
       <ChipRow {...chipProps} />
     </>
   );

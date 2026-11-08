@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="2" y="5" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.2"></rect>
+                  <path d="M4 5 V3.5 C4 2 5.5 1 7 1 C8.5 1 10 2 10 3.5 V5" stroke="currentColor" stroke-width="1.2"></path>
+                  <circle cx="7" cy="9" r="1" fill="currentColor"></circle>
+                </svg>

@@ -17,6 +17,7 @@ import {
   waitForAppReady,
   priceText,
   SUPABASE_URL,
+  homeSearch,
 } from './helpers/page';
 
 const REST_RE = SUPABASE_URL
@@ -51,7 +52,7 @@ test.describe('Network failures', () => {
     // Give the query layer ~3s to settle into its error/empty state.
     await page.waitForTimeout(3000);
     // The home shell is still rendered (we never showed a global error).
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     // And no listing prices snuck in despite the 500 — proves the stub took.
     await expect(priceText(page)).toHaveCount(0);
   });
@@ -77,7 +78,7 @@ test.describe('Network failures', () => {
     // never match one.
     await page.getByRole('button', { name: 'Categories' }).click();
     // The Categories TAB opens the search sheet in its landing state, whose box
-    // reads "Search Grabsty..." — discoverSearch() matches the per-tab copy on
+    // reads "Search Grabsty..." — the search helpers match the per-tab copy on
     // the Discover SCREEN ("Search items, brands, sellers", …), which this flow
     // never reaches. The app was behaving correctly the whole time: the sheet
     // opens fine with the REST route aborted, which is exactly what this test
@@ -105,7 +106,7 @@ test.describe('Network failures', () => {
     // while the listing query is demonstrably still in flight (no prices yet).
     // With a 15s delay there is ample margin for a slow boot, so this stays
     // true for the right reason.
-    await expect(page.getByPlaceholder('Search your feed')).toBeVisible();
+    await expect(homeSearch(page)).toBeVisible();
     await expect(priceText(page)).toHaveCount(0);
   });
 

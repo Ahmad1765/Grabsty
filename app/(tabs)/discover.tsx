@@ -1,22 +1,31 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DiscoverSheetBody } from '@/components/discover/DiscoverSheet';
+import { useTabBarClearance } from '@/lib/responsive';
+import { useTheme } from '@/context/ThemeContext';
 
 /**
- * Discover tab has been simplified and removed in favor of the integrated
- * Home search and filter experience. Any incoming routes or deep links to
- * /discover are seamlessly redirected to Home (/) with query parameters preserved.
+ * Browse tab: its own page, with the same body as the Browse sheet
+ * (search, categories, top sellers, brands, quick browse, you may like).
+ *
+ * Old /discover deep links carry their intent as query params (category,
+ * sort, q…); those still forward to Home, which owns search and filters.
  */
 export default function DiscoverScreen() {
   const params = useLocalSearchParams();
+  const { theme } = useTheme();
+  const tabBarClearance = useTabBarClearance();
+
   const searchParams = new URLSearchParams();
-
   for (const [key, value] of Object.entries(params)) {
-    if (typeof value === 'string' && value.length > 0) {
-      searchParams.set(key, value);
-    }
+    if (typeof value === 'string' && value.length > 0) searchParams.set(key, value);
   }
-
   const qs = searchParams.toString();
-  const target = qs ? (`/?${qs}` as any) : ('/' as any);
+  if (qs) return <Redirect href={`/?${qs}` as any} />;
 
-  return <Redirect href={target} />;
+  return (
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
+      <DiscoverSheetBody onClose={() => {}} contentBottom={tabBarClearance} />
+    </SafeAreaView>
+  );
 }

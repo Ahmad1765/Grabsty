@@ -8,9 +8,11 @@ import Feather from '@expo/vector-icons/Feather';
 import { type as typography } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { HIT_SLOP_8 } from '@/lib/responsive';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 
 export function ThreadHeader({
   name,
+  verified,
   subtitle,
   avatar,
   online,
@@ -19,6 +21,7 @@ export function ThreadHeader({
   onOverflow,
 }: {
   name: string;
+  verified?: boolean;
   subtitle?: string | null;
   avatar: string | null;
   online?: boolean;
@@ -139,17 +142,21 @@ export function ThreadHeader({
 
         {/* Name & Subtitle */}
         <View style={{ flexShrink: 1, justifyContent: 'center' }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: typography.family.sansBold,
-              fontSize: subtitle ? 14.5 : 16,
-              letterSpacing: -0.2,
-              color: theme.ink,
-            }}
-          >
-            {name}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text
+              numberOfLines={1}
+              style={{
+                flexShrink: 1,
+                fontFamily: typography.family.sansBold,
+                fontSize: subtitle ? 14.5 : 16,
+                letterSpacing: -0.2,
+                color: theme.ink,
+              }}
+            >
+              {name}
+            </Text>
+            {verified && <VerifiedBadge size={15} />}
+          </View>
           {subtitle ? (
             <Text
               numberOfLines={1}

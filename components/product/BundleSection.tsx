@@ -8,6 +8,8 @@ import { formatPrice } from '@/lib/currency';
 import { priceBreakdown } from '@/lib/fees';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { ListingCard } from '@/components/ListingCard';
+import { useFittedCardWidth } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
 import type { Listing } from '@/types';
 import { useTheme } from '@/context/ThemeContext';
 import { BundleProgressBar } from './BundleProgressBar';
@@ -41,7 +43,13 @@ export function BundleSection({
   onSendBundleOffer: (totalAfterDiscount: number, selectedIds: string[]) => void;
 }) {
   const { theme } = useTheme();
-  const { cardWidth } = useProductDimensions();
+  const { cardWidth: estimatedCardWidth, columns } = useProductDimensions();
+  // All four grids below span the same width, so one measurement sizes them.
+  const { cardWidth, onLayout: onGridLayout, ref: gridRef } = useFittedCardWidth(estimatedCardWidth, {
+    horizontalPadding: CARD_OUTER_PAD,
+    gap: CARD_GAP,
+    columns,
+  });
   const username = listing.seller.username;
   const isSold = listing.is_sold;
 
@@ -54,20 +62,19 @@ export function BundleSection({
       <View style={{ paddingTop: 18 }}>
         {activeSellerItems.length === 0 ? (
           <View>
-            <View
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                paddingHorizontal: CARD_OUTER_PAD,
-                columnGap: CARD_GAP,
-                rowGap: 16,
-              }}
+            <CardGrid
+              gridRef={gridRef}
+              onLayout={onGridLayout}
+              columns={columns}
+              cardWidth={cardWidth}
+              padding={CARD_OUTER_PAD}
+              gap={CARD_GAP}
+              rowGap={16}
             >
               <View style={{ width: cardWidth }}>
                 <ListingCard listing={listing} width={cardWidth} />
               </View>
-            </View>
+            </CardGrid>
             <View style={{ paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center' }}>
               <Feather name="package" size={20} color={theme.mute} />
               <Text
@@ -84,22 +91,21 @@ export function BundleSection({
             </View>
           </View>
         ) : (
-          <View
-            style={{
-              width: '100%',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              paddingHorizontal: CARD_OUTER_PAD,
-              columnGap: CARD_GAP,
-              rowGap: 16,
-            }}
+          <CardGrid
+            gridRef={gridRef}
+            onLayout={onGridLayout}
+            columns={columns}
+            cardWidth={cardWidth}
+            padding={CARD_OUTER_PAD}
+            gap={CARD_GAP}
+            rowGap={16}
           >
             {activeSellerItems.map((item) => (
               <View key={item.id} style={{ width: cardWidth }}>
                 <ListingCard listing={item} width={cardWidth} />
               </View>
             ))}
-          </View>
+          </CardGrid>
         )}
       </View>
     );
@@ -121,19 +127,18 @@ export function BundleSection({
       {/* Selectable seller items grid */}
       {activeSellerItems.length === 0 ? (
         <View>
-          <View
-            style={{
-              width: '100%',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              paddingHorizontal: CARD_OUTER_PAD,
-              columnGap: CARD_GAP,
-              rowGap: 16,
-            }}
+          <CardGrid
+            gridRef={gridRef}
+            onLayout={onGridLayout}
+            columns={columns}
+            cardWidth={cardWidth}
+            padding={CARD_OUTER_PAD}
+            gap={CARD_GAP}
+            rowGap={16}
           >
             {/* The item being viewed is the seller's available listing */}
-            <BaseItemCard item={listing} />
-          </View>
+            <BaseItemCard item={listing} width={cardWidth} />
+          </CardGrid>
           <View style={{ paddingHorizontal: 20, paddingVertical: 18, alignItems: 'center' }}>
             <Feather name="package" size={20} color={theme.mute} />
             <Text
@@ -150,39 +155,39 @@ export function BundleSection({
           </View>
         </View>
       ) : (
-        <View
-          style={{
-            width: '100%',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            paddingHorizontal: CARD_OUTER_PAD,
-            columnGap: CARD_GAP,
-            rowGap: 16,
-          }}
+        <CardGrid
+          gridRef={gridRef}
+          onLayout={onGridLayout}
+          columns={columns}
+          cardWidth={cardWidth}
+          padding={CARD_OUTER_PAD}
+          gap={CARD_GAP}
+          rowGap={16}
         >
           {/* The item being viewed is always part of the bundle — pin it first */}
-          <BaseItemCard item={listing} />
+          <BaseItemCard item={listing} width={cardWidth} />
           {activeSellerItems.map((item) => {
             const isSelected = selectedIds.has(item.id);
             return (
               <BundleSelectCard
                 key={item.id}
                 item={item}
+                width={cardWidth}
                 selected={isSelected}
                 onToggle={() => onToggle(item.id)}
                 onOpen={() => router.push(`/product/${item.id}`)}
               />
             );
           })}
-        </View>
+        </CardGrid>
       )}
     </View>
   );
 }
 
-function BaseItemCard({ item }: { item: Listing }) {
+function BaseItemCard({ item, width: cardWidth }: { item: Listing; width: number }) {
   const { theme } = useTheme();
-  const { cardWidth, cardImageHeight } = useProductDimensions();
+  const cardImageHeight = Math.round(cardWidth * 1.25);
   const meta = [item.size, conditionLabel(item.condition)].filter(Boolean).join(' · ');
   const itemPrice = Number(item.price ?? 0);
   const { total: totalPrice } = priceBreakdown(itemPrice);
@@ -254,17 +259,19 @@ function BaseItemCard({ item }: { item: Listing }) {
 
 function BundleSelectCard({
   item,
+  width: cardWidth,
   selected,
   onToggle,
   onOpen,
 }: {
   item: Listing;
+  width: number;
   selected: boolean;
   onToggle: () => void;
   onOpen: () => void;
 }) {
   const { theme } = useTheme();
-  const { cardWidth, cardImageHeight } = useProductDimensions();
+  const cardImageHeight = Math.round(cardWidth * 1.25);
   const meta = [item.size, conditionLabel(item.condition)].filter(Boolean).join(' · ');
   const itemPrice = Number(item.price ?? 0);
   const { total: totalPrice } = priceBreakdown(itemPrice);

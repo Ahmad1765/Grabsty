@@ -10,10 +10,13 @@ import {
 } from 'react';
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { signOutDevice } from '@/lib/signOutDevice';
+import { signOutGoogle } from '@/lib/oauth';
 import { clearQueryCache } from '@/lib/queryClient';
 import { setSentryUser } from '@/lib/sentry';
 import { identify, resetIdentity } from '@/lib/analytics';
 import { registerForPush, unregisterThisDevice } from '@/lib/notifications';
+import { registerMyHashes } from '@/lib/contactHashes';
 import type { User as Profile } from '@/types';
 
 type AuthState = {
@@ -67,6 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetIdentity();
     }
   }, [session?.user?.id, profile?.username, profile?.is_verified]);
+
+  // Publish this user's own phone/email hashes so friends' contact syncs can
+  // find them. Re-runs only when the account or its phone/email changes.
+  const myPhone = profile?.phone ?? session?.user?.phone ?? null;
+  const myEmail = session?.user?.email ?? null;
+  useEffect(() => {
+    if (!profile?.id) return;
+    registerMyHashes(myPhone, myEmail).catch(() => {});
+  }, [profile?.id, myPhone, myEmail]);
 
   // getSession() and the INITIAL_SESSION event both load the profile at startup;
   // concurrent loads for the same user share one request instead of two.
@@ -173,17 +185,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(null);
       setProfile(null);
     }
-    // scope: 'local' wipes the AsyncStorage/localStorage session without
-    // a network round-trip. Race with a short timeout as a final safety
-    // net so the caller's await never blocks the UI.
+    // scope: 'local' revokes only this device's session; signOutDevice drops
+    // the stored copy even when that request fails. Race with a short timeout
+    // as a final safety net so the caller's await never blocks the UI.
     try {
       await Promise.race([
-        supabase.auth.signOut({ scope: 'local' }),
+        signOutDevice(supabase),
         new Promise<void>((resolve) => setTimeout(resolve, 1500)),
       ]);
     } catch (e) {
       console.warn('[auth] signOut error', e);
     }
+    // Forget the native Google account too, or the next person on this phone
+    // gets signed straight into it.
+    signOutGoogle();
     // Drop every cached query, and with it the persisted AsyncStorage copy that
     // would otherwise rehydrate one account's data into the next session.
     //

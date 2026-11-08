@@ -112,7 +112,7 @@ export function CancelOrderModal({
               {
                 width: '100%',
                 maxHeight: '88%',
-                backgroundColor: theme.white,
+                backgroundColor: theme.paper,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 borderRadius: Platform.OS === 'web' ? 24 : 0,

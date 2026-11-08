@@ -5,7 +5,8 @@
 // viewport, and `cardWidth` to compute exact pixel widths when you can't
 // rely on FlatList's numColumns + columnWrapperStyle.
 
-import { Platform, useWindowDimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Platform, useWindowDimensions, type LayoutChangeEvent, type View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const bp = {
@@ -16,27 +17,37 @@ export const bp = {
   xl: 1024, // tablet landscape / web
 } as const;
 
-export type Breakpoint = keyof typeof bp;
-
-export function useBreakpoint(): Breakpoint {
-  const { width } = useWindowDimensions();
-  if (width >= bp.xl) return 'xl';
-  if (width >= bp.lg) return 'lg';
-  if (width >= bp.md) return 'md';
-  if (width >= bp.sm) return 'sm';
-  return 'xs';
+// ── Desktop web ─────────────────────────────────────────────────────────────
+// From bp.xl up, the web build swaps the bottom tab bar for a top header
+// (components/navigation/DesktopTopNav) and centres content in capped frames.
+// Native is never "desktop": a landscape iPad keeps the phone chrome it was
+// tested with.
+export function isDesktopWidth(width: number): boolean {
+  return Platform.OS === 'web' && width >= bp.xl;
 }
 
-export function useIsTablet(): boolean {
-  const { width } = useWindowDimensions();
-  return width >= bp.lg;
+export function useIsDesktop(): boolean {
+  return isDesktopWidth(useWindowDimensions().width);
 }
 
-export function useIsCompact(): boolean {
-  const { width, height } = useWindowDimensions();
-  return width < bp.sm || height < 700;
+// Width of the area screens render into. Grids size from this.
+export function useContentWidth(): number {
+  return useWindowDimensions().width;
 }
 
+// Side padding that centres a `max`-wide frame in the content area on
+// desktop. 0 on phones and whenever the content area is narrower than `max`.
+export function useDesktopGutter(max: number): number {
+  const width = useContentWidth();
+  return useIsDesktop() ? Math.max(0, (width - max) / 2) : 0;
+}
+
+// Max widths for centred desktop columns. Feeds get a wide frame; reading
+// and form-style screens (activity, chat, notifications) a narrow one.
+export const DESKTOP_FEED_MAX = 1320;
+export const DESKTOP_READING_MAX = 760;
+// Shop grids (own profile, other users' profiles).
+export const DESKTOP_PROFILE_MAX = 1080;
 // Pick a column count that scales with screen width. The defaults work for
 // 4:5 listing tiles: 2 cols on phones, 3 on big phones, 4 on tablets,
 // 5 on wide tablets/web. Pass `min` to raise the floor (e.g. 3 for the home
@@ -47,7 +58,13 @@ export function useResponsiveColumns(opts: {
   // Width breakpoint thresholds that bump the column count up by 1
   thresholds?: number[];
 } = {}): number {
-  const { width } = useWindowDimensions();
+  return columnsFor(useContentWidth(), opts);
+}
+
+function columnsFor(
+  width: number,
+  opts: { min?: number; max?: number; thresholds?: number[] },
+): number {
   const min = opts.min ?? 2;
   const max = opts.max ?? 5;
   const thresholds = opts.thresholds ?? [bp.md, bp.lg, bp.xl, 1440];
@@ -84,16 +101,67 @@ export function useGridDimensions(opts: {
   thresholds?: number[];
   horizontalPadding?: number;
   gap?: number;
-} = {}): { columns: number; cardWidth: number; viewportWidth: number } {
-  const { width } = useWindowDimensions();
-  const columns = useResponsiveColumns(opts);
+  // Desktop: the grid sits in a centred frame this wide at most. Columns and
+  // card widths are computed against the frame, not the full content area.
+  maxWidth?: number;
+} = {}): {
+  columns: number;
+  cardWidth: number;
+  viewportWidth: number;
+  onLayout: (e: LayoutChangeEvent) => void;
+  ref: React.RefObject<View | null>;
+} {
+  const contentWidth = useContentWidth();
+  const width = opts.maxWidth ? Math.min(contentWidth, opts.maxWidth) : contentWidth;
+  const columns = columnsFor(width, opts);
   const w = cardWidth({
     rowWidth: width,
     columns,
     horizontalPadding: opts.horizontalPadding ?? 0,
     gap: opts.gap ?? 0,
   });
-  return { columns, cardWidth: w, viewportWidth: width };
+  const fitted = useFittedCardWidth(w, {
+    horizontalPadding: opts.horizontalPadding,
+    gap: opts.gap,
+    columns,
+  });
+  return { columns, cardWidth: fitted.cardWidth, viewportWidth: width, onLayout: fitted.onLayout, ref: fitted.ref };
+}
+
+// Every grid estimates card width from the window, but the grid itself is
+// often narrower: a web scrollbar, a sheet's margins, a device frame. Then
+// N cards + gaps overshoot and a wrap grid drops to one card per row (a row
+// grid runs off the edge). Attach `onLayout` to the grid container; once it
+// reports its real width the card is shrunk to fit. Never grows past the
+// estimate, so desktop caps still hold. `columns` defaults to what the
+// estimate implies for the measured width.
+export function fitCardWidth(
+  rowWidth: number,
+  estimate: number,
+  opts: { horizontalPadding?: number; gap?: number; columns?: number } = {},
+): number {
+  if (!rowWidth) return estimate;
+  const gap = opts.gap ?? 0;
+  const inner = rowWidth - (opts.horizontalPadding ?? 0) * 2;
+  const columns = opts.columns ?? Math.max(1, Math.round((inner + gap) / (estimate + gap)));
+  return Math.min(estimate, Math.floor((inner - gap * (columns - 1)) / columns));
+}
+
+export function useFittedCardWidth(
+  estimate: number,
+  opts: { horizontalPadding?: number; gap?: number; columns?: number } = {},
+) {
+  const [rowWidth, setRowWidth] = useState(0);
+  const ref = useRef<View>(null);
+  const onLayout = useCallback((e: LayoutChangeEvent) => setRowWidth(e.nativeEvent.layout.width), []);
+  // react-native-web doesn't reliably re-fire onLayout when the window
+  // resizes, so re-measure whenever the window-based estimate moves.
+  useEffect(() => {
+    ref.current?.measure?.((_x, _y, w) => {
+      if (w) setRowWidth(w);
+    });
+  }, [estimate]);
+  return { cardWidth: fitCardWidth(rowWidth, estimate, opts), onLayout, ref };
 }
 
 // FlashList `drawDistance` for the four listing grids (home, discover, profile,
@@ -128,6 +196,8 @@ export const CONTENT_MAX_WIDTH = 720;
 export const TAB_BAR_HEIGHT = 62;
 export function useTabBarClearance(extra = 12): number {
   const insets = useSafeAreaInsets();
+  // Desktop has no bottom bar to clear — the top header takes its place.
+  if (useIsDesktop()) return extra;
   // The bar sits flush at the bottom with internal paddingBottom = insets.bottom.
   // Content clearance = bar content height + insets + extra breathing room.
   return TAB_BAR_HEIGHT + insets.bottom + extra;
@@ -135,4 +205,3 @@ export function useTabBarClearance(extra = 12): number {
 
 // Hit-slop preset for small icon buttons (improves touch target on phones).
 export const HIT_SLOP_8 = { top: 8, bottom: 8, left: 8, right: 8 } as const;
-export const HIT_SLOP_12 = { top: 12, bottom: 12, left: 12, right: 12 } as const;

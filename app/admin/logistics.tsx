@@ -202,7 +202,7 @@ export default function AdminLogisticsScreen() {
   const copyToClipboard = async (text: string, label: string) => {
     tap('light');
     await Clipboard.setStringAsync(text);
-    toast.show(`${label} copied!`, { variant: 'default', icon: 'check' });
+    toast.done(`${label} copied!`, 'copy');
   };
 
   // Dial Phone
@@ -266,10 +266,7 @@ export default function AdminLogisticsScreen() {
       // Re-fetch event logs
       escrowService.fetchEventLogs(updated.id).then(setEventLogs);
 
-      toast.show(`Status updated to ${getEscrowStatusStyle(targetStatus).label}`, {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done(`Status updated to ${getEscrowStatusStyle(targetStatus).label}`);
 
       setShowDispatchModal(false);
       setShowDisputeModal(false);

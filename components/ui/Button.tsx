@@ -57,7 +57,7 @@ export function Button({
         style={{
           height,
           paddingHorizontal: PADX[size],
-          borderRadius: radii.pill,
+          borderRadius: styles.bg === theme.purple ? 10 : radii.pill,
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',

@@ -18,12 +18,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { colors } from '@/lib/theme';
 import { useAuth } from '@/lib/auth';
 import { toggleLike } from '@/lib/listings';
 import { toggleSave } from '@/lib/saves';
 import { toggleFollow } from '@/lib/follows';
 
+import { useTheme } from '@/context/ThemeContext';
 // The action to auto-complete once the guest finishes signing in. Executed
 // server-side by the provider with the fresh user id — the originating screen
 // (product / card) re-checks its own like/save/follow state on user change, so
@@ -48,6 +48,7 @@ type GuestGateApi = { prompt: (opts: GuestPrompt) => void };
 const Ctx = createContext<GuestGateApi | undefined>(undefined);
 
 export function GuestGateProvider({ children }: { children: ReactNode }) {
+  const { theme: colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [content, setContent] = useState<GuestPrompt | null>(null);
@@ -122,7 +123,7 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
           <Pressable
             onPress={() => {}}
             style={{
-              backgroundColor: colors.white,
+              backgroundColor: colors.paper,
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               paddingHorizontal: 24,
@@ -136,7 +137,7 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
                 width: 40,
                 height: 5,
                 borderRadius: 3,
-                backgroundColor: 'rgba(15,15,15,0.12)',
+                backgroundColor: colors.hairline,
                 marginBottom: 22,
               }}
             />
@@ -184,7 +185,7 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
                     transform: [{ scale: pressed ? 0.99 : 1 }],
                   })}
                 >
-                  <Text style={{ color: colors.white, fontSize: 16, fontWeight: '800' }}>
+                  <Text style={{ color: colors.background, fontSize: 16, fontWeight: '800' }}>
                     {content.cta ?? 'Create free account'}
                   </Text>
                 </Pressable>

@@ -406,21 +406,6 @@ const EASTERN_WEAR_PREFERRED_BRANDS = [
   'Diners',
   UNBRANDED_LOCAL_TAILOR,
 ];
-
-// Phonetic stem variants / aliases for Pakistani transliterations
-export const PHONETIC_ALIASES: Record<string, string[]> = {
-  kameez: ['qameez', 'kameez', 'kamiz', 'qamiz', 'suit'],
-  kurta: ['kurti', 'kurtas', 'kurtis', 'kurta'],
-  shalwar: ['salwar', 'shalwar'],
-  khussa: ['khussas', 'khussa', 'khosa'],
-  chappal: ['chappals', 'chapal', 'chappal', 'peshawari', 'norzi'],
-  dupatta: ['dupatta', 'dupata', 'chaddar', 'chadar', 'shawl'],
-  unstitched: ['unstitched', 'lawn', 'fabric'],
-  stitched: ['stitched', 'pret', 'ready to wear'],
-  abaya: ['abaya', 'abayas', 'hijab', 'burqa', 'modest'],
-  sneakers: ['sneaker', 'sneakers', 'trainer', 'trainers', 'kicks', 'joggers'],
-};
-
 // ── Normalization Helper ──────────────────────────────────────────────────
 export function normalizeText(text: string): string {
   return text
@@ -907,14 +892,6 @@ export function getRecommendedBrandsForCategory(
 
   return results;
 }
-
-/** Returns categories relevant to a selected brand */
-export function getCategoriesForBrand(brandName: string): TaxonomyCategory[] {
-  const brand = BRAND_BY_LOWER.get(brandName.toLowerCase().trim());
-  if (!brand) return TAXONOMY_CATEGORIES;
-  return TAXONOMY_CATEGORIES.filter((c) => brand.categoryCodes.includes(c.code));
-}
-
 /** Checks for cross-field conflict (e.g. Ray-Ban selected with Men's Kurta Shalwar) */
 export function checkBrandCategoryCompatibility(
   brandName: string | null | undefined,

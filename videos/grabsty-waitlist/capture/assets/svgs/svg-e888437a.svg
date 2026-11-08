@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="110" height="110" viewBox="0 0 110 110" fill="none">
+        <!-- Octagonal Drum Base with Arched Blind Arcades -->
+        <rect x="22" y="86" width="66" height="12" stroke="#FFFFFF" stroke-width="1.4" fill="none" opacity="0.4"></rect>
+        <path d="M28 98 V90 Q33 87 38 90 V98 M42 98 V90 Q47 87 52 90 V98 M58 98 V90 Q63 87 68 90 V98 M72 98 V90 Q77 87 82 90 V98" stroke="#6C47FF" stroke-width="1.2" fill="none" opacity="0.6"></path>
+        <line x1="14" y1="98" x2="96" y2="98" stroke="#FFFFFF" stroke-width="2" opacity="0.6"></line>
+        <line x1="18" y1="102" x2="92" y2="102" stroke="#6C47FF" stroke-width="1.5" opacity="0.5"></line>
+
+        <!-- Bulbous Marble Melon Dome Profile -->
+        <path d="M26 86 C16 68 18 48 38 34 C44 26 49 18 55 12 C61 18 66 26 72 34 C92 48 94 68 84 86 Z" stroke="#6C47FF" stroke-width="2.2" fill="rgba(108, 71, 255, 0.05)" opacity="0.8"></path>
+        
+        <!-- Fluted Melon Rib Lines Converging to Crest -->
+        <path d="M55 12 V86" stroke="#FFFFFF" stroke-width="1.4" opacity="0.6"></path>
+        <path d="M55 12 Q45 42 42 86" stroke="#FFFFFF" stroke-width="1.1" stroke-dasharray="4 2" opacity="0.45"></path>
+        <path d="M55 12 Q65 42 68 86" stroke="#FFFFFF" stroke-width="1.1" stroke-dasharray="4 2" opacity="0.45"></path>
+        <path d="M55 12 Q35 48 30 86" stroke="#6C47FF" stroke-width="1.2" opacity="0.55"></path>
+        <path d="M55 12 Q75 48 80 86" stroke="#6C47FF" stroke-width="1.2" opacity="0.55"></path>
+
+        <!-- Inverted Lotus Petal Band (Padma-Kosa) -->
+        <path d="M46 22 Q55 16 64 22 Q55 26 46 22 Z" stroke="#FFFFFF" stroke-width="1.2" fill="rgba(255, 255, 255, 0.2)" opacity="0.7"></path>
+
+        <!-- Tiered Brass Finial (Kalasa with Crescent Tip) -->
+        <line x1="55" y1="2" x2="55" y2="12" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.9"></line>
+        <circle cx="55" cy="8" r="2.5" fill="#6C47FF"></circle>
+        <circle cx="55" cy="3" r="3" stroke="#FFFFFF" stroke-width="1.2" fill="none" opacity="0.85"></circle>
+      </svg>

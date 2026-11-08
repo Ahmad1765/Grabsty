@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face{font-family:"Bricolage Grotesque 96pt";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque96pt-Bold.ttf") format("truetype");}
+        @font-face{font-family:"JetBrains Mono";font-weight:400 800;font-style:normal;font-display:block;src:url("assets/fonts/JetBrainsMono-latin.woff2") format("woff2");}
+
+        #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; color: #FFFFFF; }
+        .f2-bg { position: absolute; inset: 0; background-color: #0F0F0F;
+          background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 72px 72px; }
+        .f2-stage { position: absolute; inset: 0; }
+        .f2-line { position: absolute; left: 72px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 230px; line-height: 0.9; letter-spacing: -0.02em; text-transform: uppercase; white-space: nowrap; transform-origin: 0% 50%; }
+        .f2-white { color: #FFFFFF; text-shadow: 12px 12px 0 #EF4444; }
+        .f2-red { color: #EF4444; }
+        #f2-l1 { top: 260px; }
+        #f2-l2 { top: 490px; }
+        #f2-l3 { top: 760px; }
+        #f2-l4 { top: 980px; }
+        .f2-rule { position: absolute; left: 72px; top: 735px; width: 860px; height: 6px; background: #FFFFFF; transform-origin: 0% 50%; }
+        .f2-chip { position: absolute; left: 72px; top: 1290px; padding: 26px 34px; border: 4px solid #EF4444; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 44px; letter-spacing: 0.1em; color: #EF4444; background: #0F0F0F; box-shadow: 10px 10px 0 #EF4444; }
+        .f2-chip s { text-decoration-thickness: 5px; }
+      </style>
+
+      <div data-hf-id="hf-yml2" id="root" data-composition-id="02-fake-torn" data-width="1080" data-height="1920" data-start="0" data-duration="3">
+        <div data-hf-id="hf-8zwx" id="f2-bg" class="f2-bg clip" data-start="0" data-duration="3" data-track-index="0"></div>
+        <div data-hf-id="hf-u6fs" id="f2-stage" class="f2-stage clip" data-start="0" data-duration="3" data-track-index="1">
+          <div data-hf-id="hf-jugn" class="f2-line f2-white" id="f2-l1">Replica.</div>
+          <div data-hf-id="hf-2rf3" class="f2-line f2-white" id="f2-l2">Torn.</div>
+          <div data-hf-id="hf-mlm4" class="f2-rule" id="f2-rule"></div>
+          <div data-hf-id="hf-akut" class="f2-line f2-red" id="f2-l3">Never</div>
+          <div data-hf-id="hf-u3d5" class="f2-line f2-red" id="f2-l4">Shipped.</div>
+          <div data-hf-id="hf-fq27" class="f2-chip" id="f2-chip"><s data-hf-id="hf-nab0">RS 6,500</s> — GONE</div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+
+        // Scene 1 — REPLICA. scale-slams in
+        tl.fromTo("#f2-l1", { opacity: 0, scale: 1.7, y: 420 }, { opacity: 1, scale: 1, y: 0, duration: 0.38, ease: "expo.out" }, 0.04);
+        // Scene 2 — TORN. side-snaps in
+        tl.fromTo("#f2-l2", { opacity: 0, x: -700 }, { opacity: 1, x: 0, duration: 0.32, ease: "expo.out" }, 0.9);
+        tl.fromTo("#f2-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 1.55);
+        // Scene 3 — NEVER SHIPPED. rise-slams, then the loss chip
+        tl.fromTo("#f2-l3", { opacity: 0, y: 160 }, { opacity: 1, y: 0, duration: 0.34, ease: "expo.out" }, 1.8);
+        tl.fromTo("#f2-l4", { opacity: 0, y: 160 }, { opacity: 1, y: 0, duration: 0.34, ease: "expo.out" }, 1.88);
+        tl.fromTo("#f2-l4", { x: 0 }, { x: -12, duration: 0.04, ease: "none" }, 2.2);
+        tl.to("#f2-l4", { x: 9, duration: 0.04, ease: "none" }, 2.24);
+        tl.to("#f2-l4", { x: 0, duration: 0.05, ease: "none" }, 2.28);
+        tl.fromTo("#f2-chip", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 2.3);
+
+        window.__timelines["02-fake-torn"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

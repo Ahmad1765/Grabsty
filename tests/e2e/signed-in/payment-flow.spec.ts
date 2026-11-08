@@ -1,7 +1,6 @@
-// Payment screen — uses a real listing id at runtime. We test the hero +
-// rows + slide-to-pay copy, and the unknown-id error state. We don't
-// trigger the slide-to-pay confirm; that opens Stripe Checkout (or runs the
-// demo redirect) and we don't want to touch either side in this suite.
+// Payment screen — the Cash-on-Delivery Checkout, using a real listing id at
+// runtime. We assert the summary rows and the Pay CTA, plus the unknown-id
+// error state. We never press Pay — that would create a real order.
 //
 // Lives under signed-in/ because app/payment/[id].tsx does
 // `if (!user) return <Redirect href="/auth/login" />` — signed out, the screen
@@ -10,23 +9,20 @@
 import { test, expect, waitForAppReady, fetchAnyLiveListing } from '../helpers/page';
 
 test.describe('Payment', () => {
-  test('renders Pay in full hero, rows, and slide-to-pay control', async ({ page }) => {
+  test('renders the Checkout summary with the COD total and Pay CTA', async ({ page }) => {
     await page.goto('/');
     await waitForAppReady(page);
     const listing = await fetchAnyLiveListing(page);
     test.skip(!listing, 'no listings in the live DB to drive this test');
     await page.goto(`/payment/${listing!.id}`);
     await waitForAppReady(page);
-    await expect(page.getByText('Pay in full')).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText('To', { exact: true }).first()).toBeVisible();
-    // The payment-method row is labelled "Pay with" — it was renamed from
-    // "From" and only the comment above it in app/payment/[id].tsx still says
-    // so.
-    await expect(page.getByText('Pay with', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Pay on')).toBeVisible();
-    await expect(page.getByText('Buyer Protection').first()).toBeVisible();
-    await expect(page.getByText('Total', { exact: true })).toBeVisible();
-    await expect(page.getByText(/Slide to pay/i)).toBeVisible();
+    await expect(page.getByText('Checkout', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+    for (const row of ['Item price', 'Buyer protection', 'Delivery', 'Total']) {
+      await expect(page.getByText(row, { exact: true }).first()).toBeVisible();
+    }
+    await expect(page.getByText('Cash on Delivery', { exact: true }).first()).toBeVisible();
+    await expect(page.getByText('Add delivery address')).toBeVisible();
+    await expect(page.getByText('Pay', { exact: true }).first()).toBeVisible();
   });
 
   test('unknown listing id shows the "Item unavailable" state', async ({ page }) => {
@@ -34,17 +30,5 @@ test.describe('Payment', () => {
     await waitForAppReady(page);
     await expect(page.getByText('Item unavailable')).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText('Go back')).toBeVisible();
-  });
-
-  test('See details routes to the invoice screen for the same listing', async ({ page }) => {
-    await page.goto('/');
-    await waitForAppReady(page);
-    const listing = await fetchAnyLiveListing(page);
-    test.skip(!listing, 'no listings in the live DB to drive this test');
-    await page.goto(`/payment/${listing!.id}`);
-    await waitForAppReady(page);
-    await page.getByText('See details').click();
-    await page.waitForURL(`**/invoice/${listing!.id}**`);
-    await expect(page.getByText('INVOICE')).toBeVisible({ timeout: 20_000 });
   });
 });

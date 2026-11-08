@@ -11,9 +11,9 @@ import { memo } from 'react';
 import { View, Pressable } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { router, type Href } from 'expo-router';
-import { colors } from '@/lib/theme';
 import { formatCount } from './format';
 
+import { useTheme } from '@/context/ThemeContext';
 type ProfileStatsProps = {
   followingCount: number;
   followersCount: number;
@@ -25,6 +25,7 @@ export const ProfileStats = memo(function ProfileStats({
   followersCount,
   shopLikes,
 }: ProfileStatsProps) {
+  const { theme: colors } = useTheme();
   return (
     <View
       style={{

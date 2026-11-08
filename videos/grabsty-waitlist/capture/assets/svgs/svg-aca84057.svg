@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="pill-svg" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                  <rect x="1" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.2"></rect>
+                  <path d="M9 6 H12 L13.5 8 V11 H9 V6 Z" stroke="currentColor" stroke-width="1.2"></path>
+                  <circle cx="4" cy="11" r="1.5" fill="currentColor"></circle>
+                  <circle cx="11" cy="11" r="1.5" fill="currentColor"></circle>
+                </svg>

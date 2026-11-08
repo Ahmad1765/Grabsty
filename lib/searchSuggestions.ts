@@ -878,6 +878,3 @@ export function resolveSuggestions(
     },
   ];
 }
-
-export const resolvePreSearchSuggestions = resolveSuggestions;
-

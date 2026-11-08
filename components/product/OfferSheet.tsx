@@ -12,7 +12,8 @@ import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, TextInput } from '@/lib/rnText';
-import { radii, shadow, type } from '@/lib/theme';
+import { useIsDesktop } from '@/lib/responsive';
+import { shadow, type } from '@/lib/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { formatPrice, CURRENCY_SYMBOL } from '@/lib/currency';
 import { orderTotal } from '@/lib/fees';
@@ -61,6 +62,7 @@ export function OfferSheet({
 }: OfferSheetProps) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const isDesktop = useIsDesktop();
   const inputRef = useRef<any>(null);
 
   // Normalize asking price
@@ -168,7 +170,8 @@ export function OfferSheet({
           style={{
             flex: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.55)',
-            justifyContent: 'flex-end',
+            // Desktop: centred dialog rather than a bottom sheet.
+            justifyContent: isDesktop ? 'center' : 'flex-end',
             alignItems: 'center',
           }}
         >
@@ -183,6 +186,7 @@ export function OfferSheet({
                   backgroundColor: isDark ? theme.surface : '#FFFFFF',
                   borderTopLeftRadius: 24,
                   borderTopRightRadius: 24,
+                  ...(isDesktop && { borderRadius: 24 }),
                   paddingHorizontal: 20,
                   paddingTop: 10,
                   paddingBottom: Math.max(insets.bottom + 8, 24),
@@ -190,7 +194,7 @@ export function OfferSheet({
                 }}
               >
                 {/* Drag Handle */}
-                <View
+                {!isDesktop && <View
                   style={{
                     alignSelf: 'center',
                     width: 38,
@@ -199,7 +203,7 @@ export function OfferSheet({
                     backgroundColor: isDark ? theme.border : '#E5E7EB',
                     marginBottom: 16,
                   }}
-                />
+                />}
 
                 {/* Header: Title & Close Button */}
                 <View
@@ -453,7 +457,7 @@ export function OfferSheet({
                   disabled={!isValidOffer || submitting || loading}
                   style={({ pressed }) => ({
                     height: 48,
-                    borderRadius: radii.pill,
+                    borderRadius: 10,
                     backgroundColor: theme.purple,
                     alignItems: 'center',
                     justifyContent: 'center',

@@ -22,9 +22,6 @@ import { useToast } from '@/lib/toast';
 import { safeBack } from '@/lib/nav';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { BRAND } from '@/lib/brand';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
-import { BuyerProtectionSheet } from '@/components/product/BuyerProtectionSheet';
-import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import type { Order } from '@/lib/payments';
 import type { Listing, FulfillmentStatus } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
@@ -37,7 +34,6 @@ export interface OrderDetailsTrackingViewProps {
   onBack?: () => void;
   onShare?: () => void;
   actionButtons?: React.ReactNode;
-  initialTab?: 'shipment' | 'activity';
   onConfirmPickup?: (address: any) => Promise<void>;
   sellerDefaultAddress?: any;
   onOrderUpdate?: (updatedOrder: Order) => void;
@@ -313,7 +309,6 @@ export function OrderDetailsTrackingView({
   onBack,
   onShare,
   actionButtons,
-  initialTab = 'shipment',
   onConfirmPickup,
   sellerDefaultAddress,
   onOrderUpdate,
@@ -331,8 +326,6 @@ export function OrderDetailsTrackingView({
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'shipment' | 'activity'>(initialTab);
-  const [bpSheetOpen, setBpSheetOpen] = useState(false);
 
   // Seller Modals (Rule 1 & 2)
   const [labelModalVisible, setLabelModalVisible] = useState(false);
@@ -397,50 +390,25 @@ export function OrderDetailsTrackingView({
   if (!isSeller && (statusBadge === 'Needs Label' || statusBadge === 'Packing')) {
     statusBadge = 'Preparing Order';
   }
-  let statusPillText = isSeller ? 'Needs Label' : 'Preparing Order';
-  let itemStatusBadgeText = 'Preparing Package';
 
   if (currentFulfillment === 'delivered') {
     statusBadge = statusBadge || 'Delivered';
-    statusPillText = 'Delivered';
-    itemStatusBadgeText = 'Delivered';
   } else if (currentFulfillment === 'shifting' || (order as any)?.shipped_at || (order as any)?.shifted_at) {
     statusBadge = statusBadge || 'In Transit';
-    statusPillText = 'In Transit';
-    itemStatusBadgeText = 'In Transit';
   } else if (currentFulfillment === 'picked') {
     statusBadge = statusBadge || 'Picked';
-    statusPillText = 'Picked Up';
-    itemStatusBadgeText = 'Picked';
   } else if (currentFulfillment === 'completed') {
     statusBadge = statusBadge || 'Completed';
-    statusPillText = 'Completed';
-    itemStatusBadgeText = 'Completed';
   } else if (currentFulfillment === 'packing') {
     statusBadge = statusBadge || (isSeller ? 'Needs Label' : 'Preparing Order');
-    statusPillText = isSeller ? 'Needs Label' : 'Preparing Order';
-    itemStatusBadgeText = 'Preparing Package';
   } else if (currentFulfillment === 'disputed') {
     statusBadge = statusBadge || 'Refund Under Review';
-    statusPillText = 'Disputed';
-    itemStatusBadgeText = 'Under Review';
   } else if (currentFulfillment === 'canceled') {
     statusBadge = statusBadge || 'Cancelled';
-    statusPillText = 'Cancelled';
-    itemStatusBadgeText = 'Cancelled';
   } else {
     statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Needs Label' : 'Paid') : (isSeller ? 'Needs Label' : 'Preparing Order'));
   }
 
-  if (order?.payment_method === 'cod' && currentFulfillment !== 'completed' && currentFulfillment !== 'canceled' && currentFulfillment !== 'disputed') {
-    if (order?.cod_seller_confirmed_at && !order?.cod_buyer_confirmed_at) {
-      statusBadge = isSeller ? 'Awaiting Buyer COD' : 'Confirm COD Payment';
-      itemStatusBadgeText = isSeller ? 'Awaiting Buyer COD' : 'Confirm COD Payment';
-    } else if (order?.cod_buyer_confirmed_at && !order?.cod_seller_confirmed_at) {
-      statusBadge = isSeller ? 'Confirm COD Payment' : 'Awaiting Seller COD';
-      itemStatusBadgeText = isSeller ? 'Confirm COD Payment' : 'Awaiting Seller COD';
-    }
-  }
 
   const addr = (order?.shipping_address as any) || {};
   const recipient =
@@ -501,10 +469,6 @@ export function OrderDetailsTrackingView({
       },
     ];
   }, [order, listing, item, orderIdNumber, itemCondition, itemPhoto]);
-
-  // Buyer protection fee calculation
-  const listingPrice = Number(listing?.price ?? (order?.amount_cents ? order.amount_cents / 100 : 1000));
-  const protectionFee = buyerProtectionFee(listingPrice);
 
   // ── Dynamic order timestamps & live chronological event calculation ──
   const orderCreatedAt = useMemo(() => {
@@ -670,10 +634,7 @@ export function OrderDetailsTrackingView({
     tap('light');
     try {
       await Clipboard.setStringAsync(trackingNumber);
-      toast.show('Tracking ID copied to clipboard', {
-        variant: 'default',
-        icon: 'copy',
-      });
+      toast.done('Tracking ID copied to clipboard', 'copy');
     } catch {
       toast.show('Failed to copy tracking ID', {
         variant: 'default',
@@ -736,10 +697,7 @@ export function OrderDetailsTrackingView({
         setPickupConfirmed(true);
         setPickupConfirmedDateStr(chosenDateStr);
         setReadyDeliverModalVisible(false);
-        toast.show(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`, {
-          variant: 'default',
-          icon: 'check',
-        });
+        toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
       } catch (e: any) {
         console.warn('pickup schedule error', e);
         toast.show(e?.message || 'Could not schedule pickup', {
@@ -751,10 +709,7 @@ export function OrderDetailsTrackingView({
       setPickupConfirmed(true);
       setPickupConfirmedDateStr(chosenDateStr);
       setReadyDeliverModalVisible(false);
-      toast.show(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`, {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
     }
   };
 
@@ -765,15 +720,9 @@ export function OrderDetailsTrackingView({
       await Share.share({
         message: `${BRAND} Shipping Label\nWaybill: ${trackingNumber}\nFrom: ${pickupContactName} (${pickupLine1}, ${pickupCity})\nTo: ${recipient} (${streetAddress})\nCarrier: ${carrierName}`,
       });
-      toast.show('Shipping label ready & shared', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Shipping label ready & shared');
     } catch {
-      toast.show('Label saved to documents', {
-        variant: 'default',
-        icon: 'check',
-      });
+      toast.done('Label saved to documents');
     }
   };
 
@@ -1331,7 +1280,7 @@ export function OrderDetailsTrackingView({
                       onPress={() => {
                         tap('light');
                         Clipboard.setStringAsync(sItem.orderId.replace('Order #', ''))
-                          .then(() => toast.show('Order number copied', { variant: 'default', icon: 'copy' }))
+                          .then(() => toast.done('Order number copied', 'copy'))
                           .catch(() => {});
                       }}
                     >

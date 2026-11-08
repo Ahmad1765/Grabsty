@@ -12,7 +12,6 @@
 //   - keys.ts               -> Centralized query keys
 //   - useListingsQueries.ts -> Product listings, likes, saves
 //   - useFeedQueries.ts     -> Home feed, price drops, saved searches
-//   - useSearchQueries.ts   -> Brand & tag indices, suggested follows
 //   - useProfileQueries.ts  -> Profiles, follow states, followers/following
 //   - useWardrobeQueries.ts -> Swipe deck, my wardrobe, liked wardrobe
 //   - useChatQueries.ts     -> Inbox and chat threads
@@ -20,7 +19,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export * from './keys';
-export * from './useSearchQueries';
 export * from './useListingsQueries';
 export * from './useFeedQueries';
 export * from './useProfileQueries';

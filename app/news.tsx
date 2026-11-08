@@ -13,7 +13,7 @@ import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { useOpenedNewsIds } from '@/lib/newsStorage';
 import { useNewFromFollowedQuery } from '@/lib/queries';
-import { radii, shadow, type as typography } from '@/lib/theme';
+import { shadow, type as typography } from '@/lib/theme';
 import { FollowingTab } from '@/components/news';
 
 function haptic() {
@@ -92,7 +92,7 @@ function SignedOutNewsState() {
           backgroundColor: theme.purple,
           paddingHorizontal: 28,
           height: 48,
-          borderRadius: radii.pill,
+          borderRadius: 10,
           alignItems: 'center',
           justifyContent: 'center',
           width: '100%',
@@ -170,7 +170,7 @@ export default function NewsScreen() {
     }
     const idsToMark = followedListings.map((l) => `listing-${l.id}`);
     await markAllOpened(idsToMark);
-    toast.show('All notifications marked as read', { variant: 'info', icon: 'check-circle' });
+    toast.done('All notifications marked as read');
   }, [user, followedQ.data, markAllOpened, toast]);
 
   return (

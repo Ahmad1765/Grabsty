@@ -12,7 +12,7 @@ import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii, type as typography } from '@/lib/theme';
+import { radii, type as typography } from '@/lib/theme';
 import {
   TAXONOMY_BRANDS,
   NO_BRAND,
@@ -166,6 +166,7 @@ function BrandRow({
   theme: any;
   isDark: boolean;
 }) {
+  const { theme: colors } = useTheme();
   return (
     <Pressable
       onPress={onSelect}
@@ -239,6 +240,7 @@ export function BrandSheet({
   onSelectBrand: (brandName: string, isCustom?: boolean) => void;
   onClose: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
   const [query, setQuery] = useState('');
   const closedByPopStateRef = useRef(false);

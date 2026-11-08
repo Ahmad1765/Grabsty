@@ -12,7 +12,7 @@ import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { colors, radii, type as typography } from '@/lib/theme';
+import { radii, type as typography } from '@/lib/theme';
 import { CATEGORIES, hasSubcategories } from '@/lib/categories';
 import type { Category } from '@/types';
 import { UNBRANDED_LOCAL_TAILOR } from '@/lib/taxonomy';
@@ -70,6 +70,7 @@ export function CategorySheet({
   onChange: (category: Category, subcategory: string | null) => void;
   onClose: () => void;
 }) {
+  const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
   const searchBg = isDark ? theme.surface : '#F0F1F5';
   const searchInputRef = useRef<any>(null);

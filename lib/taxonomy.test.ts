@@ -3,8 +3,6 @@ import {
   getBrandsForCategory,
   getRecommendedBrandsForCategory,
   getCategoryCodesForSelection,
-  checkBrandCategoryCompatibility,
-  TAXONOMY_BRANDS,
   smartClassify,
 } from './taxonomy';
 import { CATEGORIES } from './categories';

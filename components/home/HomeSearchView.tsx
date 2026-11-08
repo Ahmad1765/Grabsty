@@ -33,6 +33,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
 import { useSearchHistory } from '@/hooks/useSearchHistory';
 import { supabase } from '@/lib/supabase';
+import { getBlockPeerIds } from '@/lib/blocks';
+import { logSellerSearch } from '@/lib/recommendations';
 import { searchUsers } from '@/lib/follows';
 import { searchListings, fetchListingsResult } from '@/lib/listings';
 import { getSearchSuggestions } from '@/lib/searchSuggestions';
@@ -48,11 +50,15 @@ import {
   countActiveSearchFilters,
 } from '@/lib/searchFilters';
 import { ListingCard } from '@/components/ListingCard';
-import { useGridDimensions } from '@/lib/responsive';
+import { useGridDimensions, useIsDesktop, DESKTOP_FEED_MAX } from '@/lib/responsive';
+import { CardGrid } from '@/components/ui/CardGrid';
+import { categoryLabel } from '@/lib/categories';
 import { radii, type as typography } from '@/lib/theme';
 import type { Category, Listing } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { formatPrice } from '@/lib/currency';
+import { CONDITION_LABELS } from '@/components/product/shared';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function haptic() {
   if (Platform.OS !== 'web') {
@@ -113,7 +119,13 @@ export const HomeSearchView = memo(function HomeSearchView({
 }: HomeSearchViewProps) {
   const toast = useToast();
   const { theme, isDark } = useTheme();
-  const { width: screenWidth } = useWindowDimensions();
+  // Desktop: the overlay is the centred feed frame, so its pager pages are too.
+  const { width: windowWidth } = useWindowDimensions();
+  const isDesktop = useIsDesktop();
+  const insets = useSafeAreaInsets();
+  // The floating tab bar stays visible over search on phones.
+  const tabBarClearance = isDesktop ? 40 : insets.bottom + 80;
+  const screenWidth = isDesktop ? Math.min(windowWidth, DESKTOP_FEED_MAX) : windowWidth;
   const inputRef = useRef<any>(null);
   const pagerRef = useRef<ScrollView>(null);
 
@@ -167,6 +179,8 @@ export const HomeSearchView = memo(function HomeSearchView({
   const savedSearchesQ = useSavedSearchesQuery(user?.id ?? null);
 
   const [localSavedKeys, setLocalSavedKeys] = useState<Set<string>>(new Set());
+  // Last tap wins over server data so the star flips instantly in both directions.
+  const [savedOverride, setSavedOverride] = useState<Record<string, boolean>>({});
 
   const storageKey = user?.id
     ? `@ceranix_saved_searches_local:${user.id}`
@@ -232,7 +246,8 @@ export const HomeSearchView = memo(function HomeSearchView({
           .limit(10);
 
         if (!error && data && data.length > 0 && isMounted) {
-          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id).map((p) => ({
+          const hidden = new Set(await getBlockPeerIds());
+          const mapped: RecentMemberItem[] = data.filter((p) => p.id !== user?.id && !hidden.has(p.id)).map((p) => ({
             id: p.id,
             username: p.username || 'user',
             full_name: p.full_name,
@@ -258,14 +273,6 @@ export const HomeSearchView = memo(function HomeSearchView({
     };
   }, [user?.id]);
 
-  const [tabLayouts, setTabLayouts] = useState<{
-    listings: { x: number; width: number };
-    seller: { x: number; width: number };
-  }>({
-    listings: { x: 16, width: 44 },
-    seller: { x: 84, width: 72 },
-  });
-
   const handleSelectMember = useCallback((member: RecentMemberItem | SellerResult) => {
     const nextMember: RecentMemberItem = {
       id: member.id,
@@ -282,6 +289,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       return updated;
     });
     setHasRealRecentHistory(true);
+    logSellerSearch(member.id);
 
     router.push(`/user/${member.id}` as any);
   }, []);
@@ -306,6 +314,7 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   const isSaved = useMemo(() => {
     const { key, label } = effectiveSearchInfo;
+    if (key in savedOverride) return savedOverride[key];
     if (localSavedKeys.has(key)) return true;
     if (savedSearchesQ.data) {
       const actualQuery = query.trim() || null;
@@ -327,7 +336,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       );
     }
     return false;
-  }, [effectiveSearchInfo, localSavedKeys, query, savedSearchesQ.data, searchFilters.category]);
+  }, [effectiveSearchInfo, savedOverride, localSavedKeys, query, savedSearchesQ.data, searchFilters.category]);
 
   const handleToggleSaveSearch = useCallback(async () => {
     haptic();
@@ -336,6 +345,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     const nextSaved = !currentlySaved;
 
     // Optimistic toggle locally
+    setSavedOverride((prev) => ({ ...prev, [key]: nextSaved }));
     setLocalSavedKeys((prev) => {
       const next = new Set(prev);
       if (nextSaved) {
@@ -351,22 +361,23 @@ export const HomeSearchView = memo(function HomeSearchView({
     });
 
     if (nextSaved) {
-      toast.show(`Saved search alert for "${label}"`, {
-        variant: 'success',
-        icon: 'star',
-      });
+      toast.done(`Saved search alert for "${label}"`, 'star');
     } else {
-      toast.show('Search alert removed', {
-        variant: 'info',
-        icon: 'trash-2',
-      });
+      toast.done('Search alert removed', 'trash-2');
     }
 
     // If authenticated, sync with Supabase
     if (user?.id) {
       try {
         const actualQuery = query.trim() || null;
-        const existing = savedSearchesQ.data?.find((s) => {
+        // Un-saving right after saving can beat the post-save refetch, so the
+        // new row isn't in the cache yet — refetch before giving up, or the
+        // delete is skipped and the search silently comes back as saved.
+        let savedList = savedSearchesQ.data;
+        if (currentlySaved) {
+          savedList = (await savedSearchesQ.refetch()).data ?? savedList;
+        }
+        const existing = savedList?.find((s) => {
           if (actualQuery) {
             const qNorm = actualQuery.toLowerCase();
             return (
@@ -400,10 +411,11 @@ export const HomeSearchView = memo(function HomeSearchView({
         console.warn('[saved-searches] sync error', err);
       }
     }
-  }, [effectiveSearchInfo, isSaved, user, savedSearchesQ.data, query, searchFilters, toast, storageKey]);
+  }, [effectiveSearchInfo, isSaved, user, savedSearchesQ.data, savedSearchesQ.refetch, query, searchFilters, toast, storageKey]);
 
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
+  const touchInNestedScroller = useRef(false);
 
   // ── Entrance / Exit Motion ──
   const animProgress = useSharedValue(0);
@@ -411,7 +423,7 @@ export const HomeSearchView = memo(function HomeSearchView({
 
   useEffect(() => {
     animProgress.value = withTiming(1, {
-      duration: 400,
+      duration: 320,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     });
     // Opened onto results (a category or preset query): show them, don't
@@ -435,7 +447,7 @@ export const HomeSearchView = memo(function HomeSearchView({
     animProgress.value = withTiming(
       0,
       {
-        duration: 320,
+        duration: 240,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       },
       (finished) => {
@@ -468,50 +480,38 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => subscription.remove();
   }, [hasSubmitted, handleClose]));
 
-  const rootAnimatedStyle = useAnimatedStyle(() => {
-    const translateX = interpolate(
-      animProgress.value,
-      [0, 1],
-      [screenWidth, 0],
-      Extrapolation.CLAMP,
-    );
-    return {
-      transform: [{ translateX }],
-    };
-  });
+  // Opens in place (no slide): the overlay fades over Home while the search
+  // bar starts exactly on Home's bar (HomeHeader FeedSearch: x=16, width
+  // minus the 44px bell + 10px gap) and glides right as the chevron fades in.
+  const rootAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0, 0.6], [0, 1], Extrapolation.CLAMP),
+  }));
 
-  const searchBarAnimatedStyle = useAnimatedStyle(() => {
-    const scale = interpolate(animProgress.value, [0, 1], [0.96, 1], Extrapolation.CLAMP);
-    return {
-      transform: [{ scale }],
-    };
-  });
+  // The bar itself never moves; "Close" fades in where Home's bell was.
+  const closeAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0.2, 0.7], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateX: interpolate(animProgress.value, [0, 1], [8, 0], Extrapolation.CLAMP) }],
+  }));
+
+  // The "pop up": body content fades in while rising into place.
+  const bodyAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animProgress.value, [0.1, 0.8], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(animProgress.value, [0, 1], [40, 0], Extrapolation.CLAMP) }],
+  }));
 
   const HORIZONTAL_PAD = 12;
   const GRID_GAP = 8;
 
-  const { cardWidth } = useGridDimensions({
+  const { columns, cardWidth, onLayout: onGridLayout, ref: gridRef } = useGridDimensions({
     min: 2,
-    max: 4,
-    thresholds: [560, 900, 1200],
+    max: isDesktop ? 5 : 4,
+    thresholds: isDesktop ? [560, 900, 1150] : [560, 900, 1200],
     horizontalPadding: HORIZONTAL_PAD,
     gap: GRID_GAP,
+    maxWidth: isDesktop ? DESKTOP_FEED_MAX : undefined,
   });
 
   const hasQuery = query.trim().length > 0;
-
-  // Real-time interpolated translation and width for sliding indicator bar matching Image 1
-  const indicatorTranslateX = scrollX.interpolate({
-    inputRange: [0, screenWidth],
-    outputRange: [tabLayouts.listings.x, tabLayouts.seller.x],
-    extrapolate: 'clamp',
-  });
-
-  const indicatorWidth = scrollX.interpolate({
-    inputRange: [0, screenWidth],
-    outputRange: [tabLayouts.listings.width, tabLayouts.seller.width],
-    extrapolate: 'clamp',
-  });
 
   // Real-time multi-criteria filtering on listingResults
   const displayListings = useMemo(() => {
@@ -716,11 +716,21 @@ export const HomeSearchView = memo(function HomeSearchView({
     return () => clearTimeout(timer);
   }, [query, searchFilters.category, hasSubmitted, runSearch]);
 
+  // While a tab tap animates the pager, onScroll still reports the old page for a
+  // few frames; without this lock it flipped activeTab back and forth (flicker).
+  const tabLockRef = useRef<SearchTab | null>(null);
+  const tabLockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Handle Tab Switch by clicking header (preserves open keyboard)
   const handleTabPress = useCallback(
     (tab: SearchTab) => {
       haptic();
       setActiveTab(tab);
+      tabLockRef.current = tab;
+      if (tabLockTimer.current) clearTimeout(tabLockTimer.current);
+      tabLockTimer.current = setTimeout(() => {
+        tabLockRef.current = null;
+      }, 500);
       const targetX = tab === 'listings' ? 0 : screenWidth;
       pagerRef.current?.scrollTo({ x: targetX, animated: true });
       RNAnimated.timing(scrollX, {
@@ -740,6 +750,10 @@ export const HomeSearchView = memo(function HomeSearchView({
       scrollX.setValue(offsetX);
       const pageIndex = Math.round(offsetX / screenWidth);
       const newTab: SearchTab = pageIndex === 0 ? 'listings' : 'seller';
+      if (tabLockRef.current) {
+        if (newTab === tabLockRef.current && offsetX % screenWidth === 0) tabLockRef.current = null;
+        return;
+      }
       if (newTab !== activeTab) {
         setActiveTab(newTab);
       }
@@ -753,6 +767,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       const offsetX = e.nativeEvent.contentOffset.x;
       const pageIndex = Math.round(offsetX / screenWidth);
       const newTab: SearchTab = pageIndex === 0 ? 'listings' : 'seller';
+      tabLockRef.current = null;
       if (newTab !== activeTab) {
         setActiveTab(newTab);
         inputRef.current?.focus?.();
@@ -765,11 +780,22 @@ export const HomeSearchView = memo(function HomeSearchView({
   const handleTouchStart = useCallback((e: any) => {
     touchStartX.current = e.nativeEvent?.pageX ?? e.nativeEvent?.clientX ?? 0;
     touchStartY.current = e.nativeEvent?.pageY ?? e.nativeEvent?.clientY ?? 0;
+    // A swipe that starts inside a nested horizontal scroller (e.g. the
+    // suggestion chip row) is scrolling that row, not switching tabs.
+    touchInNestedScroller.current = false;
+    const pager = (pagerRef.current as any)?.getScrollableNode?.();
+    for (let el = e.target as HTMLElement | null; el && el !== pager; el = el.parentElement) {
+      const ox = typeof window !== 'undefined' ? window.getComputedStyle(el).overflowX : '';
+      if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth) {
+        touchInNestedScroller.current = true;
+        break;
+      }
+    }
   }, []);
 
   const handleTouchEnd = useCallback(
     (e: any) => {
-      if (hasSubmitted) return;
+      if (hasSubmitted || touchInNestedScroller.current) return;
       const currentX = e.nativeEvent?.pageX ?? e.nativeEvent?.clientX ?? 0;
       const currentY = e.nativeEvent?.pageY ?? e.nativeEvent?.clientY ?? 0;
       const deltaX = currentX - touchStartX.current;
@@ -804,16 +830,6 @@ export const HomeSearchView = memo(function HomeSearchView({
     [addSearch],
   );
 
-  // Arrow click to populate search bar for query refinement
-  const handlePopulateSuggestion = useCallback(
-    (term: string) => {
-      haptic();
-      setQuery(term.trim() + ' ');
-      setHasSubmitted(false);
-      inputRef.current?.focus?.();
-    },
-    [],
-  );
 
   // Tag selection from Previous searches / Popular searches with tab routing
   const handleSelectTag = useCallback(
@@ -937,7 +953,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: tabBarClearance }}
     >
       {/* ── Your Recent Searches ── */}
       {historyItems.length > 0 && (
@@ -947,16 +963,14 @@ export const HomeSearchView = memo(function HomeSearchView({
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: 14,
+              marginBottom: 12,
             }}
           >
             <Text
               style={{
-                fontSize: 15,
-                fontWeight: '700',
-                fontFamily: typography.family.sansBold,
-                color: theme.text,
-                letterSpacing: -0.2,
+                fontSize: 17,
+                fontFamily: typography.family.sansSemibold,
+                color: theme.ink,
               }}
             >
               Recent searches
@@ -976,10 +990,9 @@ export const HomeSearchView = memo(function HomeSearchView({
             >
               <Text
                 style={{
-                  fontSize: 14.5,
-                  fontWeight: '600',
-                  fontFamily: typography.family.sansBold,
-                  color: theme.purple,
+                  fontSize: 13,
+                  fontFamily: typography.family.sansMedium,
+                  color: theme.mute,
                 }}
               >
                 Clear all
@@ -993,9 +1006,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 key={item.term}
                 style={{
                   height: 30,
-                  backgroundColor: isDark ? theme.surface : theme.panel,
-                  borderWidth: 1,
-                  borderColor: theme.border,
+                  backgroundColor: theme.surface,
                   borderRadius: 15,
                   flexDirection: 'row',
                   alignItems: 'center',
@@ -1007,7 +1018,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                   accessibilityRole="button"
                   accessibilityLabel={`Search for ${item.term}`}
                   style={({ pressed }) => ({
-                    paddingLeft: 12,
+                    paddingLeft: 14,
                     paddingRight: 4,
                     height: '100%',
                     justifyContent: 'center',
@@ -1016,10 +1027,9 @@ export const HomeSearchView = memo(function HomeSearchView({
                 >
                   <Text
                     style={{
-                      fontSize: 12.5,
-                      fontWeight: '500',
+                      fontSize: 13,
                       fontFamily: typography.family.sansMedium,
-                      color: theme.text,
+                      color: theme.ink,
                     }}
                     numberOfLines={1}
                   >
@@ -1044,7 +1054,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                     opacity: pressed ? 0.5 : 0.8,
                   })}
                 >
-                  <Feather name="x" size={13} color={isDark ? '#9CA3AF' : '#6B7280'} />
+                  <Feather name="x" size={14} color={theme.mute} />
                 </Pressable>
               </View>
             ))}
@@ -1053,13 +1063,12 @@ export const HomeSearchView = memo(function HomeSearchView({
       )}
 
       {/* Popular searches Section */}
-      <View style={{ marginTop: 24 }}>
+      <View style={{ marginTop: historyItems.length > 0 ? 28 : 4 }}>
         <Text
           style={{
-            fontSize: 15,
-            fontWeight: '700',
-            fontFamily: typography.family.sansBold,
-            color: theme.text,
+            fontSize: 17,
+            fontFamily: typography.family.sansSemibold,
+            color: theme.ink,
             marginBottom: 12,
           }}
         >
@@ -1073,22 +1082,22 @@ export const HomeSearchView = memo(function HomeSearchView({
               onPress={() => handleSelectTag(term, 'listings')}
               style={({ pressed }) => ({
                 height: 30,
-                backgroundColor: isDark ? theme.surface : theme.panel,
-                borderWidth: 1,
-                borderColor: theme.border,
+                backgroundColor: theme.surface,
                 borderRadius: 15,
-                paddingHorizontal: 12,
+                paddingHorizontal: 14,
+                flexDirection: 'row',
+                gap: 6,
                 alignItems: 'center',
                 justifyContent: 'center',
                 opacity: pressed ? 0.75 : 1,
               })}
             >
+              <Feather name="search" size={14} color={theme.mute} />
               <Text
                 style={{
-                  fontSize: 12.5,
-                  fontWeight: '500',
+                  fontSize: 13,
                   fontFamily: typography.family.sansMedium,
-                  color: theme.text,
+                  color: theme.ink,
                 }}
               >
                 {term}
@@ -1106,7 +1115,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
-      contentContainerStyle={{ paddingTop: 16, paddingBottom: 40 }}
+      contentContainerStyle={{ paddingTop: 16, paddingBottom: tabBarClearance }}
     >
       <View style={{ paddingHorizontal: 16, marginBottom: 8 }}>
         <Text
@@ -1219,7 +1228,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           backgroundColor: theme.background,
           shadowColor: '#000',
           shadowOffset: { width: -3, height: 0 },
-          shadowOpacity: isDark ? 0.35 : 0.1,
+          shadowOpacity: isDesktop ? 0 : isDark ? 0.35 : 0.1,
           shadowRadius: 10,
           elevation: 12,
         },
@@ -1229,181 +1238,244 @@ export const HomeSearchView = memo(function HomeSearchView({
       onTouchEnd={Platform.OS === 'web' ? handleTouchEnd : undefined}
     >
       {/* ── Top Header Row ── */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 16,
-          paddingTop: 8,
-          paddingBottom: 8,
-          gap: 10,
-          borderBottomWidth: 0,
-        }}
-      >
-        {/* Back Button '<' (Always visible on left, matching Reference Image 2 & 3) */}
-        <Pressable
-          onPress={() => {
-            haptic();
-            if (hasSubmitted) {
-              setHasSubmitted(false);
-              inputRef.current?.focus?.();
-              setQuery('');
-              setSearchFilters(EMPTY_SEARCH_FILTERS);
-              ++searchRequestIdRef.current;
-              setSellerResults([]);
-              setListingResults([]);
-              setLoading(false);
-            } else {
-              handleClose();
-            }
+      {isDesktop ? (
+        // Desktop: the query is edited in the header field (DesktopSearch),
+        // so this is a results heading, not a second search bar.
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'flex-end',
+            gap: 10,
+            paddingHorizontal: 16,
+            paddingTop: 22,
+            paddingBottom: 6,
           }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={hasSubmitted ? "Back to search" : "Close search"}
-          style={({ pressed }) => ({
-            width: 32,
-            height: 44,
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.6 : 1,
-            transform: [{ scale: pressed ? 0.94 : 1 }],
-          })}
         >
-          <Feather
-            name="chevron-left"
-            size={28}
-            color={theme.text}
-          />
-        </Pressable>
-
-        {/* Search Input Box (Pill shape matching Reference Image 2) */}
-        <Animated.View
-          style={[
-            {
-              flex: 1,
-              flexDirection: 'row',
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: '700',
+                letterSpacing: 1.4,
+                textTransform: 'uppercase',
+                color: theme.textMuted,
+                marginBottom: 4,
+              }}
+            >
+              {query.trim() ? (activeTab === 'seller' ? 'Members matching' : 'Results for') : 'Category'}
+            </Text>
+            <Text
+              numberOfLines={1}
+              style={{ fontSize: 28, lineHeight: 34, fontWeight: '700', letterSpacing: -0.6, color: theme.ink }}
+            >
+              {query.trim()
+                ? `“${query.trim()}”`
+                : categoryLabel(searchFilters.category) || 'Search'}
+            </Text>
+          </View>
+          {hasSubmitted && (
+            <Pressable
+              onPress={handleToggleSaveSearch}
+              accessibilityRole="button"
+              accessibilityLabel={isSaved ? 'Saved search active' : 'Save this search'}
+              style={(state) => ({
+                height: 36,
+                paddingHorizontal: 14,
+                borderRadius: 18,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                borderWidth: 1,
+                borderColor: isSaved || (state as { hovered?: boolean }).hovered ? theme.ink : theme.border,
+                backgroundColor: theme.panel,
+              })}
+            >
+              <Ionicons name={isSaved ? 'star' : 'star-outline'} size={15} color={isSaved ? theme.purple : theme.ink} />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: theme.ink }}>
+                {isSaved ? 'Search saved' : 'Save search'}
+              </Text>
+            </Pressable>
+          )}
+          <Pressable
+            onPress={handleClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close search"
+            style={(state) => ({
+              width: 36,
+              height: 36,
+              borderRadius: 18,
               alignItems: 'center',
-              backgroundColor: isDark ? theme.surface : '#F4F4F5',
-              borderRadius: radii.pill,
-              paddingLeft: 14,
-              paddingRight: query.length > 0 ? 8 : 14,
-              height: 44,
-              borderWidth: 0,
-            },
-            searchBarAnimatedStyle,
-          ]}
+              justifyContent: 'center',
+              borderWidth: 1,
+              borderColor: (state as { hovered?: boolean }).hovered ? theme.ink : theme.border,
+              backgroundColor: theme.panel,
+            })}
+          >
+            <Feather name="x" size={17} color={theme.ink} />
+          </Pressable>
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingHorizontal: 16,
+            paddingTop: 12, // = HomeHeader search marginTop, so the bar doesn't jump vertically
+            paddingBottom: 8,
+            gap: 12,
+            borderBottomWidth: 0,
+          }}
         >
-          <Feather
-            name="search"
-            size={18}
-            color={isDark ? "#9CA3AF" : "#6B7280"}
-            style={{ flexShrink: 0 }}
-          />
-          <TextInput
-            ref={inputRef}
-            value={query}
-            onChangeText={(text) => {
-              setQuery(text);
-              setHasSubmitted(false);
-            }}
-            onFocus={() => {
-              if (query.trim().length > 0 && hasSubmitted) {
-                setHasSubmitted(false);
-              }
-            }}
-            onSubmitEditing={handleSubmitSearch}
-            placeholder={searchPlaceholder}
-            accessibilityLabel={searchPlaceholder}
-            placeholderTextColor={isDark ? "#9CA3AF" : "#8E8E93"}
-            autoFocus={Platform.OS === 'web'}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={
-              {
-                flex: 1,
-                minWidth: 0,
-                flexShrink: 1,
-                marginLeft: 8,
-                marginRight: query.length > 0 ? 4 : 0,
-                fontFamily: typography.family.sans,
-                fontSize: 16,
-                letterSpacing: -0.15,
-                color: theme.text,
-                padding: 0,
-                outlineStyle: 'none',
-                outlineWidth: 0,
-              } as any
-            }
-          />
-
-          {/* Clear icon inside search pill (only rendered when query text exists) */}
-          {query.length > 0 && (
+          {/* Back: returns to the search landing after a submit, else closes search. */}
+          <Animated.View style={closeAnimatedStyle}>
             <Pressable
               onPress={() => {
                 haptic();
-                setQuery('');
-                if (!searchFilters.category) {
+                if (hasSubmitted) {
                   setHasSubmitted(false);
+                  inputRef.current?.focus?.();
+                  setQuery('');
+                  setSearchFilters(EMPTY_SEARCH_FILTERS);
                   ++searchRequestIdRef.current;
                   setSellerResults([]);
                   setListingResults([]);
                   setLoading(false);
+                } else {
+                  handleClose();
                 }
-                inputRef.current?.focus?.();
               }}
               hitSlop={8}
-              accessibilityLabel="Clear search"
-              style={{
-                width: 24,
-                height: 24,
-                alignItems: 'center',
+              accessibilityRole="button"
+              accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
+              style={({ pressed }) => ({
+                width: 32,
+                height: 44,
+                alignItems: 'flex-start',
                 justifyContent: 'center',
-                marginRight: 2,
-              }}
+                opacity: pressed ? 0.6 : 1,
+              })}
             >
-              <Feather name="x" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+              <Feather name="arrow-left" size={22} color={theme.ink} />
+            </Pressable>
+          </Animated.View>
+
+          {/* Search field */}
+          <Animated.View
+            style={[
+              {
+                flex: 1,
+                flexDirection: 'row',
+                alignItems: 'center',
+                // Same field as the Home bar (HomeHeader) so opening search doesn't reshape it.
+                backgroundColor: isDark ? theme.surface : '#F0F1F5',
+                borderRadius: radii.pill,
+                paddingLeft: 14,
+                paddingRight: query.length > 0 ? 8 : 14,
+                height: 44,
+                borderWidth: 0,
+              },
+            ]}
+          >
+            <Feather
+              name="search"
+              size={16} // = Home bar icon, so the swap is invisible
+              color={theme.mute}
+              style={{ flexShrink: 0 }}
+            />
+            <TextInput
+              ref={inputRef}
+              value={query}
+              onChangeText={(text) => {
+                setQuery(text);
+                setHasSubmitted(false);
+              }}
+              onFocus={() => {
+                if (query.trim().length > 0 && hasSubmitted) {
+                  setHasSubmitted(false);
+                }
+              }}
+              onSubmitEditing={handleSubmitSearch}
+              placeholder={searchPlaceholder}
+              accessibilityLabel={searchPlaceholder}
+              placeholderTextColor={theme.muteSoft}
+              autoFocus={Platform.OS === 'web'}
+              returnKeyType="search"
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={
+                {
+                  flex: 1,
+                  minWidth: 0,
+                  flexShrink: 1,
+                  marginLeft: 8,
+                  marginRight: query.length > 0 ? 4 : 0,
+                  fontFamily: typography.family.sansMedium,
+                  fontSize: 16,
+                  letterSpacing: -0.15,
+                  color: theme.ink,
+                  padding: 0,
+                  outlineStyle: 'none',
+                  outlineWidth: 0,
+                } as any
+              }
+            />
+
+            {/* Clear icon inside search pill (only rendered when query text exists) */}
+            {query.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  haptic();
+                  setQuery('');
+                  if (!searchFilters.category) {
+                    setHasSubmitted(false);
+                    ++searchRequestIdRef.current;
+                    setSellerResults([]);
+                    setListingResults([]);
+                    setLoading(false);
+                  }
+                  inputRef.current?.focus?.();
+                }}
+                hitSlop={8}
+                accessibilityLabel="Clear search"
+                style={{
+                  width: 24,
+                  height: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 2,
+                }}
+              >
+                <Feather name="x" size={16} color={theme.mute} />
+              </Pressable>
+            )}
+          </Animated.View>
+
+          {/* Save search (bookmark) */}
+          {hasSubmitted && (
+            <Pressable
+              onPress={handleToggleSaveSearch}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={isSaved ? 'Saved search active' : 'Save this search'}
+              accessibilityState={{ selected: isSaved }}
+              style={({ pressed }) => ({
+                width: 32,
+                height: 44,
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                opacity: pressed ? 0.6 : 1,
+              })}
+            >
+              <Ionicons
+                name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                size={22}
+                color={isSaved ? theme.purple : theme.ink}
+              />
             </Pressable>
           )}
-        </Animated.View>
 
-        {/* After Searching: Save Your Search Star / Favourite Button (Reference Image 3) */}
-        {hasSubmitted && (
-          <Pressable
-            onPress={handleToggleSaveSearch}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={isSaved ? "Saved search active" : "Save this search"}
-            style={({ pressed }) => ({
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: isSaved
-                ? (isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)')
-                : (isDark ? theme.panel : theme.surface),
-              borderWidth: 1,
-              borderColor: isSaved
-                ? (isDark ? 'rgba(108, 71, 255, 0.5)' : 'rgba(108, 71, 255, 0.28)')
-                : theme.border,
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: pressed ? 0.75 : 1,
-              transform: [{ scale: pressed ? 0.92 : 1 }],
-              shadowColor: isSaved ? theme.purple : '#000000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: isSaved ? 0.16 : 0.05,
-              shadowRadius: 6,
-              elevation: isSaved ? 3 : 1,
-            })}
-          >
-            <Ionicons
-              name={isSaved ? "star" : "star-outline"}
-              size={21}
-              color={isSaved ? theme.purple : theme.mute}
-            />
-          </Pressable>
-        )}
-      </View>
+        </View>
+      )}
 
       {/* Tab Switcher ('Items' & 'Members') */}
       {!hasSubmitted && (
@@ -1445,11 +1517,8 @@ export const HomeSearchView = memo(function HomeSearchView({
               style={{
                 fontSize: 14,
                 lineHeight: 18,
-                fontWeight: activeTab === 'listings' ? '700' : '500',
-                fontFamily:
-                  activeTab === 'listings'
-                    ? typography.family.sansBold
-                    : typography.family.sansMedium,
+                fontWeight: '600',
+                fontFamily: typography.family.sansSemibold,
                 color:
                   activeTab === 'listings'
                     ? theme.text
@@ -1490,11 +1559,8 @@ export const HomeSearchView = memo(function HomeSearchView({
               style={{
                 fontSize: 14,
                 lineHeight: 18,
-                fontWeight: activeTab === 'seller' ? '700' : '500',
-                fontFamily:
-                  activeTab === 'seller'
-                    ? typography.family.sansBold
-                    : typography.family.sansMedium,
+                fontWeight: '600',
+                fontFamily: typography.family.sansSemibold,
                 color:
                   activeTab === 'seller'
                     ? theme.text
@@ -1511,6 +1577,7 @@ export const HomeSearchView = memo(function HomeSearchView({
       )}
 
       {/* ── Main Content Area ── */}
+      <Animated.View style={[{ flex: 1 }, bodyAnimatedStyle]}>
       {hasSubmitted ? (
         /* Completed Search Results (Items and Members tab switcher is hidden, as shown in Reference Image 3) */
         <View style={{ flex: 1, backgroundColor: theme.background }}>
@@ -1525,7 +1592,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
                 contentContainerStyle={{
-                  paddingBottom: 40,
+                  paddingBottom: tabBarClearance,
                 }}
               >
                 <SearchFilterChips
@@ -1535,21 +1602,19 @@ export const HomeSearchView = memo(function HomeSearchView({
                 />
 
                 {displayListings.length > 0 ? (
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      flexWrap: 'wrap',
-                      gap: GRID_GAP,
-                      paddingHorizontal: HORIZONTAL_PAD,
-                      paddingTop: 8,
-                    }}
+                  <CardGrid
+                    gridRef={gridRef}
+                    onLayout={onGridLayout}
+                    columns={columns}
+                    cardWidth={cardWidth}
+                    padding={HORIZONTAL_PAD}
+                    gap={GRID_GAP}
+                    style={{ paddingTop: 8 }}
                   >
                     {displayListings.map((item) => (
-                      <View key={item.id} style={{ width: cardWidth }}>
-                        <ListingCard listing={item} width={cardWidth} />
-                      </View>
+                      <ListingCard key={item.id} listing={item} width={cardWidth} />
                     ))}
-                  </View>
+                  </CardGrid>
                 ) : (
                   <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: 'center' }}>
                     <Text style={{ fontSize: 14, color: theme.mute, textAlign: 'center' }}>
@@ -1576,7 +1641,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 renderItem={renderSellerItem}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
                 ListHeaderComponent={
                   <View
                     style={{
@@ -1652,7 +1717,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
               >
                 {/* Horizontal suggestion chips (Universal 30px standard) */}
                 {suggestions.length > 0 && (
@@ -1660,6 +1725,9 @@ export const HomeSearchView = memo(function HomeSearchView({
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
+                    // Web: don't chain overscroll at the row's ends into the
+                    // Items/Members pager, which would snap it to Members.
+                    style={Platform.OS === 'web' ? ({ overscrollBehaviorX: 'contain' } as any) : undefined}
                     contentContainerStyle={{
                       paddingHorizontal: 16,
                       paddingTop: 2,
@@ -1673,27 +1741,19 @@ export const HomeSearchView = memo(function HomeSearchView({
                         onPress={() => handleSelectSuggestion(sugg.text)}
                         style={({ pressed }) => ({
                           height: 30,
-                          borderRadius: 8,
-                          paddingHorizontal: 12,
+                          borderRadius: 15,
+                          paddingHorizontal: 14,
                           alignItems: 'center',
                           justifyContent: 'center',
-                          backgroundColor: pressed
-                            ? isDark
-                              ? '#27343A'
-                              : '#F4F4F5'
-                            : isDark
-                            ? '#1C2428'
-                            : '#FFFFFF',
-                          borderWidth: 1,
-                          borderColor: isDark ? 'rgba(255,255,255,0.12)' : '#E5E7EB',
+                          backgroundColor: theme.surface,
+                          opacity: pressed ? 0.7 : 1,
                         })}
                       >
                         <Text
                           style={{
                             fontSize: 13,
-                            fontWeight: '500',
                             fontFamily: typography.family.sansMedium,
-                            color: theme.text,
+                            color: theme.ink,
                           }}
                         >
                           {sugg.text}
@@ -1804,7 +1864,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                             }}
                             numberOfLines={1}
                           >
-                            {item.condition || (item.size ? `Size ${item.size}` : '')}
+                            {(item.condition && (CONDITION_LABELS[item.condition] ?? item.condition)) || (item.size ? `Size ${item.size}` : '')}
                           </Text>
                         </View>
                       </Pressable>
@@ -1875,7 +1935,7 @@ export const HomeSearchView = memo(function HomeSearchView({
                 renderItem={renderSellerItem}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                contentContainerStyle={{ paddingBottom: 40 }}
+                contentContainerStyle={{ paddingBottom: tabBarClearance }}
               />
             ) : (
               <View style={{ paddingVertical: 48, paddingHorizontal: 20, alignItems: 'center' }}>
@@ -1889,6 +1949,7 @@ export const HomeSearchView = memo(function HomeSearchView({
           </View>
         </ScrollView>
       )}
+      </Animated.View>
       </Animated.View>
   );
 });

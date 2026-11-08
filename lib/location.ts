@@ -8,20 +8,6 @@ export interface GeocodedAddress {
   postal_code: string;
   country: string;
 }
-
-export const POPULAR_CITIES = [
-  'Lahore',
-  'Karachi',
-  'Islamabad',
-  'Rawalpindi',
-  'Faisalabad',
-  'Peshawar',
-  'Multan',
-  'Quetta',
-  'Sialkot',
-  'Gujranwala',
-] as const;
-
 /**
  * Reverse geocode latitude and longitude into structured address fields.
  * Uses OpenStreetMap Nominatim with clean fallback to expo-location.

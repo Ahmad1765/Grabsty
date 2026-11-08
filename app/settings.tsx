@@ -16,7 +16,6 @@
 //    vacation mode, bundle discounts, push notifications, and auth flows.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState } from 'react';
 import {
   View,
   Pressable,
@@ -37,6 +36,7 @@ import { safeBack } from '@/lib/nav';
 import { tap } from '@/lib/haptics';
 import { useTheme } from '@/context/ThemeContext';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { bp } from '@/lib/responsive';
 import { BRAND } from '@/lib/brand';
@@ -47,6 +47,7 @@ import {
   PayoutSheet,
   VerificationSheet,
   PhoneSheet,
+  ThemeSheet,
   useSettingsManager,
   SUPPORT_EMAIL,
   ChatGPTRow,
@@ -76,7 +77,8 @@ const TABS: TabConfig[] = [
 
 export default function SettingsScreen() {
   const { profile, user, session } = useAuth();
-  const { theme, isDark } = useTheme();
+  const { theme, isDark, mode: themeMode } = useTheme();
+  const themeLabel = themeMode === 'system' ? 'System' : themeMode === 'dark' ? 'Dark' : 'Light';
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isLaptop = width >= bp.lg;
@@ -130,6 +132,16 @@ export default function SettingsScreen() {
                 onPress={() => {
                   tap('light');
                   mgr.openSystemSettings();
+                }}
+              />
+            </ChatGPTRow>
+
+            <ChatGPTRow label="Appearance" desc="Light, dark, or match your device">
+              <ChatGPTButton
+                label={themeLabel}
+                onPress={() => {
+                  tap('light');
+                  mgr.setShowTheme(true);
                 }}
               />
             </ChatGPTRow>
@@ -192,7 +204,7 @@ export default function SettingsScreen() {
                     </Text>
                     {profile.is_verified && (
                       <View style={{ marginLeft: 6 }}>
-                        <ShieldCheckIcon size={16} />
+                        <VerifiedBadge size={16} />
                       </View>
                     )}
                   </View>
@@ -272,6 +284,22 @@ export default function SettingsScreen() {
                 }}
               />
             </ChatGPTRow>
+
+            {session && (
+              <ChatGPTRow
+                label="Blocked accounts"
+                desc="See who you've blocked and unblock them"
+              >
+                <ChatGPTButton
+                  label="Manage"
+                  icon="slash"
+                  onPress={() => {
+                    tap('light');
+                    router.push('/blocked' as any);
+                  }}
+                />
+              </ChatGPTRow>
+            )}
 
             {session && (
               <ChatGPTRow
@@ -766,6 +794,8 @@ export default function SettingsScreen() {
           }}
         />
 
+        <ThemeSheet visible={mgr.showTheme} onClose={() => mgr.setShowTheme(false)} />
+
         <PhoneSheet
           visible={mgr.showPhone}
           initialPhone={mgr.phone}
@@ -975,6 +1005,13 @@ export default function SettingsScreen() {
         {/* Group 2: App settings matching Video */}
         <ChatGPTGroup title="App settings">
           <ChatGPTItem
+            icon="moon"
+            label="Appearance"
+            value={themeLabel}
+            chevron
+            onPress={() => mgr.setShowTheme(true)}
+          />
+          <ChatGPTItem
             icon="shopping-bag"
             label="Purchases & Orders"
             chevron
@@ -1033,7 +1070,7 @@ export default function SettingsScreen() {
         </ChatGPTGroup>
 
         {/* Group 4: Support & Legal */}
-        <ChatGPTGroup title="Support & Legal">
+        <ChatGPTGroup title="Support & legal">
           <ChatGPTItem
             icon="message-square"
             label="Customer Support"
@@ -1146,6 +1183,8 @@ export default function SettingsScreen() {
           if (ok) mgr.setShowVerify(false);
         }}
       />
+
+      <ThemeSheet visible={mgr.showTheme} onClose={() => mgr.setShowTheme(false)} />
 
       <PhoneSheet
         visible={mgr.showPhone}

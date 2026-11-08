@@ -16,8 +16,8 @@ import {
   type LocalImage,
 } from '@/lib/upload';
 import { useToast } from '@/lib/toast';
-import { colors } from '@/lib/theme';
 
+import { useTheme } from '@/context/ThemeContext';
 const PURPLE = '#6C47FF';
 const RED = '#EF4444';
 
@@ -50,6 +50,7 @@ function FieldShell({
   focused: boolean;
   children: React.ReactNode;
 }) {
+  const { theme: colors } = useTheme();
   const borderColor = error ? RED : focused ? PURPLE : colors.border;
 
   return (
@@ -94,6 +95,7 @@ function FieldShell({
 type UsernameStatus = 'idle' | 'checking' | 'ok' | 'taken';
 
 export default function ProfileEditScreen() {
+  const { theme: colors } = useTheme();
   const { profile, user, refreshProfile, loading } = useAuth();
   const toast = useToast();
   const params = useLocalSearchParams<{ onboarding?: string }>();
@@ -102,7 +104,6 @@ export default function ProfileEditScreen() {
   // to clear the home indicator / gesture bar itself. Matches the pattern in
   // app/conversation/new.tsx rather than hardcoding a per-platform guess.
   const insets = useSafeAreaInsets();
-  const ctaBottomPad = Math.max(insets.bottom, 12) + 12;
 
   const [username, setUsername] = useState('');
   const [fullName, setFullName] = useState('');
@@ -110,7 +111,6 @@ export default function ProfileEditScreen() {
   const [location, setLocation] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
-  const [avatarRemoved, setAvatarRemoved] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -121,7 +121,6 @@ export default function ProfileEditScreen() {
   const checkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fullNameRef = useRef<TextInput>(null);
   const bioRef = useRef<TextInput>(null);
-  const locationRef = useRef<TextInput>(null);
 
   useEffect(() => {
     mounted.current = true;
@@ -142,7 +141,6 @@ export default function ProfileEditScreen() {
     setLocation('Lahore');
     setAvatarUri(profile.avatar_url ?? null);
     setAvatarBase64(null);
-    setAvatarRemoved(false);
     setUsernameError(null);
     setUsernameStatus('idle');
   }, [profile]);
@@ -171,7 +169,6 @@ export default function ProfileEditScreen() {
     username.trim().toLowerCase() !== initialSnapshot.username ||
     fullName.trim() !== initialSnapshot.fullName ||
     bio.trim() !== initialSnapshot.bio ||
-    avatarRemoved ||
     hasNewLocalAvatar;
 
   const validateUsername = useCallback((raw: string): string | null => {
@@ -259,30 +256,12 @@ export default function ProfileEditScreen() {
       if (!mounted.current) return;
       setAvatarUri(asset.uri);
       setAvatarBase64(asset.base64 ?? null);
-      setAvatarRemoved(false);
     } catch {
       toast.show('Could not open photos', { variant: 'default', icon: 'alert-triangle' });
     }
   }, [ensurePermission, toast]);
 
 
-
-  const removeAvatar = useCallback(() => {
-    if (!avatarUri && !profile?.avatar_url) return;
-    tap('light');
-    Alert.alert('Remove photo?', 'Your profile will show your initial instead.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: () => {
-          setAvatarUri(null);
-          setAvatarBase64(null);
-          setAvatarRemoved(true);
-        },
-      },
-    ]);
-  }, [avatarUri, profile?.avatar_url]);
 
   const confirmDiscard = useCallback(() => {
     Alert.alert('Discard changes?', 'Your unsaved changes will be lost.', [
@@ -338,9 +317,7 @@ export default function ProfileEditScreen() {
 
     try {
       let avatar_url: string | null = profile?.avatar_url ?? null;
-      if (avatarRemoved) {
-        avatar_url = null;
-      } else if (hasNewLocalAvatar) {
+      if (hasNewLocalAvatar) {
         const localImg: LocalImage = { uri: avatarUri!, base64: avatarBase64 };
         avatar_url = await uploadAvatar(localImg, user.id);
       }
@@ -374,10 +351,7 @@ export default function ProfileEditScreen() {
       await refreshProfile();
       if (!mounted.current) return;
 
-      toast.show(isOnboarding ? "You're in 🌶️" : 'Profile updated', {
-        variant: 'success',
-        icon: 'check',
-      });
+      toast.done(isOnboarding ? "You're all set" : 'Profile updated');
 
       if (isOnboarding) router.replace('/(tabs)');
       else safeBack();
@@ -397,7 +371,6 @@ export default function ProfileEditScreen() {
     fullName,
     bio,
     location,
-    avatarRemoved,
     hasNewLocalAvatar,
     avatarUri,
     avatarBase64,
@@ -423,13 +396,6 @@ export default function ProfileEditScreen() {
 
   const displayName = fullName || username || profile.username || 'U';
   const initial = displayName.trim().charAt(0).toUpperCase() || 'U';
-  const showRemove = !!avatarUri || (!!profile.avatar_url && !avatarRemoved);
-
-  const canSave =
-    !validateUsername(username) &&
-    usernameStatus !== 'taken' &&
-    usernameStatus !== 'checking';
-
   const ctaLabel = saving
     ? 'Saving…'
     : isOnboarding
@@ -670,7 +636,7 @@ export default function ProfileEditScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 6,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                 }}
               >
                 <Text style={{ fontSize: 11, fontWeight: '700', color: colors.mute, letterSpacing: 0.5 }}>
@@ -713,7 +679,7 @@ export default function ProfileEditScreen() {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginRight: 12,
@@ -734,7 +700,7 @@ export default function ProfileEditScreen() {
                   paddingHorizontal: 8,
                   paddingVertical: 3,
                   borderRadius: 6,
-                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  backgroundColor: colors.primarySoft,
                 }}
               >
                 <Text

@@ -41,6 +41,8 @@ export default function ResetPasswordScreen() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Shown so a link that signs into someone else's account is obvious.
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const href = Platform.OS === 'web' ? initialWebHref : url;
@@ -52,15 +54,16 @@ export default function ResetPasswordScreen() {
       const code = p.get('code');
       const access_token = p.get('access_token');
       const refresh_token = p.get('refresh_token');
+      let res;
       if (code) {
-        const { error: e } = await supabase.auth.exchangeCodeForSession(code);
-        if (e) throw e;
+        res = await supabase.auth.exchangeCodeForSession(code);
       } else if (access_token && refresh_token) {
-        const { error: e } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (e) throw e;
+        res = await supabase.auth.setSession({ access_token, refresh_token });
       } else {
         throw new Error('This reset link is incomplete.');
       }
+      if (res.error) throw res.error;
+      setEmail(res.data.session?.user?.email ?? null);
       setPhase('ready');
     })().catch((e) => {
       setError(e?.message ?? 'This reset link is invalid or has expired.');
@@ -105,6 +108,11 @@ export default function ResetPasswordScreen() {
 
         {phase === 'ready' && (
           <>
+            {email && (
+              <Text testID="reset-account-email" style={{ marginTop: 8, color: theme.textMuted }}>
+                For {email}
+              </Text>
+            )}
             <TextInput
               testID="new-password-input"
               placeholder="New password (8+ characters)"

@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+      <style>
+        @font-face{font-family:"Bricolage Grotesque 96pt";font-weight:700;font-style:normal;font-display:block;src:url("assets/fonts/BricolageGrotesque96pt-Bold.ttf") format("truetype");}
+        @font-face{font-family:"JetBrains Mono";font-weight:400 800;font-style:normal;font-display:block;src:url("assets/fonts/JetBrainsMono-latin.woff2") format("woff2");}
+
+        #root { position: absolute; inset: 0; width: 1080px; height: 1920px; overflow: hidden; color: #FFFFFF; }
+        .f4-bg { position: absolute; inset: 0; background-color: #0F0F0F;
+          background-image: linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+          background-size: 72px 72px; }
+        .f4-stage { position: absolute; inset: 0; }
+        .f4-kicker { position: absolute; left: 72px; top: 130px; padding: 14px 22px; border: 3px solid #FFFFFF; font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 30px; letter-spacing: 0.14em; text-transform: uppercase; box-shadow: 8px 8px 0 #6C47FF; }
+
+        .f4-card { position: absolute; left: 72px; width: 900px; height: 300px; background: #0F0F0F; border: 4px solid #FFFFFF; box-shadow: 16px 16px 0 #6C47FF; }
+        #f4-c1 { top: 260px; }
+        #f4-c2 { top: 620px; }
+        #f4-c3 { top: 980px; }
+        .f4-num { position: absolute; left: 40px; top: 34px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 64px; line-height: 1; color: #6C47FF; }
+        .f4-title { position: absolute; left: 40px; top: 108px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 100px; line-height: 0.92; letter-spacing: -0.01em; text-transform: uppercase; white-space: nowrap; }
+        .f4-sub { position: absolute; left: 40px; bottom: 30px; font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 28px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.65); }
+        #f4-c2 .f4-title { font-size: 90px; top: 92px; }
+        #f4-c3 .f4-title { font-size: 90px; top: 92px; }
+
+        .f4-tag { position: absolute; left: 560px; top: 40px; width: 330px; height: auto; }
+        .f4-shield { position: absolute; left: 680px; top: -70px; width: 220px; height: auto; }
+        .f4-check { position: absolute; left: 690px; top: 70px; width: 170px; height: 170px; }
+
+        .f4-link { position: absolute; left: 160px; width: 8px; height: 60px; background: #6C47FF; transform-origin: 50% 0%; }
+        #f4-k1 { top: 564px; }
+        #f4-k2 { top: 924px; }
+
+        .f4-paid { position: absolute; left: 72px; top: 1360px; width: 900px; height: 150px; background: #6C47FF; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 26px; font-family: "Bricolage Grotesque 96pt", sans-serif; font-weight: 700; font-size: 58px; text-transform: uppercase; letter-spacing: -0.005em; white-space: nowrap; box-shadow: 12px 12px 0 #FFFFFF; }
+        .f4-paid svg { width: 64px; height: 64px; flex: none; }
+      </style>
+
+      <div data-hf-id="hf-w85i" id="root" data-composition-id="04-pay-hold-check" data-width="1080" data-height="1920" data-start="0" data-duration="6.5">
+        <div data-hf-id="hf-he23" id="f4-bg" class="f4-bg clip" data-start="0" data-duration="6.5" data-track-index="0"></div>
+        <div data-hf-id="hf-d2dq" id="f4-stage" class="f4-stage clip" data-start="0" data-duration="6.5" data-track-index="1">
+          <div data-hf-id="hf-ama1" class="f4-kicker" id="f4-kicker">How a Grabsty order works</div>
+
+          <div data-hf-id="hf-r84g" class="f4-link" id="f4-k1"></div>
+          <div data-hf-id="hf-23m3" class="f4-link" id="f4-k2"></div>
+
+          <div data-hf-id="hf-tn9q" class="f4-card" id="f4-c1">
+            <div data-hf-id="hf-grx2" class="f4-num">01</div>
+            <div data-hf-id="hf-5dfs" class="f4-title">You pay</div>
+            <div data-hf-id="hf-xg9u" class="f4-sub">Card or cash on delivery</div>
+            <img data-hf-id="hf-fsb1" class="f4-tag" id="f4-tag" src="assets/sticker-7.png" alt="" />
+          </div>
+
+          <div data-hf-id="hf-nhjx" class="f4-card" id="f4-c2">
+            <div data-hf-id="hf-h683" class="f4-num">02</div>
+            <div data-hf-id="hf-pygr" class="f4-title"><span data-hf-id="hf-rb4l" style="display:block">Grabsty</span><span data-hf-id="hf-n0j0" style="display:block">holds it</span></div>
+            <img data-hf-id="hf-csw4" class="f4-shield" id="f4-shield" src="assets/3d-shield-sticker-cut.png" alt="" />
+          </div>
+
+          <div data-hf-id="hf-mpw4" class="f4-card" id="f4-c3">
+            <div data-hf-id="hf-hkj4" class="f4-num">03</div>
+            <div data-hf-id="hf-k8l7" class="f4-title"><span data-hf-id="hf-k18v" style="display:block"><span data-hf-id="hf-i8a6" id="f4-count">48</span> hrs to</span><span data-hf-id="hf-orle" style="display:block">check it</span></div>
+            <svg data-hf-id="hf-t355" class="f4-check" id="f4-check" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle data-hf-id="hf-8gc4" cx="12" cy="12" r="12" fill="#F2F3FE"></circle>
+              <g data-hf-id="hf-izv2" transform="translate(-5.4, -5.4) scale(1.45)">
+                <path data-hf-id="hf-dj3s" d="M12.033 6.8s-2.93 1.424-5.233 1.424c0 0-.3 5.986 5.233 8.876 5.533-2.89 5.233-8.876 5.233-8.876-2.303 0-5.233-1.424-5.233-1.424z" stroke="#5356EE" stroke-width="1.2" stroke-linejoin="round"></path>
+                <path data-hf-id="hf-0l5e" d="M9.4 12.013l1.8 1.8 3.4-3.6" stroke="#5356EE" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </g>
+            </svg>
+          </div>
+
+          <div data-hf-id="hf-jobw" class="f4-paid" id="f4-paid">
+            <span data-hf-id="hf-s9k1">Then the seller gets paid</span>
+            <svg data-hf-id="hf-dv6c" viewBox="0 0 64 64" fill="none" aria-hidden="true"><path data-hf-id="hf-w76c" id="f4-tick" d="M12 34 L26 48 L52 18" stroke="#FFFFFF" stroke-width="9" stroke-linecap="square" stroke-linejoin="miter"></path></svg>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        window.__timelines = window.__timelines || {};
+        const tl = gsap.timeline({ paused: true });
+        const countEl = document.getElementById("f4-count");
+        const cp = { v: 0 };
+
+        // Scene 1 — kicker + card 01 (YOU PAY), price tag slaps on
+        tl.fromTo("#f4-kicker", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+        tl.fromTo("#f4-c1", { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.12);
+        tl.fromTo("#f4-tag", { opacity: 0, scale: 1.6, rotation: 4 }, { opacity: 1, scale: 1, rotation: -8, duration: 0.32, ease: "back.out(1.6)" }, 0.5);
+
+        // Scene 2 — connector draws, card 02 (GRABSTY HOLDS IT), shield lands
+        tl.fromTo("#f4-k1", { scaleY: 0 }, { scaleY: 1, duration: 0.25, ease: "power3.out" }, 1.0);
+        tl.fromTo("#f4-c2", { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 1.1);
+        tl.fromTo("#f4-shield", { opacity: 0, y: -260 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 1.35);
+
+        // Scene 3 — connector, card 03, 48 counts up, shield-check pops
+        tl.fromTo("#f4-k2", { scaleY: 0 }, { scaleY: 1, duration: 0.25, ease: "power3.out" }, 2.2);
+        tl.fromTo("#f4-c3", { opacity: 0, y: 140 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 2.3);
+        tl.fromTo(cp, { v: 0 }, { v: 48, duration: 0.8, ease: "power3.out",
+          onUpdate: () => { countEl.textContent = String(Math.round(cp.v)); } }, 2.4);
+        tl.fromTo("#f4-check", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" }, 2.9);
+
+        // Scene 4 — the payoff chip, tick draws
+        tl.fromTo("#f4-paid", { opacity: 0, y: 80 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 3.9);
+        tl.fromTo("#f4-tick", { strokeDasharray: 70, strokeDashoffset: 70 }, { strokeDashoffset: 0, duration: 0.35, ease: "power3.out" }, 4.2);
+
+        window.__timelines["04-pay-hold-check"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

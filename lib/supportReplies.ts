@@ -21,7 +21,7 @@ export const SUPPORT_KNOWLEDGE_BASE: { keywords: string[]; title: string; answer
       `🛡️ **Grabsty Buyer Protection**\n\n` +
       `Every transaction processed through Grabsty is 100% protected:\n\n` +
       `• **Safe Escrow**: We hold your payment securely until you receive and inspect your parcel.\n` +
-      `• **48-Hour Inspection Window**: You have 2 days from delivery to verify your item. If it’s damaged or not as described, tap "I have an issue" to pause payout.\n` +
+      `• **24-Hour Inspection Window**: You have 24 hours from delivery to verify your item. If it’s damaged or not as described, tap "I have an issue" to pause payout.\n` +
       `• **Full Refund Guarantee**: If an item never arrives or is counterfeit, you get a full refund including shipping fees.`,
   },
   {
@@ -29,7 +29,7 @@ export const SUPPORT_KNOWLEDGE_BASE: { keywords: string[]; title: string; answer
     title: 'Seller Payouts & Wallet',
     answer:
       `💳 **Seller Payouts**\n\n` +
-      `• Once the buyer confirms delivery (or 48h after courier delivery), funds are released to your **Grabsty Balance**.\n` +
+      `• Once the buyer confirms delivery (or 24h after courier delivery), funds are released to your **Grabsty Balance**.\n` +
       `• You can instantly withdraw to any Pakistani Bank Account, JazzCash, or Easypaisa.\n` +
       `• Withdrawals are processed within 24 business hours with zero hidden deduction fees.`,
   },

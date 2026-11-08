@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { canAdvanceEscrow, ESCROW_TRANSITION_MAP, getEscrowStatusStyle } from './escrowService';
-import type { EscrowStatus } from '@/types';
 
 vi.mock('react-native', () => ({
   Platform: { OS: 'web' },

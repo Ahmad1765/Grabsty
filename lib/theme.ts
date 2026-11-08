@@ -23,6 +23,9 @@ export const lightTheme = {
   primarySoft: 'rgba(0, 0, 0, 0.06)',
   primarySofter: 'rgba(0, 0, 0, 0.12)',
   white: '#FFFFFF',
+  // Card / sheet surface. Use this — not `white` — for backgrounds; `white`
+  // is literal white in both palettes (text/icons on purple, photo overlays).
+  paper: '#FFFFFF',
   ink: '#111111',
   ink2: '#111111',
   hair: 'rgba(0, 0, 0, 0.08)',
@@ -73,7 +76,8 @@ export const darkTheme = {
   primaryDeep: '#E0E0E0',
   primarySoft: 'rgba(255, 255, 255, 0.10)',
   primarySofter: 'rgba(255, 255, 255, 0.18)',
-  white: '#161616', // Card and container surface in dark mode
+  white: '#FFFFFF',
+  paper: '#161616',
   ink: '#F5F5F5',
   ink2: '#F5F5F5',
   hair: 'rgba(255, 255, 255, 0.08)',
@@ -116,11 +120,6 @@ let currentTheme: ThemeTokens = lightTheme;
 export function setActiveTheme(nextTheme: ThemeTokens) {
   currentTheme = nextTheme;
 }
-
-export function getActiveTheme(): ThemeTokens {
-  return currentTheme;
-}
-
 // Dynamic colors proxy that always resolves properties from active theme
 export const colors: ThemeTokens = new Proxy({} as ThemeTokens, {
   get(_target, prop: string | symbol) {
@@ -147,13 +146,6 @@ export const colors: ThemeTokens = new Proxy({} as ThemeTokens, {
     );
   },
 });
-
-export const gradients = {
-  story: ['#000000', '#000000', '#000000'] as const,
-  warm: ['#000000', '#000000'] as const,
-  pinkPeach: ['#000000', '#000000'] as const,
-} as const;
-
 export const radii = {
   sm: 8,
   md: 12,
@@ -164,26 +156,6 @@ export const radii = {
   '4xl': 28,
   pill: 999,
 } as const;
-
-export const spacing = {
-  0: 0,
-  '0.5': 2,
-  1: 4,
-  '1.5': 6,
-  2: 8,
-  '2.5': 10,
-  3: 12,
-  4: 16,
-  5: 20,
-  6: 24,
-  7: 28,
-  8: 32,
-  10: 40,
-  12: 48,
-  14: 56,
-  16: 64,
-} as const;
-
 export const type = {
   family: {
     sans: 'Inter_400Regular',
@@ -307,9 +279,6 @@ export const eyebrowMute: ReturnType<typeof getEyebrowMute> = new Proxy(
     },
   },
 );
-
-export const tintedPurple = 'rgba(0, 0, 0, 0.45)';
-
 export const getTextStyles = (activeTheme: ThemeTokens = lightTheme) =>
   ({
     display: {

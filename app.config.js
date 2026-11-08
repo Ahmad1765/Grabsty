@@ -12,6 +12,12 @@
 const easProjectId =
   process.env.EAS_PROJECT_ID || '601d3c06-7d72-4ab7-88a3-97c570648676';
 
+// Native Google sign-in: iOS opens Google via the reversed iOS client ID as a URL scheme.
+const googleIosClientId = (process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '').trim();
+const googleIosUrlScheme = googleIosClientId
+  ? 'com.googleusercontent.apps.' + googleIosClientId.replace('.apps.googleusercontent.com', '')
+  : undefined;
+
 // This file is the ONLY app config. There is no app.json — a dynamic config that
 // returns an object keyed `expo` makes @expo/config's reduceExpoObject() collapse
 // to exactly that object, so anything merged in from a static app.json was thrown
@@ -26,7 +32,9 @@ module.exports = () => ({
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     scheme: 'grabsty',
-    userInterfaceStyle: 'light',
+    // 'automatic' lets the OS report dark mode (needed for Settings → Appearance → System);
+    // ThemeContext pins the scheme via Appearance.setColorScheme for Light/Dark.
+    userInterfaceStyle: 'automatic',
     // Fingerprint policy derives runtimeVersion from the native module set, so an
     // OTA JS update only lands on a build whose native layer actually matches —
     // never a crash from shipping a bundle newer than the installed binary.
@@ -54,6 +62,9 @@ module.exports = () => ({
     ios: {
       supportsTablet: false,
       bundleIdentifier: 'com.grabsty.app',
+      usesAppleSignIn: true,
+      // Only standard HTTPS: skips App Store Connect's export-compliance question on every build.
+      config: { usesNonExemptEncryption: false },
       infoPlist: {
         NSContactsUsageDescription: 'Allow Grabsty to access your contacts to find friends on the app.',
         NSCameraUsageDescription: 'Grabsty needs camera access to take photos of items to sell.',
@@ -109,6 +120,8 @@ module.exports = () => ({
     ],
     plugins: [
       'expo-router',
+      'expo-apple-authentication',
+      ...(googleIosUrlScheme ? [['@react-native-google-signin/google-signin', { iosUrlScheme: googleIosUrlScheme }]] : []),
       'expo-secure-store',
       [
         'expo-image-picker',
@@ -177,7 +190,6 @@ module.exports = () => ({
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
-      sentryDebug: process.env.EXPO_PUBLIC_SENTRY_DEBUG,
       posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY,
       posthogHost: process.env.EXPO_PUBLIC_POSTHOG_HOST,
     },

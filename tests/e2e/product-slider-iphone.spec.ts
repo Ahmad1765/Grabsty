@@ -11,6 +11,8 @@ test.describe('iPhone Product Card Slider', () => {
     await expect(card).toBeVisible({ timeout: 10_000 });
 
     const carousel = page.getByTestId('listing-card-carousel').first();
+    // Live data: carousels only render for multi-photo listings.
+    test.skip((await carousel.count()) === 0, 'no multi-photo listing in the live feed');
     await expect(carousel).toBeVisible({ timeout: 10_000 });
     const box = await carousel.boundingBox();
     expect(box).not.toBeNull();
@@ -124,6 +126,8 @@ test.describe('iPhone Product Card Slider', () => {
     await expect(priceText(page).first()).toBeVisible({ timeout: 15_000 });
 
     const carousel = page.getByTestId('listing-card-carousel').first();
+    // Live data: carousels only render for multi-photo listings.
+    test.skip((await carousel.count()) === 0, 'no multi-photo listing in the live feed');
     const count = await carousel.count();
     if (count === 0) return;
 

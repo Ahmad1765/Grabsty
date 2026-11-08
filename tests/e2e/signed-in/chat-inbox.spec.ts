@@ -27,30 +27,30 @@ test.describe('Inbox (signed in)', () => {
     await expect(
       page
         .locator(
-          "text=/^now$|^\\d+[mhd]$|^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{1,2}$|No messages yet|No buying chats yet|No buyer chats yet|No social messages yet/",
+          "text=/^just now$|^\\d+ (min|hour|day|month|year)s? ago$|No messages yet|No buying chats yet|No buyer chats yet|No social messages yet/",
         )
         .first(),
     ).toBeVisible({ timeout: 20_000 });
   });
 
   test('Buying chip filters message list', async ({ page }) => {
-    await page.getByRole('button', { name: 'Buying' }).first().click();
+    await page.getByRole('button', { name: 'Buying', exact: true }).first().click();
     await expect(
-      page.locator('text=/^now$|^\\d+[mhd]$|^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{1,2}$|No buying chats yet/').first(),
+      page.locator('text=/^just now$|^\\d+ (min|hour|day|month|year)s? ago$|No buying chats yet/').first(),
     ).toBeVisible();
   });
 
   test('Selling chip filters message list', async ({ page }) => {
-    await page.getByRole('button', { name: 'Selling' }).first().click();
+    await page.getByRole('button', { name: 'Selling', exact: true }).first().click();
     await expect(
-      page.locator('text=/^now$|^\\d+[mhd]$|^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{1,2}$|No buyer chats yet/').first(),
+      page.locator('text=/^just now$|^\\d+ (min|hour|day|month|year)s? ago$|No buyer chats yet/').first(),
     ).toBeVisible();
   });
 
   test('Socials chip filters message list', async ({ page }) => {
-    await page.getByRole('button', { name: 'Socials' }).first().click();
+    await page.getByRole('button', { name: 'Socials', exact: true }).first().click();
     await expect(
-      page.locator('text=/^now$|^\\d+[mhd]$|^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \\d{1,2}$|No social messages yet/').first(),
+      page.locator('text=/^just now$|^\\d+ (min|hour|day|month|year)s? ago$|No social messages yet/').first(),
     ).toBeVisible();
   });
 });

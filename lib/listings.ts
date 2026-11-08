@@ -119,48 +119,6 @@ export async function fetchListings(
   const r = await fetchListingsResult(opts);
   return r.ok ? r.rows : [];
 }
-
-// Listings whose seller the current user follows. Two-step query because
-// PostgREST doesn't let us join through `user_follows` and back into
-// `listings` in one shot. Returns the same discriminated result shape as
-// `fetchListingsResult` so the home screen's wedge-vs-empty branch stays
-// uniform.
-export async function fetchFollowingListingsResult(
-  userId: string,
-  limit = 60,
-): Promise<FetchListingsResult> {
-  try {
-    const { data: rows, error: followErr } = await supabase
-      .from('user_follows')
-      .select('followee_id')
-      .eq('follower_id', userId);
-    if (followErr) {
-      console.warn('[listings] fetchFollowingListings follow', followErr.message);
-      return { ok: false };
-    }
-    const followeeIds = (rows ?? []).map((r) => (r as { followee_id: string }).followee_id);
-    if (followeeIds.length === 0) return { ok: true, rows: [] };
-
-    const { data, error } = await supabase
-      .from('listings')
-      .select(SELECT_FEED)
-      .in('seller_id', followeeIds)
-      .eq('is_sold', false)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) {
-      console.warn('[listings] fetchFollowingListings', error.message);
-      return { ok: false };
-    }
-    const out = (data ?? []) as unknown as Listing[];
-    putCachedListings(out);
-    return { ok: true, rows: out };
-  } catch (e: any) {
-    captureError(e, { fn: 'fetchFollowingListings' });
-    return { ok: false };
-  }
-}
-
 // Server-side search across the WHOLE catalog (title, brand, description,
 // tags). The Discover screen previously filtered its 60 cached "popular" rows
 // client-side, which silently missed anything outside that window. Escapes

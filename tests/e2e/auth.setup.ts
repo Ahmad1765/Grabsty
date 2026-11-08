@@ -13,6 +13,7 @@ import {
   E2E_USER_PASSWORD,
   passwordField,
   waitForAppReady,
+  homeSearch,
 } from './helpers/page';
 
 setup('authenticate user', async ({ page }) => {
@@ -35,7 +36,7 @@ setup('authenticate user', async ({ page }) => {
 
   // Successful sign-in dismisses the modal back to the tabs. The home
   // feed's search field is the unique signal that we're past the auth flow.
-  await expect(page.getByPlaceholder(/^Search( your feed)?$/)).toBeVisible({
+  await expect(homeSearch(page)).toBeVisible({
     timeout: 30_000,
   });
 

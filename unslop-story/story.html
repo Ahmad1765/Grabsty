@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Grabsty Support — unslop story</title>
+<meta name="unslop-steps" content="Spacing, Color and avatar, Type and copy">
+<meta name="unslop-frame" content="40 40 420">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&display=swap" rel="stylesheet">
+<style>
+  /* Step 0: the Support tab as it shipped */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { width: 1440px; min-height: 900px; background: #ECECEE; font-family: Inter, system-ui, sans-serif; color: #111; -webkit-font-smoothing: antialiased; }
+  .screen { position: absolute; left: 40px; top: 40px; width: 390px; height: 740px; background: #fff; border-radius: 28px; overflow: hidden; }
+
+  .title { height: 48px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+
+  .tabs { position: relative; display: flex; }
+  .tab { flex: 1; text-align: center; padding: 14px 0; font-size: 14.5px; font-weight: 500; letter-spacing: -0.1px; color: rgba(0,0,0,0.45); }
+  .tab.on { font-weight: 700; color: #111; }
+  .underline { position: absolute; bottom: 0; left: 297.7px; width: 54.6px; height: 2.5px; border-radius: 2px; background: #111; }
+
+  .content { padding: 18px 16px 0; }
+  .contact { display: flex; align-items: center; gap: 12px; }
+  .avatar { position: relative; width: 54px; height: 54px; flex: none; }
+  .avatar img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .avatar .blob { border: 1px solid rgba(0,0,0,0.1); }
+  .avatar .mark { opacity: 0; }
+  .dot { position: absolute; right: 1px; bottom: 1px; width: 12px; height: 12px; border-radius: 6px; background: #6C47FF; border: 2px solid #fff; }
+  .name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+  .sub { font-size: 13.5px; color: rgba(0,0,0,0.6); margin-top: 2px; }
+
+  .para { font-size: 14px; line-height: 20px; color: rgba(0,0,0,0.6); margin-top: 14px; }
+  .cta { height: 44px; margin-top: 14px; border-radius: 22px; background: #111; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 700; }
+  .cta svg { width: 16px; height: 16px; }
+
+  .section { margin-top: 28px; }
+  .label { font-size: 12px; font-weight: 600; letter-spacing: 0.2px; color: rgba(0,0,0,0.6); margin: 0 0 8px 12px; }
+  .group { border: 1px solid rgba(0,0,0,0.08); border-radius: 14px; overflow: hidden; }
+  .row { display: flex; align-items: center; padding: 13px 16px; min-height: 56px; }
+  .divider { height: 0.5px; margin-left: 54px; background: #F0F0F0; }
+  .ico { width: 28px; margin-right: 10px; flex: none; display: flex; }
+  .ico svg { width: 18px; height: 18px; }
+  .ico svg.shield { width: 20px; height: 20px; }
+  .txt { flex: 1; min-width: 0; }
+  .t { font-size: 15px; font-weight: 500; letter-spacing: -0.1px; }
+  .d { font-size: 12.5px; color: rgba(0,0,0,0.6); margin-top: 2px; white-space: nowrap; }
+  .chev { width: 16px; height: 16px; margin-left: 8px; flex: none; stroke: #C7C7CC; }
+
+  /* Step 1: spacing onto the 4px grid */
+  .s1 .content { padding-top: 16px; }
+  .s1 .avatar { width: 56px; height: 56px; }
+  .s1 .para, .s1 .cta { margin-top: 16px; }
+  .s1 .row { padding-top: 12px; padding-bottom: 12px; }
+  .s1 .label { margin-left: 16px; }
+
+  /* Step 2: real brand mark, no fake status, greys from the theme ramp */
+  .s2 .avatar .blob { opacity: 0; border-color: transparent; }
+  .s2 .avatar .mark { opacity: 1; }
+  .s2 .divider { background: rgba(0,0,0,0.08); }
+  .s2 .chev { stroke: rgba(0,0,0,0.45); }
+
+  /* Step 3: weights, tracking and sizes */
+  .s3 .tab { font-size: 15px; letter-spacing: 0; }
+  .s3 .tab.on { font-weight: 600; }
+  .s3 .underline { height: 2px; border-radius: 1px; }
+  .s3 .name { font-weight: 600; letter-spacing: 0; }
+  .s3 .sub { font-size: 14px; }
+  .s3 .cta { font-weight: 600; font-size: 15px; }
+  .s3 .label { font-size: 13px; font-weight: 500; letter-spacing: 0; }
+  .s3 .t { letter-spacing: 0; }
+  .s3 .d { font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <div class="title">Activity</div>
+  <div class="tabs">
+    <div class="tab">Messages</div>
+    <div class="tab">Orders</div>
+    <div class="tab on" data-slop="Bold 700">Support</div>
+    <div class="underline"></div>
+  </div>
+
+  <div class="content">
+    <div class="contact" data-gap="main">
+      <div class="avatar" data-slop="Stock 3D blob">
+        <img class="blob" src="blob.jpg" alt="">
+        <img class="mark" src="icon.png" alt="">
+        <div class="dot" data-out="2"></div>
+      </div>
+      <div>
+        <div class="name">Grabsty Support</div>
+        <div class="sub">Customer care and disputes</div>
+      </div>
+    </div>
+
+    <div class="para" data-gap="main">Disputing an order opens a support chat automatically. For anything else, message the team directly.</div>
+
+    <div class="cta" data-gap="main">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Message support
+    </div>
+
+    <div class="section" data-gap="main">
+      <div class="label" data-slop="Uppercase label"><span class="swap" data-at="3"><span class="from">HELP TOPICS</span><span class="to">Help topics</span></span></div>
+      <div class="group">
+        <div class="row">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
+          <div class="txt"><div class="t">Order status &amp; tracking</div><div class="d">Track deliveries, delays, or dispatch status</div></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="ico"><svg class="shield" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="12" fill="#F2F3FE"/><g transform="translate(-5.4, -5.4) scale(1.45)"><path d="M12.033 6.8s-2.93 1.424-5.833 1.424v.168c0 .838.044 1.634.154 2.367.33 2.47 1.233 4.398 2.729 6.01l.066.084c.594.628 1.255 1.131 1.937 1.529.198.125.925.419.925.419s.726-.293.925-.419c.704-.377 1.343-.9 1.937-1.529l.066-.084c1.035-1.11 1.783-2.387 2.245-3.874.22-.67.33-1.361.44-2.136.088-.733.176-1.529.176-2.367v-.168c-2.833 0-5.767-1.424-5.767-1.424z" stroke="#5356EE" stroke-width="0.93"/><path d="M9.4 12.013l1.932 1.787 3.668-3.4" stroke="#5356EE" stroke-width="0.93" stroke-linecap="round" stroke-linejoin="round"/></g></svg></div>
+          <div class="txt"><div class="t">Buyer Protection &amp; refunds</div><div class="d">How your money and purchases stay safe</div></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+          <div class="txt"><div class="t">Payments &amp; payouts</div><div class="d"><span class="swap" data-at="3"><span class="from">Withdraw balance, payment methods &amp; fees</span><span class="to">Withdraw balance, methods &amp; fees</span></span></div></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div class="txt"><div class="t">Selling &amp; shipping</div><div class="d">Tips to price, list and ship items fast</div></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="divider"></div>
+        <div class="row">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="txt"><div class="t">Report a problem</div><div class="d">Suspicious sellers, fraud or fakes</div></div>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
