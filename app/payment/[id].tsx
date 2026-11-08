@@ -611,6 +611,17 @@ export default function PaymentScreen() {
         return;
       }
 
+      // Mirrors the server rule (pakistan_only_orders) so the buyer hears it before paying.
+      const country = (shippingAddress.country || '').trim().toLowerCase();
+      if (country && !['pakistan', 'pk', 'pak'].includes(country)) {
+        toast.show("Grabsty isn't available in your country yet. We only deliver within Pakistan.", {
+          variant: 'default',
+          icon: 'globe',
+        });
+        setAddressSheetOpen(true);
+        return;
+      }
+
       const cleanPhone = (shippingAddress.phone || '').replace(/[\s\-\(\)]/g, '');
       if (cleanPhone.length < 10 || cleanPhone.length > 15) {
         toast.show('Please enter a valid contact phone number (10 to 15 digits)', {
