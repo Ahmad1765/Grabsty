@@ -80,3 +80,6 @@ scratch/
 agent/
 Brand Assets
 
+
+# security scanner output
+strix_runs/
