@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - name: TypeScript check
         run: npm run typecheck
@@ -40,7 +40,7 @@ jobs:
     # backlog doesn't gate PRs. Drive `--max-warnings` down over time to make
     # the gate stricter as the backlog is burned down.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - name: ESLint
         run: npm run lint
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
       - name: Vitest
         run: npm test
@@ -71,7 +71,7 @@ jobs:
       EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
       EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${{ secrets.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
 
       - name: Warn on missing Supabase env
@@ -102,7 +102,7 @@ jobs:
               }' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload web bundle artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: web-bundle-${{ github.sha }}
           path: dist
@@ -118,7 +118,7 @@ jobs:
     # Everything else is expected to be resolved by a version bump or an
     # `overrides` entry in package.json.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-project
         with:
           install: 'false'
