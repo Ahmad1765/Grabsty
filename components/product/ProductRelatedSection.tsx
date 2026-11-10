@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { memo } from 'react';
-import { View, Pressable, type LayoutChangeEvent } from 'react-native';
+import { View, Pressable, StyleSheet, type LayoutChangeEvent } from 'react-native';
 import { Text } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
@@ -87,7 +87,7 @@ export const ProductRelatedSection = memo(function ProductRelatedSection({
                 paddingVertical: 9,
                 borderRadius: 999,
                 backgroundColor: active ? theme.selected : theme.paper,
-                borderWidth: 1,
+                borderWidth: StyleSheet.hairlineWidth,
                 borderColor: theme.border,
                 transform: [{ scale: pressed ? 0.96 : 1 }],
               })}

@@ -20,7 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Pressable, Alert, Share, type LayoutChangeEvent, type ViewStyle } from 'react-native';
+import { View, Pressable, Alert, type LayoutChangeEvent, type ViewStyle } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { safeBack } from '@/lib/nav';
@@ -57,6 +57,7 @@ import { SaveListSheet } from '@/components/SaveListSheet';
 import { FullscreenImageViewer } from '@/components/product/FullscreenImageViewer';
 import { ProductActionBar } from '@/components/product/ProductActionBar';
 import { SellerOptionsSheet } from '@/components/product/SellerOptionsSheet';
+import { ShareListingSheet } from '@/components/product/ShareListingSheet';
 import { OfferSheet } from '@/components/product/OfferSheet';
 import type { PopIconHandle } from '@/components/product/PopIcon';
 import { ProductSkeleton } from '@/components/product/ProductSkeleton';
@@ -71,10 +72,9 @@ import {
 import { CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { categoryLabel, subcategoryLabel } from '@/lib/categories';
 import { useTheme } from '@/context/ThemeContext';
-import { BRAND, APP_URL } from '@/lib/brand';
 import { reportListing, REPORT_REASONS } from '@/lib/reports';
 import { useGuestGate } from '@/components/GuestGate';
-import { buyerProtectionFee, orderTotal, formatPrice } from '@/lib/fees';
+import { buyerProtectionFee, orderTotal } from '@/lib/fees';
 import { isBundlesEnabled, computeBundlePricing } from '@/lib/bundle';
 import { useSellSheet } from '@/components/sell/SellSheet';
 import { BuyerProtectionSheet } from '@/components/product/BuyerProtectionSheet';
@@ -130,6 +130,7 @@ export default function ProductScreen() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [offerLoading, setOfferLoading] = useState(false);
   const [likersVisible, setLikersVisible] = useState(false);
+  const [shareVisible, setShareVisible] = useState(false);
 
   // Imperative pop icon animation handles
   const heartAnimRef = useRef<PopIconHandle>(null);
@@ -462,19 +463,10 @@ export default function ProductScreen() {
     }
   }, [listing, user, isBundleActive, bundle.selectedBundleIds, bundleCount, engagement, toast]);
 
-  const shareListing = useCallback(async () => {
-    if (!listing) return;
+  const shareListing = useCallback(() => {
     tap('light');
-    try {
-      const url = `${APP_URL}/product/${listing.id}`;
-      await Share.share({
-        message: `${listing.title} · ${formatPrice(listing.price)} on ${BRAND}\n${url}`,
-        url,
-      });
-    } catch {
-      // User dismissed share sheet
-    }
-  }, [listing]);
+    setShareVisible(true);
+  }, []);
 
   const handleReport = useCallback(() => {
     tap('selection');
@@ -827,6 +819,10 @@ export default function ProductScreen() {
         initialIndex={engagement.fullscreenIndex ?? 0}
         onClose={() => engagement.setFullscreenIndex(null)}
       />
+
+      {listing ? (
+        <ShareListingSheet visible={shareVisible} listing={listing} onClose={() => setShareVisible(false)} />
+      ) : null}
 
       {listing?.seller ? (
         <SellerOptionsSheet

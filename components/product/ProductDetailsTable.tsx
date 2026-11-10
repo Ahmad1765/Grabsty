@@ -324,7 +324,7 @@ export const ProductDetailsTable = memo(function ProductDetailsTable({
                 }}
                 style={({ pressed }) => ({
                   backgroundColor: theme.paper,
-                  borderWidth: 1,
+                  borderWidth: HAIRLINE,
                   borderColor: theme.border,
                   borderRadius: 999,
                   paddingHorizontal: 12,

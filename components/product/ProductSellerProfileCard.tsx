@@ -18,7 +18,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { PressableScale } from '@/components/PressableScale';
 import { useTheme } from '@/context/ThemeContext';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
-import { timeAgo } from '@/components/product/shared';
+import { HAIRLINE, timeAgo } from '@/components/product/shared';
 import type { Listing } from '@/types';
 
 type ProductSellerProfileCardProps = {
@@ -57,7 +57,7 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
         style={{
           backgroundColor: theme.paper,
           borderRadius: 18,
-          borderWidth: 1,
+          borderWidth: HAIRLINE,
           borderColor: theme.border,
           paddingHorizontal: 14,
           paddingVertical: 12,
@@ -96,7 +96,7 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
               backgroundColor: theme.panel,
               alignItems: 'center',
               justifyContent: 'center',
-              borderWidth: 1,
+              borderWidth: HAIRLINE,
               borderColor: theme.border,
             }}
           >
@@ -201,7 +201,7 @@ export const ProductSellerProfileCard = memo(function ProductSellerProfileCard({
                 paddingVertical: 5.5,
                 borderRadius: 999,
                 backgroundColor: followed ? theme.paper : theme.ink,
-                borderWidth: 1,
+                borderWidth: HAIRLINE,
                 borderColor: followed ? theme.border : theme.ink,
                 alignItems: 'center',
                 justifyContent: 'center',

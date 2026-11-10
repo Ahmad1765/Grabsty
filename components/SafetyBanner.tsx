@@ -5,7 +5,7 @@
 //
 // Copy is context-aware (buyer vs seller vs checkout) but the mark, link, and
 // coverage explainer stay identical across surfaces.
-import { View, Alert, Platform, type ViewStyle, type StyleProp } from 'react-native';
+import { View, Alert, StyleSheet, Platform, type ViewStyle, type StyleProp } from 'react-native';
 import { Text } from '@/lib/rnText';
 import * as Haptics from 'expo-haptics';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
@@ -82,7 +82,7 @@ export function SafetyBanner({ context = 'shop', title, body, style, onLinkPress
           padding: bare ? 0 : 14,
           borderRadius: radii.xl,
           backgroundColor: bare ? 'transparent' : theme.panel,
-          borderWidth: bare ? 0 : 1,
+          borderWidth: bare ? 0 : StyleSheet.hairlineWidth,
           borderColor: theme.border,
         },
         style,

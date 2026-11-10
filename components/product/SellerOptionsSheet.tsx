@@ -137,63 +137,44 @@ export function SellerOptionsSheet({
     <BottomSheetModal
       visible={visible}
       onClose={onClose}
-      title={mode === 'options' ? `@${seller.username}` : 'Report seller'}
-      subtitle={mode === 'options' ? (seller.location || 'Seller options') : 'Select a reason for review'}
+      title={mode === 'options' ? seller.full_name?.trim() || `@${seller.username}` : 'Report seller'}
+      subtitle={
+        mode === 'options'
+          ? [seller.full_name?.trim() ? `@${seller.username}` : null, seller.location].filter(Boolean).join(' · ') || 'Seller'
+          : 'Select a reason for review'
+      }
       autoHeight={true}
     >
       {mode === 'options' ? (
         <View style={styles.container}>
-          {/* Grouped Actions Card */}
-          <View style={[styles.actionGroup, { backgroundColor: theme.panel }]}>
-            {/* Share profile */}
-            <Pressable
-              onPress={handleShare}
-              style={({ pressed }) => [styles.actionRow, pressed && { backgroundColor: theme.primarySoft }]}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: theme.purpleSoft }]}>
-                <Feather name="share-2" size={17} color={theme.purple} />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: theme.ink }]}>Share seller profile</Text>
-                <Text style={[styles.actionDesc, { color: theme.mute }]}>Copy link or share to other apps</Text>
-              </View>
-              <Feather name="chevron-right" size={17} color={theme.mute} />
-            </Pressable>
-
-            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
-
-            {/* View shop */}
-            <Pressable
-              onPress={handleViewProfile}
-              style={({ pressed }) => [styles.actionRow, pressed && { backgroundColor: theme.primarySoft }]}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: theme.primarySoft }]}>
-                <Feather name="shopping-bag" size={17} color={theme.ink} />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: theme.ink }]}>View full shop & listings</Text>
-                <Text style={[styles.actionDesc, { color: theme.mute }]}>Browse reviews, ratings, and items</Text>
-              </View>
-              <Feather name="chevron-right" size={17} color={theme.mute} />
-            </Pressable>
-
-            <View style={[styles.divider, { backgroundColor: theme.divider }]} />
-
-            {/* Report */}
-            <Pressable
-              onPress={() => setMode('report')}
-              style={({ pressed }) => [styles.actionRow, pressed && { backgroundColor: theme.primarySoft }]}
-            >
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(239,68,68,0.08)' }]}>
-                <Feather name="flag" size={17} color="#EF4444" />
-              </View>
-              <View style={styles.actionContent}>
-                <Text style={[styles.actionTitle, { color: '#EF4444' }]}>Report seller</Text>
-                <Text style={[styles.actionDesc, { color: theme.mute }]}>Flag suspicious activity or violations</Text>
-              </View>
-              <Feather name="chevron-right" size={17} color="#EF4444" />
-            </Pressable>
-          </View>
+          {[
+            { key: 'share', icon: 'share-2', title: 'Share profile', desc: 'Send their shop to a friend', onPress: handleShare },
+            { key: 'shop', icon: 'shopping-bag', title: 'View shop', desc: 'Listings, reviews and ratings', onPress: handleViewProfile },
+            { key: 'report', icon: 'flag', title: 'Report seller', desc: 'Flag suspicious activity', onPress: () => setMode('report'), danger: true },
+          ].map((a, i) => {
+            const color = a.danger ? theme.danger : theme.ink;
+            return (
+              <Pressable
+                key={a.key}
+                testID={`seller-options-${a.key}`}
+                onPress={a.onPress}
+                accessibilityRole="button"
+                accessibilityLabel={a.title}
+                style={({ pressed }) => [
+                  styles.actionRow,
+                  i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: theme.border },
+                  pressed && { opacity: 0.6 },
+                ]}
+              >
+                <Feather name={a.icon as any} size={20} color={color} />
+                <View style={styles.actionContent}>
+                  <Text style={[styles.actionTitle, { color }]}>{a.title}</Text>
+                  <Text style={[styles.actionDesc, { color: theme.mute }]}>{a.desc}</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color={theme.mute} />
+              </Pressable>
+            );
+          })}
         </View>
       ) : (
         /* Reporting mode */
@@ -247,39 +228,26 @@ export function SellerOptionsSheet({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 2,
-  },
-  actionGroup: {
-    borderRadius: 18,
-    overflow: 'hidden',
+    paddingBottom: 8,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 64,
     paddingVertical: 12,
-    paddingHorizontal: 14,
-    gap: 12,
-  },
-  iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 16,
   },
   actionContent: {
     flex: 1,
   },
   actionTitle: {
-    fontSize: 14.5,
-    fontWeight: '700',
-    letterSpacing: -0.2,
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
   },
   actionDesc: {
-    fontSize: 12,
-    marginTop: 1.5,
+    fontSize: 13,
+    fontFamily: 'Inter_400Regular',
+    marginTop: 2,
   },
   divider: {
     height: 1,

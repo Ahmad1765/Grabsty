@@ -94,12 +94,7 @@ export function tap(style: 'light' | 'medium' | 'selection' = 'selection') {
   else if (style === 'light') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 }
-export const CONDITION_LABELS: Record<string, string> = {
-  new_with_tags: 'New with tags',
-  like_new: 'Like new',
-  good: 'Good',
-  fair: 'Fair',
-};
+export { CONDITION_LABELS } from '@/lib/listingMeta';
 
 // Category labels now live in the single-source taxonomy (lib/categories).
 // Unified brand palette (matches home tabs + PromoBanner + LiveActivityTicker)
