@@ -15,6 +15,7 @@
 //    with a blank screen.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { useUnreadNotificationsCount } from '@/lib/notificationsFeed';
 import {
   
   useMutation,
@@ -46,8 +47,6 @@ export type SavedSearchMatches = {
   total: number;
 };
 
-const NO_MATCHES: SavedSearchMatches = { counts: {}, total: 0 };
-const EMPTY_SAVED_SEARCHES: SavedSearch[] = [];
 
 /**
  * My Feed primary grid: personalized recommendations for a signed-in user,
@@ -117,10 +116,9 @@ export function useSavedSearchMatchesQuery(userId: string | null, searches: Save
 /**
  * Unread total behind the Inbox's Activity tab badge.
  */
+/** Bell badge: unread items in the Notifications feed (orders, offers, activity). */
 export function useActivityUnreadCount(userId: string | null): number {
-  const searchesQ = useSavedSearchesQuery(userId);
-  const matchesQ = useSavedSearchMatchesQuery(userId, searchesQ.data ?? EMPTY_SAVED_SEARCHES);
-  return (matchesQ.data ?? NO_MATCHES).total;
+  return useUnreadNotificationsCount(userId);
 }
 
 /**
