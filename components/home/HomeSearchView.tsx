@@ -1225,12 +1225,10 @@ export const HomeSearchView = memo(function HomeSearchView({
       style={[
         {
           flex: 1,
+          // No shadow/elevation: the view fades in over Home (it no longer
+          // slides), and a shadow here bled up into the status-bar strip,
+          // tinting it grey on iOS and Android.
           backgroundColor: theme.background,
-          shadowColor: '#000',
-          shadowOffset: { width: -3, height: 0 },
-          shadowOpacity: isDesktop ? 0 : isDark ? 0.35 : 0.1,
-          shadowRadius: 10,
-          elevation: 12,
         },
         rootAnimatedStyle,
       ]}
