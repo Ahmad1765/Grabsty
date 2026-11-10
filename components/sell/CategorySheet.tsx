@@ -8,11 +8,12 @@ import {
   BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput } from '@/lib/rnText';
+import { Text } from '@/lib/rnText';
+import { SheetSearchBar } from './SheetSearchBar';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { radii, type as typography } from '@/lib/theme';
+import { type as typography } from '@/lib/theme';
 import { CATEGORIES, hasSubcategories } from '@/lib/categories';
 import type { Category } from '@/types';
 import { UNBRANDED_LOCAL_TAILOR } from '@/lib/taxonomy';
@@ -72,7 +73,6 @@ export function CategorySheet({
 }) {
   const { theme: colors } = useTheme();
   const { theme, isDark } = useTheme();
-  const searchBg = isDark ? theme.surface : '#F0F1F5';
   const searchInputRef = useRef<any>(null);
 
   // Active Category drill-down (null = Level 1 Main Categories, Category = Level 2 Sub-categories)
@@ -111,7 +111,6 @@ export function CategorySheet({
       const timer = setTimeout(() => {
         setTouchReady(true);
         setInteractive(true);
-        searchInputRef.current?.focus();
       }, 250);
       return () => clearTimeout(timer);
     } else {
@@ -410,45 +409,13 @@ export function CategorySheet({
         {activeCategoryDef !== null ? (
           // ── LEVEL 2: SUBCATEGORIES OF SELECTED CATEGORY (With Search) ──
           <View style={{ flex: 1 }}>
-            {/* Search Input Bar (Strictly in Subcategories only) */}
-            <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  borderRadius: radii.pill,
-                  backgroundColor: searchBg,
-                  paddingHorizontal: 14,
-                  height: 44,
-                }}
-              >
-                <Feather name="search" size={16} color={theme.mute} />
-                <TextInput
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder={`Search in ${activeCategoryMeta?.title ?? 'subcategories'}…`}
-                  placeholderTextColor={theme.muteSoft ?? theme.mute}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={
-                    {
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: 14.5,
-                      color: theme.ink,
-                      padding: 0,
-                      outlineStyle: 'none',
-                    } as any
-                  }
-                />
-                {query.length > 0 && (
-                  <Pressable onPress={() => setQuery('')} hitSlop={8}>
-                    <Feather name="x" size={16} color={theme.mute} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
+            {/* Search (same bar as Brand) */}
+            <SheetSearchBar
+              testID="category-search"
+              value={query}
+              onChangeText={setQuery}
+              placeholder={`Search in ${activeCategoryMeta?.title ?? 'subcategories'}`}
+            />
 
             <ScrollView
               showsVerticalScrollIndicator={false}
@@ -524,46 +491,14 @@ export function CategorySheet({
         ) : (
           // ── LEVEL 1: MAIN CATEGORIES (With Search Across Subcategories & Categories) ──
           <View style={{ flex: 1 }}>
-            {/* Search Input Bar (Level 1: All categories & subcategories) */}
-            <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 10,
-                  borderRadius: radii.pill,
-                  backgroundColor: searchBg,
-                  paddingHorizontal: 14,
-                  height: 44,
-                }}
-              >
-                <Feather name="search" size={16} color={theme.mute} />
-                <TextInput
-                  ref={searchInputRef}
-                  value={query}
-                  onChangeText={setQuery}
-                  placeholder="Search category or subcategory…"
-                  placeholderTextColor={theme.muteSoft ?? theme.mute}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={
-                    {
-                      flex: 1,
-                      minWidth: 0,
-                      fontSize: 14.5,
-                      color: theme.ink,
-                      padding: 0,
-                      outlineStyle: 'none',
-                    } as any
-                  }
-                />
-                {query.length > 0 && (
-                  <Pressable onPress={() => setQuery('')} hitSlop={8}>
-                    <Feather name="x" size={16} color={theme.mute} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
+            {/* Search (same bar as Brand); no autofocus, keyboard opens on tap */}
+            <SheetSearchBar
+              ref={searchInputRef}
+              testID="category-search"
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search categories"
+            />
 
             <ScrollView
               showsVerticalScrollIndicator={false}

@@ -8,11 +8,12 @@ import {
   BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, TextInput } from '@/lib/rnText';
+import { Text } from '@/lib/rnText';
+import { SheetSearchBar } from './SheetSearchBar';
 import Feather from '@expo/vector-icons/Feather';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
-import { radii, type as typography } from '@/lib/theme';
+import { type as typography } from '@/lib/theme';
 import {
   TAXONOMY_BRANDS,
   NO_BRAND,
@@ -446,47 +447,8 @@ export function BrandSheet({
           <View style={{ width: 40 }} />
         </View>
 
-        {/* Search Input Bar (Vinted Style) */}
-        <View style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8 }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 10,
-              borderWidth: 1,
-              borderColor: theme.border,
-              borderRadius: radii.xl,
-              backgroundColor: theme.panel,
-              paddingHorizontal: 14,
-              height: 44,
-            }}
-          >
-            <Feather name="search" size={16} color={theme.mute} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search brands"
-              placeholderTextColor={theme.muteSoft ?? theme.mute}
-              autoCapitalize="words"
-              autoCorrect={false}
-              style={
-                {
-                  flex: 1,
-                  minWidth: 0,
-                  fontSize: 14.5,
-                  color: theme.ink,
-                  padding: 0,
-                  outlineStyle: 'none',
-                } as any
-              }
-            />
-            {query.length > 0 && (
-              <Pressable onPress={() => setQuery('')} hitSlop={8}>
-                <Feather name="x" size={16} color={theme.mute} />
-              </Pressable>
-            )}
-          </View>
-        </View>
+        {/* Search (same bar as Category) */}
+        <SheetSearchBar testID="brand-search" value={query} onChangeText={setQuery} placeholder="Search brands" />
 
         {/* Scrollable Brands Directory */}
         <ScrollView
