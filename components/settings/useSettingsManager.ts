@@ -146,11 +146,7 @@ export function useSettingsManager() {
       if (!mounted.current) return;
       setAddress((a.data as ShippingAddress | null) ?? null);
       setPayout((p.data as PayoutMethod | null) ?? null);
-      const vRec = (v.data as Verification | null) ?? null;
-      if (vRec && !vRec.id_photo_url && vRec.notes) {
-        vRec.id_photo_url = vRec.notes;
-      }
-      setVerification(vRec);
+      setVerification((v.data as Verification | null) ?? null);
       setPhone(user?.phone || (user?.user_metadata as any)?.phone || null);
     } catch (e) {
       console.warn('[settings] loadExtras failed', e);
@@ -529,70 +525,24 @@ export function useSettingsManager() {
   const savePayout = useCallback(
     async (form: PayoutForm): Promise<boolean> => {
       if (!user?.id) return false;
+      // The RPC is the only write path (direct table writes are revoked): it
+      // validates the details and derives account_last4 server-side.
       const payload = {
-        user_id: user.id,
         kind: form.kind,
-        label: form.label.trim(),
-        account_last4: form.account_last4.trim(),
-        is_default: true,
+        provider: form.provider,
+        account_title: form.account_title,
+        account_number: form.account_number,
+        ...(payout?.id ? { id: payout.id } : {}),
       };
-
-      let savedData: PayoutMethod | null = null;
-      let rpcError: Error | null = null;
-
-      try {
-        const { data, error } = await supabase.rpc('set_default_payout', {
-          p_payload: payout?.id ? { ...payload, id: payout.id } : payload,
-        });
-        if (!error && data) {
-          savedData = data as PayoutMethod;
-        } else if (error) {
-          rpcError = new Error(error.message);
-        }
-      } catch (err: any) {
-        rpcError = err instanceof Error ? err : new Error(String(err));
-      }
-
-      // Direct database fallback if RPC not yet deployed or failed
-      if (!savedData) {
-        try {
-          await supabase
-            .from('payout_methods')
-            .update({ is_default: false })
-            .eq('user_id', user.id)
-            .eq('is_default', true);
-
-          if (payout?.id) {
-            const { data, error } = await supabase
-              .from('payout_methods')
-              .update(payload)
-              .eq('id', payout.id)
-              .eq('user_id', user.id)
-              .select()
-              .single();
-            if (!error && data) savedData = data as PayoutMethod;
-          } else {
-            const { data, error } = await supabase
-              .from('payout_methods')
-              .insert(payload)
-              .select()
-              .single();
-            if (!error && data) savedData = data as PayoutMethod;
-          }
-        } catch {
-          // continue to check savedData
-        }
-      }
-
-      if (!savedData) {
-        toast.show(rpcError?.message ?? 'Could not save payout method', {
+      const { data, error } = await supabase.rpc('set_default_payout', { p_payload: payload });
+      if (error || !data) {
+        toast.show(error?.message ?? 'Could not save payout method', {
           variant: 'default',
           icon: 'alert-triangle',
         });
         return false;
       }
-
-      if (mounted.current) setPayout(savedData);
+      if (mounted.current) setPayout(data as PayoutMethod);
       toast.done('Payout method saved');
       return true;
     },
@@ -617,28 +567,32 @@ export function useSettingsManager() {
     async (form: VerifyForm): Promise<boolean> => {
       if (!user?.id) return false;
 
-      let photoUrl = form.id_photo_url || null;
-      if (form.local_image?.uri) {
-        try {
-          photoUrl = await uploadVerificationDocument(form.local_image, user.id);
-        } catch (uploadErr) {
-          // Never store the device-local URI: an admin can't open it.
-          console.warn('[settings] verification photo upload failed', uploadErr);
-          toast.show('Could not upload your ID photo. Please try again.', {
-            variant: 'default',
-            icon: 'alert-triangle',
-          });
-          return false;
-        }
+      // Upload whichever sides were (re)taken; keep stored paths otherwise.
+      let front = form.front_path;
+      let back = form.back_path;
+      try {
+        [front, back] = await Promise.all([
+          form.front_local ? uploadVerificationDocument(form.front_local, user.id) : front,
+          form.back_local ? uploadVerificationDocument(form.back_local, user.id) : back,
+        ]);
+      } catch (uploadErr) {
+        console.warn('[settings] CNIC photo upload failed', uploadErr);
+        toast.show('Could not upload your CNIC photos. Please try again.', {
+          variant: 'default',
+          icon: 'alert-triangle',
+        });
+        return false;
       }
 
+      // guard_verification_cnic re-checks all of this and derives the last 4.
       const payload = {
         user_id: user.id,
         status: 'submitted' as const,
-        legal_name: form.legal_name.trim(),
-        document_kind: form.document_kind,
-        document_number_last4: form.document_number_last4.trim() || null,
-        notes: photoUrl || (verification?.notes ?? null),
+        legal_name: form.legal_name,
+        document_kind: 'national_id' as const,
+        cnic_number: form.cnic_number,
+        notes: front,
+        id_back_photo_path: back,
         submitted_at: new Date().toISOString(),
       };
       const { data, error } = await supabase
@@ -653,15 +607,11 @@ export function useSettingsManager() {
         });
         return false;
       }
-      const record = (data as Verification) ?? null;
-      if (record && !record.id_photo_url && record.notes) {
-        record.id_photo_url = record.notes;
-      }
-      if (mounted.current) setVerification(record);
-      toast.done('Verification submitted');
+      if (mounted.current) setVerification((data as Verification) ?? null);
+      toast.done('Submitted for review');
       return true;
     },
-    [user?.id, verification?.notes, toast],
+    [user?.id, toast],
   );
 
   const savePhone = useCallback(

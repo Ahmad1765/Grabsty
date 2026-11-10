@@ -53,7 +53,7 @@ test.describe("Settings (signed in)", () => {
 
   test("Verification & Payouts shows the three rows", async ({ page }) => {
     await openSection(page, "Verification & Payouts");
-    await expect(page.getByText("Identity verification", { exact: true })).toBeVisible();
+    await expect(page.getByText("Certified Seller", { exact: true })).toBeVisible();
     await expect(page.getByText("Payout method", { exact: true })).toBeVisible();
     await expect(page.getByText("Shipping address", { exact: true })).toBeVisible();
   });

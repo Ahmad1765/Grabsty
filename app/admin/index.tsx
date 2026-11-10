@@ -60,6 +60,7 @@ import {
 } from '@/lib/support';
 import type { ChatMessage } from '@/lib/chat';
 import { useVerificationPhotoUrl } from '@/lib/upload';
+import { cnicFrontPath } from '@/lib/payoutDetails';
 
 type AdminTab = 'overview' | 'analytics' | 'logistics' | 'disputes' | 'verifications' | 'users' | 'support';
 type LogisticsFilter = 'all' | 'active' | 'IN_TRANSIT' | 'DELIVERED' | 'COMPLETED_FUNDS_RELEASED';
@@ -862,7 +863,7 @@ export default function AdminConsoleScreen() {
             >
               <Feather name="shield" size={16} color={activeTab === 'verifications' ? theme.text : theme.textMuted} />
               <Text style={{ flex: 1, fontSize: 14, fontWeight: activeTab === 'verifications' ? '600' : '500', color: activeTab === 'verifications' ? theme.text : theme.textMuted }}>
-                Seller KYC Verifications
+                Certified Seller (CNIC)
               </Text>
               {metrics.pendingKycCount > 0 && (
                 <View style={{ paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, backgroundColor: 'rgba(108,71,255,0.15)' }}>
@@ -1507,28 +1508,45 @@ export default function AdminConsoleScreen() {
                         </Text>
                       </View>
 
-                      <Text style={{ fontSize: 13, color: theme.text, marginBottom: (item.notes || item.id_photo_url) ? 8 : 12 }}>
-                        Document: <Text style={{ fontWeight: '700', textTransform: 'capitalize' }}>{item.document_kind.replace(/_/g, ' ')}</Text> · Number (Last 4): <Text style={{ fontWeight: '700' }}>{item.document_number_last4 || 'N/A'}</Text>
+                      <Text style={{ fontSize: 13, color: theme.text, marginBottom: 8 }}>
+                        CNIC:{' '}
+                        <Text selectable style={{ fontWeight: '700' }}>
+                          {item.cnic_number
+                            ? item.cnic_number.replace(/^(\d{5})(\d{7})(\d)$/, '$1-$2-$3')
+                            : `•••• ${item.document_number_last4 || 'N/A'} (older submission, no full CNIC)`}
+                        </Text>
                       </Text>
 
-                      {Boolean(item.notes || item.id_photo_url) && (
-                        <View style={{ marginBottom: 12 }}>
-                          <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textMuted, marginBottom: 6 }}>
-                            Attached CNIC / ID Photo:
-                          </Text>
-                          <KycPhoto
-                            value={(item.id_photo_url || item.notes)!}
-                            style={{
-                              width: 200,
-                              height: 120,
-                              borderRadius: 8,
-                              backgroundColor: isDark ? '#111111' : '#EEEEEE',
-                              borderWidth: 1,
-                              borderColor: theme.border,
-                            }}
-                          />
-                        </View>
-                      )}
+                      {(() => {
+                        const frontPath = cnicFrontPath(item);
+                        const photos = [
+                          { label: 'Front', path: frontPath },
+                          { label: 'Back', path: item.id_back_photo_path ?? null },
+                        ].filter((p): p is { label: string; path: string } => !!p.path);
+                        if (!photos.length) return null;
+                        return (
+                          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                            {photos.map((p) => (
+                              <View key={p.label}>
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textMuted, marginBottom: 6 }}>
+                                  CNIC {p.label.toLowerCase()}
+                                </Text>
+                                <KycPhoto
+                                  value={p.path}
+                                  style={{
+                                    width: 200,
+                                    height: 126,
+                                    borderRadius: 8,
+                                    backgroundColor: theme.surface,
+                                    borderWidth: 1,
+                                    borderColor: theme.border,
+                                  }}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        );
+                      })()}
 
                       {isPending && (
                         <View style={{ flexDirection: 'row', gap: 8, justifyContent: 'flex-end' }}>

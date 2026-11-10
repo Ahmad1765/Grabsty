@@ -34,7 +34,7 @@ import { Image } from 'expo-image';
 import { useAuth } from '@/lib/auth';
 import { safeBack } from '@/lib/nav';
 import { tap } from '@/lib/haptics';
-import { useTheme } from '@/context/ThemeContext';
+import { useTheme, DARK_MODE_ENABLED } from '@/context/ThemeContext';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
@@ -136,15 +136,17 @@ export default function SettingsScreen() {
               />
             </ChatGPTRow>
 
-            <ChatGPTRow label="Appearance" desc="Light, dark, or match your device">
-              <ChatGPTButton
-                label={themeLabel}
-                onPress={() => {
-                  tap('light');
-                  mgr.setShowTheme(true);
-                }}
-              />
-            </ChatGPTRow>
+            {DARK_MODE_ENABLED && (
+              <ChatGPTRow label="Appearance" desc="Light, dark, or match your device">
+                <ChatGPTButton
+                  label={themeLabel}
+                  onPress={() => {
+                    tap('light');
+                    mgr.setShowTheme(true);
+                  }}
+                />
+              </ChatGPTRow>
+            )}
 
             <ChatGPTRow
               label="Version"
@@ -369,15 +371,17 @@ export default function SettingsScreen() {
         return (
           <>
             <ChatGPTRow
-              label="Identity verification"
+              label="Certified Seller"
               desc={
                 mgr.loadingExtras
                   ? 'Loading status…'
                   : mgr.verification?.status === 'approved'
-                    ? 'Verified seller account'
+                    ? 'CNIC verified. Your profile shows the verified badge'
                     : mgr.verification?.status === 'submitted'
-                      ? 'Identity verification submitted and pending review'
-                      : 'Verify your government ID for trusted buyer/seller protection'
+                      ? 'CNIC submitted, pending review'
+                      : mgr.verification?.status === 'rejected'
+                        ? 'Not approved. Check your CNIC details and resubmit'
+                        : 'Verify with your CNIC to get the verified badge'
               }
             >
               {mgr.verification?.status === 'approved' ? (
@@ -389,7 +393,7 @@ export default function SettingsScreen() {
                 </View>
               ) : (
                 <ChatGPTButton
-                  label={mgr.verification?.status === 'submitted' ? 'Pending' : 'Verify ID'}
+                  label={mgr.verification?.status === 'submitted' ? 'Pending' : 'Verify CNIC'}
                   icon="shield"
                   onPress={() => {
                     tap('light');
@@ -405,8 +409,10 @@ export default function SettingsScreen() {
                 mgr.loadingExtras
                   ? 'Loading…'
                   : mgr.payout
-                    ? `${mgr.payout.kind === 'bank' ? 'Bank' : 'Wallet'} · ${mgr.payout.label} ••${mgr.payout.account_last4}`
-                    : 'Add a bank account or wallet for automatic sales disbursements'
+                    ? mgr.payout.account_number
+                      ? `${mgr.payout.provider ?? mgr.payout.label} ••${mgr.payout.account_last4} · ${mgr.payout.account_title ?? ''}`
+                      : 'Add your full account details so we can pay you'
+                    : 'Add a bank account or wallet so we can send your earnings'
               }
             >
               <ChatGPTButton
@@ -970,13 +976,13 @@ export default function SettingsScreen() {
           />
           <ChatGPTItem
             icon="shield"
-            label="Identity verification"
+            label="Certified Seller"
             value={
               mgr.verification?.status === 'approved'
                 ? 'Verified'
                 : mgr.verification?.status === 'submitted'
                   ? 'Pending'
-                  : 'Verify ID'
+                  : 'Verify CNIC'
             }
             chevron
             onPress={() => mgr.setShowVerify(true)}
@@ -986,7 +992,9 @@ export default function SettingsScreen() {
             label="Payout method"
             value={
               mgr.payout
-                ? `${mgr.payout.kind === 'bank' ? 'Bank' : 'Wallet'} · ••${mgr.payout.account_last4}`
+                ? mgr.payout.account_number
+                  ? `${mgr.payout.provider ?? mgr.payout.label} ••${mgr.payout.account_last4}`
+                  : 'Update'
                 : 'Add'
             }
             chevron
@@ -1004,13 +1012,15 @@ export default function SettingsScreen() {
 
         {/* Group 2: App settings matching Video */}
         <ChatGPTGroup title="App settings">
-          <ChatGPTItem
-            icon="moon"
-            label="Appearance"
-            value={themeLabel}
-            chevron
-            onPress={() => mgr.setShowTheme(true)}
-          />
+          {DARK_MODE_ENABLED && (
+            <ChatGPTItem
+              icon="moon"
+              label="Appearance"
+              value={themeLabel}
+              chevron
+              onPress={() => mgr.setShowTheme(true)}
+            />
+          )}
           <ChatGPTItem
             icon="shopping-bag"
             label="Purchases & Orders"

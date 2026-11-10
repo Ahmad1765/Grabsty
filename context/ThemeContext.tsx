@@ -26,6 +26,12 @@ export interface ThemeContextData {
 const ThemeContext = createContext<ThemeContextData | undefined>(undefined);
 
 const STORAGE_KEY = '@theme_mode';
+// Dark mode is hidden from the UI for now (Settings → Appearance is gone).
+// Everything below still works: the saved choice is kept, and flipping this
+// to true restores the Appearance rows (app/settings.tsx) and each user's pick.
+export const DARK_MODE_ENABLED = false;
+const effective = (m: ThemeMode): ThemeMode => (DARK_MODE_ENABLED ? m : 'light');
+
 // Dark mode is opt-in: nobody gets it until they pick Dark or System.
 const DEFAULT_MODE: ThemeMode = 'light';
 
@@ -52,7 +58,8 @@ function applyNativeScheme(mode: ThemeMode) {
   if (Platform.OS === 'web') return;
   try {
     // null → 'unspecified' natively: release the override, follow the OS.
-    Appearance.setColorScheme(mode === 'system' ? null : mode);
+    const m = effective(mode);
+    Appearance.setColorScheme(m === 'system' ? null : m);
   } catch {}
 }
 
@@ -82,7 +89,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // While an explicit mode is pinned, useColorScheme() reports that pin, so
   // only trust it in 'system' mode.
-  const isDark = mode === 'system' ? systemScheme === 'dark' : mode === 'dark';
+  const active = effective(mode);
+  const isDark = active === 'system' ? systemScheme === 'dark' : active === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
 
   // Synchronously during render so the `colors` proxy (lib/theme.ts) already

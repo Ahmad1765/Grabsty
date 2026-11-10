@@ -924,6 +924,94 @@ export default function AdminLogisticsScreen() {
 }
 
 // ── Detail View Component ──────────────────────────────────────────────────
+type SellerPayout = {
+  kind: 'bank' | 'wallet' | null;
+  provider: string | null;
+  account_title: string | null;
+  account_number: string | null;
+  account_last4: string | null;
+  legal_name: string | null;
+  verification_status: string | null;
+  phone: string | null;
+};
+
+// Seller's default payout method + CNIC name, via an admin-only RPC. Shown on
+// every transaction so whoever releases funds can send them without asking.
+function SellerPayoutCard({ sellerId, onCopy }: { sellerId: string; onCopy: (text: string, label: string) => void }) {
+  const [state, setState] = useState<{ loading: boolean; data: SellerPayout | null; error: string | null }>({
+    loading: true,
+    data: null,
+    error: null,
+  });
+
+  useEffect(() => {
+    let live = true;
+    setState({ loading: true, data: null, error: null });
+    supabase.rpc('admin_get_payout_method', { p_user_id: sellerId }).then(({ data, error }) => {
+      if (!live) return;
+      const row = (Array.isArray(data) ? data[0] : data) as SellerPayout | undefined;
+      setState({ loading: false, data: row ?? null, error: error?.message ?? null });
+    });
+    return () => {
+      live = false;
+    };
+  }, [sellerId]);
+
+  const p = state.data;
+  const rows: { label: string; value: string | null; copy?: boolean }[] = p?.kind
+    ? [
+        { label: p.kind === 'bank' ? 'Bank' : 'Wallet', value: p.provider },
+        { label: 'Account title', value: p.account_title, copy: true },
+        {
+          label: p.kind === 'bank' ? 'IBAN / account no.' : 'Mobile number',
+          value: p.account_number ?? (p.account_last4 ? `••${p.account_last4} (seller must re-enter full number)` : null),
+          copy: !!p.account_number,
+        },
+        { label: 'CNIC name', value: p.legal_name },
+        { label: 'Seller phone', value: p.phone, copy: true },
+      ]
+    : [];
+  const nameMismatch =
+    !!p?.account_title && !!p?.legal_name && p.account_title.trim().toLowerCase() !== p.legal_name.trim().toLowerCase();
+
+  return (
+    <View style={[styles.ledgerCard, { marginTop: 12 }]}>
+      <Text style={styles.sectionHeaderTitle}>SELLER PAYOUT · TAP TO COPY</Text>
+      {state.loading ? (
+        <ActivityIndicator color="#6C47FF" size="small" />
+      ) : state.error ? (
+        <Text style={styles.ledgerLabel}>Couldn&apos;t load payout details: {state.error}</Text>
+      ) : !p?.kind ? (
+        <Text style={[styles.ledgerLabel, { color: '#EF4444' }]}>
+          No payout method. Ask the seller to add one in Settings → Payout method before releasing funds.
+        </Text>
+      ) : (
+        <>
+          {rows.map((r) => (
+            <Pressable
+              key={r.label}
+              disabled={!r.copy || !r.value}
+              onPress={() => r.value && onCopy(r.value, r.label)}
+              style={styles.ledgerRow}
+            >
+              <Text style={styles.ledgerLabel}>{r.label}</Text>
+              <Text selectable style={[styles.ledgerValue, { flexShrink: 1, textAlign: 'right', marginLeft: 12 }]}>
+                {r.value || '—'}
+              </Text>
+            </Pressable>
+          ))}
+          <Text style={[styles.ledgerLabel, { marginTop: 6 }]}>
+            {p.verification_status === 'approved'
+              ? 'Certified Seller (CNIC verified)'
+              : `Not a Certified Seller (CNIC ${p.verification_status ?? 'not submitted'})`}
+            {nameMismatch ? ' · Account title differs from CNIC name, check before paying' : ''}
+          </Text>
+        </>
+      )}
+    </View>
+  );
+}
+
 function DetailContent({
   tx,
   pickupAddress,
@@ -1197,6 +1285,9 @@ function DetailContent({
           </Text>
         </View>
       </View>
+
+      {/* ── Where the seller gets paid (needed to release funds) ── */}
+      <SellerPayoutCard sellerId={tx.seller_id} onCopy={onCopy} />
 
       {/* ── Audit Trail & Timestamps ── */}
       <View style={styles.auditSection}>

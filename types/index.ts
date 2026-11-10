@@ -231,7 +231,12 @@ export interface PayoutMethod {
   id: string;
   user_id: string;
   kind: PayoutKind;
+  /** Bank / wallet name (legacy rows: free-text label). */
   label: string;
+  provider?: string | null;
+  account_title?: string | null;
+  /** Full IBAN / account no. / wallet mobile. Owner + admins only (RLS). */
+  account_number?: string | null;
   account_last4: string;
   is_default: boolean;
   created_at: string;
@@ -248,6 +253,10 @@ export interface Verification {
   document_number_last4: string | null;
   notes: string | null;
   id_photo_url?: string | null;
+  /** 13-digit CNIC, digits only. */
+  cnic_number?: string | null;
+  /** verification-docs path of the CNIC back photo (front is in `notes`). */
+  id_back_photo_path?: string | null;
   submitted_at: string;
   reviewed_at: string | null;
 }

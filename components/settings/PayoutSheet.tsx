@@ -1,8 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { useTheme } from '@/context/ThemeContext';
 import type { PayoutKind, PayoutMethod } from '@/types';
+import {
+  WALLET_PROVIDERS,
+  accountNumberError,
+  accountTitleError,
+  normalizeAccountNumber,
+} from '@/lib/payoutDetails';
 import {
   SheetModal,
   SheetField,
@@ -14,8 +20,9 @@ import {
 
 export type PayoutForm = {
   kind: PayoutKind;
-  label: string;
-  account_last4: string;
+  provider: string;
+  account_title: string;
+  account_number: string;
 };
 
 const KINDS = ['bank', 'wallet'] as const satisfies readonly PayoutKind[];
@@ -34,30 +41,44 @@ export function PayoutSheet({
   onRemove?: () => Promise<void>;
 }) {
   const { theme } = useTheme();
-  const [form, setForm] = useState<PayoutForm>({ kind: 'bank', label: '', account_last4: '' });
+  const [form, setForm] = useState<PayoutForm>({ kind: 'bank', provider: '', account_title: '', account_number: '' });
   const [saving, setSaving] = useState(false);
+  // Settings loads the saved payout in the background; if it lands after the
+  // sheet opened, fill the form from it, but never over what the user typed.
+  const dirty = useRef(false);
+  const edit = (patch: Partial<PayoutForm>) => {
+    dirty.current = true;
+    setForm((s) => ({ ...s, ...patch }));
+  };
 
   useEffect(() => {
-    if (visible) {
+    if (!visible) dirty.current = false;
+  }, [visible]);
+
+  useEffect(() => {
+    if (visible && !dirty.current) {
       setForm({
         kind: initial?.kind ?? 'bank',
-        label: initial?.label ?? '',
-        account_last4: initial?.account_last4 ?? '',
+        provider: initial?.provider ?? initial?.label ?? '',
+        account_title: initial?.account_title ?? '',
+        // Legacy rows only kept the last 4 digits: ask for the full number again.
+        account_number: initial?.account_number ?? '',
       });
       setSaving(false);
     }
   }, [visible, initial]);
 
-  const last4Valid = /^[0-9]{4}$/.test(form.account_last4);
-  const labelValid = form.label.trim().length >= 2;
-  const canSave = last4Valid && labelValid;
   const isBank = form.kind === 'bank';
+  const providerOk = form.provider.trim().length >= 2;
+  const titleErr = accountTitleError(form.account_title);
+  const numberErr = accountNumberError(form.kind, form.account_number);
+  const canSave = providerOk && !titleErr && !numberErr;
 
   return (
     <SheetModal visible={visible} onClose={onClose} title="Payout method">
       <Text style={{ fontSize: 13, color: theme.textMuted, lineHeight: 19, marginBottom: 16 }}>
-        Add where you want your earnings sent. We never store full account numbers — only the last 4
-        digits for your reference.
+        Where we send your earnings after a buyer confirms delivery. The name must match the account,
+        or the transfer can bounce. Only you and the Grabsty payouts team can see these details.
       </Text>
 
       <View style={{ marginBottom: 14 }}>
@@ -65,28 +86,48 @@ export function PayoutSheet({
         <SheetChoice
           options={KINDS}
           value={form.kind}
-          onChange={(kind) => setForm((s) => ({ ...s, kind }))}
-          renderLabel={(k) => (k === 'bank' ? 'Bank' : 'Wallet')}
+          onChange={(kind) =>
+            edit({ kind, provider: kind === 'wallet' ? WALLET_PROVIDERS[0] : '', account_number: '' })
+          }
+          renderLabel={(k) => (k === 'bank' ? 'Bank account' : 'Mobile wallet')}
           shape="block"
         />
       </View>
 
+      {isBank ? (
+        <SheetField
+          label="Bank name"
+          value={form.provider}
+          placeholder="e.g. HBL, Meezan Bank, UBL"
+          onChangeText={(t) => edit({ provider: t.slice(0, 60) })}
+          error={!providerOk && form.provider.length > 0 ? 'Enter your bank name' : undefined}
+        />
+      ) : (
+        <View style={{ marginBottom: 14 }}>
+          <SheetLabel style={{ marginBottom: 8, marginLeft: 4 }}>Wallet</SheetLabel>
+          <SheetChoice
+            options={WALLET_PROVIDERS}
+            value={(WALLET_PROVIDERS as readonly string[]).includes(form.provider) ? (form.provider as (typeof WALLET_PROVIDERS)[number]) : WALLET_PROVIDERS[0]}
+            onChange={(provider) => edit({ provider })}
+            renderLabel={(p) => p}
+          />
+        </View>
+      )}
+
       <SheetField
-        label={isBank ? 'Bank label' : 'Wallet label'}
-        value={form.label}
-        placeholder={isBank ? 'HBL · Main account' : 'JazzCash'}
-        onChangeText={(t) => setForm((s) => ({ ...s, label: t.slice(0, 60) }))}
-        error={!labelValid && form.label.length > 0 ? 'At least 2 characters' : undefined}
+        label="Account holder name"
+        value={form.account_title}
+        placeholder="As it appears on the account"
+        onChangeText={(t) => edit({ account_title: t.slice(0, 80) })}
+        error={titleErr && form.account_title.length > 0 ? titleErr : undefined}
       />
       <SheetField
-        label="Last 4 digits"
-        value={form.account_last4}
-        placeholder="1234"
-        keyboardType="number-pad"
-        onChangeText={(t) =>
-          setForm((s) => ({ ...s, account_last4: t.replace(/[^0-9]/g, '').slice(0, 4) }))
-        }
-        error={!last4Valid && form.account_last4.length > 0 ? 'Must be 4 digits' : undefined}
+        label={isBank ? 'IBAN or account number' : 'Wallet mobile number'}
+        value={form.account_number}
+        placeholder={isBank ? 'PK36SCBL0000001123456702' : '03XXXXXXXXX'}
+        keyboardType={isBank ? 'default' : 'phone-pad'}
+        onChangeText={(t) => edit({ account_number: t.slice(0, 34) })}
+        error={numberErr && form.account_number.length > 0 ? numberErr : undefined}
       />
 
       <SheetPrimary
@@ -97,7 +138,12 @@ export function PayoutSheet({
           if (!canSave) return;
           setSaving(true);
           try {
-            await onSave(form);
+            await onSave({
+              ...form,
+              provider: form.provider.trim(),
+              account_title: form.account_title.trim(),
+              account_number: normalizeAccountNumber(form.account_number),
+            });
           } finally {
             setSaving(false);
           }
