@@ -60,6 +60,10 @@ export interface ConversationRow {
   updated_at: string;
   buyer_last_read_at?: string | null;
   seller_last_read_at?: string | null;
+  /** Seller-side preview: skips order updates (system messages), which are buyer-only. */
+  seller_last_message?: string | null;
+  seller_last_sender_id?: string | null;
+  seller_activity_at?: string | null;
   listing?: Pick<Listing, 'id' | 'title' | 'price' | 'images' | 'thumbnails' | 'is_sold'> | null;
   buyer?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales' | 'is_verified'> | null;
   seller?: Pick<User, 'id' | 'username' | 'avatar_url' | 'full_name' | 'location' | 'rating' | 'total_sales' | 'is_verified'> | null;
@@ -68,6 +72,7 @@ export interface ConversationRow {
 export const CONVERSATION_SELECT = `
   id, listing_id, buyer_id, seller_id, last_message, last_sender_id, updated_at,
   buyer_last_read_at, seller_last_read_at,
+  seller_last_message, seller_last_sender_id, seller_activity_at,
   listing:listings(id, title, price, images, thumbnails, is_sold),
   buyer:profiles!conversations_buyer_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales, is_verified),
   seller:profiles!conversations_seller_id_fkey(id, username, avatar_url, full_name, location, rating, total_sales, is_verified)
@@ -86,9 +91,26 @@ export async function listConversations(userId: string): Promise<ConversationRow
   // A chat with someone you blocked leaves your inbox. Order updates still land
   // in it, and unblocking brings it back.
   const blocked = new Set(await getBlockedUserIds(userId));
-  return ((data ?? []) as unknown as ConversationRow[]).filter(
-    (c) => !blocked.has(c.buyer_id === userId ? c.seller_id : c.buyer_id),
-  );
+  return ((data ?? []) as unknown as ConversationRow[])
+    .filter((c) => !blocked.has(c.buyer_id === userId ? c.seller_id : c.buyer_id))
+    .map((c) => conversationForViewer(c, userId))
+    // A listing chat holding nothing but order updates is empty for its seller.
+    .filter((c) => !(c.seller_id === userId && c.listing_id && !c.last_message && !c.last_sender_id))
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+}
+
+/**
+ * Order updates (system messages) are buyer-only: the seller can't read them
+ * (RLS), so their inbox row uses the seller-side preview, sender and time.
+ */
+export function conversationForViewer(conv: ConversationRow, userId: string): ConversationRow {
+  if (conv.seller_id !== userId || !conv.listing_id || conv.seller_activity_at === undefined) return conv;
+  return {
+    ...conv,
+    last_message: conv.seller_last_message ?? null,
+    last_sender_id: conv.seller_last_sender_id ?? null,
+    updated_at: conv.seller_activity_at ?? conv.updated_at,
+  };
 }
 
 export async function getConversation(conversationId: string): Promise<ConversationRow | null> {

@@ -65,6 +65,10 @@ test("Certified Seller: CNIC only, formats the number, needs both photos", async
   await openVerifyPanel(page);
   await expect(page.getByText("Certified Seller", { exact: true })).toBeVisible();
   // "Pending" on reruns: resubmitting while under review is allowed.
+  // Wait for the saved status: the button reads "Verify CNIC" until it loads.
+  await expect(
+    page.getByText(/^(Verify with your CNIC|CNIC submitted, pending review|Not approved)/).first(),
+  ).toBeVisible({ timeout: 15_000 });
   const entry = page.getByText(/^(Verify CNIC|Pending)$/).first();
   await expect(entry).toBeVisible({ timeout: 15_000 });
   const rerun = (await entry.textContent()) === "Pending";

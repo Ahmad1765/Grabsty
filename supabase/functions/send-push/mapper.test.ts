@@ -89,6 +89,19 @@ describe('buildPushNotifications — messages INSERT', () => {
     expect(out).toEqual([]);
   });
 
+  it('pushes order updates (system messages) to the buyer only, never the seller', () => {
+    const toSeller = buildPushNotifications(
+      messageInsert({ sender_id: BUYER, kind: 'system', content: 'Order cancelled by Buyer' }),
+      { conversation, senderName: 'ayesha' },
+    );
+    expect(toSeller).toEqual([]);
+    const toBuyer = buildPushNotifications(
+      messageInsert({ sender_id: SELLER, kind: 'system', content: 'Package is in transit.' }),
+      { conversation, senderName: 'shop' },
+    );
+    expect(toBuyer.map((n) => n.userId)).toEqual([BUYER]);
+  });
+
   it('formats an offer with the amount', () => {
     const out = buildPushNotifications(
       messageInsert({

@@ -117,6 +117,9 @@ function fromMessage(
     if (!recipient) return [];
 
     const kind = str(record.kind) ?? 'text';
+    // Order updates in chat are buyer-only (the seller can't even read them);
+    // sellers hear about orders through the order push, not chat.
+    if (kind === 'system' && recipient === conv.seller_id) return [];
     if (kind === 'offer') {
       const metadata = (record.metadata ?? {}) as Record<string, unknown>;
       return [
