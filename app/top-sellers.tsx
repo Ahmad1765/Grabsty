@@ -1,10 +1,13 @@
 // Top sellers ("See all" from Browse → Top sellers this week).
-//   Most searched   - most_searched_sellers: distinct searchers who opened the
+//   Trending        - most_searched_sellers: distinct searchers who opened the
 //                     seller from search in 7 days, then sales
-//   Recommended     - sellers behind this buyer's get_recommendations listings,
-//                     ranked by how many of their items match the buyer's taste
+//   Recommended     - sellers behind this buyer's get_recommendations listings
+//                     that matched on interest (intent / cf / social / taste —
+//                     popularity-only 'trending' rows are dropped), ranked by
+//                     summed rec_score
 // Complies with UI_GUARDRAILS.md: three-hue palette (no yellow rank badges or
-// green/red movement arrows), 30px pill tabs, Inter via rnText, inline Pressable styles.
+// green/red movement arrows), 36px Whatnot squircle tabs (same as Activity's
+// filter chips), Inter via rnText, inline Pressable styles.
 
 import { useMemo, useState } from 'react';
 import { View, Pressable, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
@@ -40,7 +43,7 @@ function useMostSearchedSellers() {
   });
 }
 
-type Tab = 'searched' | 'recommended';
+type Tab = 'trending' | 'recommended';
 type Row = { id: string; username: string; avatar_url: string | null; subtitle: string };
 
 const PAD = 16;
@@ -49,13 +52,13 @@ export default function TopSellersScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const { user } = useAuth();
-  const [tab, setTab] = useState<Tab>('searched');
+  const [tab, setTab] = useState<Tab>('trending');
 
   const top = useMostSearchedSellers();
   // Same key/limit as Browse's "You may like", so this is usually a cache hit.
   const recs = useRecommendationsQuery(user?.id ?? null, 48);
 
-  const searchedRows = useMemo<Row[]>(
+  const trendingRows = useMemo<Row[]>(
     () =>
       (top.data ?? []).map((s) => ({
         id: s.id,
@@ -70,21 +73,24 @@ export default function TopSellersScreen() {
   );
 
   const recommendedRows = useMemo<Row[]>(() => {
-    const bySeller = new Map<string, { row: Row; n: number; cats: Map<string, number> }>();
+    const bySeller = new Map<string, { row: Row; n: number; score: number; cats: Map<string, number> }>();
     for (const l of recs.data ?? []) {
       const s = l.seller;
-      if (!s?.username || l.is_sold || l.seller_id === user?.id) continue;
+      // 'trending' = picked for popularity/backfill, not this buyer's interests.
+      if (!s?.username || l.is_sold || l.seller_id === user?.id || !l.rec_reason || l.rec_reason === 'trending') continue;
       const e = bySeller.get(l.seller_id) ?? {
         row: { id: l.seller_id, username: s.username, avatar_url: s.avatar_url, subtitle: '' },
         n: 0,
+        score: 0,
         cats: new Map(),
       };
       e.n += 1;
+      e.score += Number(l.rec_score ?? 0);
       if (l.category) e.cats.set(l.category, (e.cats.get(l.category) ?? 0) + 1);
       bySeller.set(l.seller_id, e);
     }
     return [...bySeller.values()]
-      .sort((a, b) => b.n - a.n)
+      .sort((a, b) => b.score - a.score || b.n - a.n)
       .map(({ row, n, cats }) => {
         const topCat = [...cats.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
         const label = CATEGORIES.find((c) => c.id === topCat)?.label;
@@ -93,8 +99,8 @@ export default function TopSellersScreen() {
       });
   }, [recs.data, user?.id]);
 
-  const rows = tab === 'searched' ? searchedRows : recommendedRows;
-  const loading = tab === 'searched' ? top.isPending : !!user && recs.isPending;
+  const rows = tab === 'trending' ? trendingRows : recommendedRows;
+  const loading = tab === 'trending' ? top.isPending : !!user && recs.isPending;
   const empty =
     tab === 'recommended' && !user
       ? 'Sign in to see sellers picked for you.'
@@ -116,21 +122,20 @@ export default function TopSellersScreen() {
         accessibilityLabel={label}
         testID={`top-sellers-tab-${key}`}
         style={({ pressed }) => ({
-          height: 30,
-          borderRadius: 15,
-          paddingHorizontal: 14,
+          height: 36,
+          borderRadius: 8,
+          paddingHorizontal: 16,
           justifyContent: 'center',
-          backgroundColor: active ? theme.ink : theme.panel,
-          borderWidth: active ? 0 : 1,
-          borderColor: theme.border,
-          opacity: pressed ? 0.7 : 1,
+          backgroundColor: active ? (isDark ? '#FFFFFF' : '#111111') : isDark ? '#2C2C2E' : '#E5E7EB',
+          opacity: pressed ? 0.8 : 1,
         })}
       >
         <Text
           style={{
-            fontSize: 13,
-            fontFamily: type.family.sansMedium,
-            color: active ? theme.background : theme.ink,
+            fontSize: 14,
+            fontFamily: type.family.sansBold,
+            letterSpacing: -0.2,
+            color: active ? (isDark ? '#000000' : '#FFFFFF') : isDark ? '#FFFFFF' : '#111111',
           }}
         >
           {label}
@@ -177,8 +182,8 @@ export default function TopSellersScreen() {
         </Text>
 
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 20, marginBottom: 16 }}>
-          {tabChip('searched', 'Most searched')}
-          {tabChip('recommended', 'Recommended for you')}
+          {tabChip('trending', 'Trending')}
+          {tabChip('recommended', 'Recommended')}
         </View>
 
         {loading ? (
