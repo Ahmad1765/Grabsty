@@ -40,7 +40,6 @@ import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { getOptimizedImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { bp } from '@/lib/responsive';
 import { BRAND } from '@/lib/brand';
-import { getOrCreateSupportConversation } from '@/lib/support';
 import {
   BundleDiscountSheet,
   AddressSheet,
@@ -494,21 +493,13 @@ export default function SettingsScreen() {
               desc={session ? `Chat live with our dedicated support and mediation team` : `Email: ${SUPPORT_EMAIL}`}
             >
               <ChatGPTButton
-                label="Start Support Chat"
+                label="Create support chat"
                 icon="message-square"
                 onPress={async () => {
                   if (session && user) {
                     tap('light');
-                    try {
-                      const conv = await getOrCreateSupportConversation(user.id);
-                      if (conv) {
-                        router.push(`/conversation/${conv.id}` as any);
-                      } else {
-                        router.push('/conversation/new?support=true' as any);
-                      }
-                    } catch {
-                      router.push('/conversation/new?support=true' as any);
-                    }
+                    // Support = describe the issue -> numbered case (no bot).
+                    router.push('/(tabs)/chat?tab=support&newCase=1' as any);
                   } else {
                     Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() => {});
                   }
@@ -1089,16 +1080,7 @@ export default function SettingsScreen() {
             onPress={async () => {
               if (session && user) {
                 tap('light');
-                try {
-                  const conv = await getOrCreateSupportConversation(user.id);
-                  if (conv) {
-                    router.push(`/conversation/${conv.id}` as any);
-                  } else {
-                    router.push('/conversation/new?support=true' as any);
-                  }
-                } catch {
-                  router.push('/conversation/new?support=true' as any);
-                }
+                router.push('/(tabs)/chat?tab=support&newCase=1' as any);
               } else {
                 router.push('/auth/login');
               }

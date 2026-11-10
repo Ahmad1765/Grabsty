@@ -15,6 +15,7 @@
 //    - User Management
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { confirm } from '@/lib/confirm';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
@@ -53,6 +54,10 @@ import type { EscrowStatus, Verification } from '@/types';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   fetchAdminSupportConversations,
+  fetchAdminSupportCases,
+  adminCloseSupportCase,
+  caseLabel,
+  type AdminSupportCase,
   fetchAdminSupportMessages,
   adminSendSupportMessage,
   SUPPORT_BOT_USER_ID,
@@ -136,6 +141,8 @@ export default function AdminConsoleScreen() {
 
   // Support Team State
   const [supportConvs, setSupportConvs] = useState<AdminSupportConversation[]>([]);
+  const [supportCases, setSupportCases] = useState<AdminSupportCase[]>([]);
+  const [closingCase, setClosingCase] = useState(false);
   const [supportFilter, setSupportFilter] = useState<'all' | 'disputes' | 'general'>('all');
   const [supportSearch, setSupportSearch] = useState('');
   const [selectedSupportConv, setSelectedSupportConv] = useState<AdminSupportConversation | null>(null);
@@ -152,11 +159,13 @@ export default function AdminConsoleScreen() {
   const loadAllData = useCallback(async () => {
     if (!profile?.is_admin) return;
     try {
-      const [txs, kycRes, supportConvsData] = await Promise.all([
+      const [txs, kycRes, supportConvsData, casesData] = await Promise.all([
         escrowService.fetchLogisticsTransactions('all', 100),
         supabase.rpc('admin_get_verifications', { p_status: 'all' }),
         fetchAdminSupportConversations('all'),
+        fetchAdminSupportCases('all'),
       ]);
+      setSupportCases(casesData);
 
       setTransactions(txs);
       if (kycRes.data) setVerifications(kycRes.data as Verification[]);
@@ -293,6 +302,39 @@ export default function AdminConsoleScreen() {
   const disputedOrders = useMemo(() => {
     return transactions.filter((t) => t.status === 'DISPUTED');
   }, [transactions]);
+
+  // Support case per conversation: the open one, else the most recent.
+  const caseByConv = useMemo(() => {
+    const m = new Map<string, AdminSupportCase>();
+    for (const c of supportCases) {
+      const prev = m.get(c.conversation_id);
+      if (!prev || (c.status === 'open' && prev.status !== 'open') ||
+          (c.status === prev.status && c.created_at > prev.created_at)) {
+        m.set(c.conversation_id, c);
+      }
+    }
+    return m;
+  }, [supportCases]);
+
+  const handleCloseCase = async (c: AdminSupportCase) => {
+    if (closingCase) return;
+    const ok = await confirm({
+      title: `Close case ${caseLabel(c.case_number)}?`,
+      message: 'The user is told the case is resolved and can no longer write in this chat until they open a new case.',
+      confirmLabel: 'Close case',
+    });
+    if (!ok) return;
+    setClosingCase(true);
+    const done = await adminCloseSupportCase(c.case_id);
+    setClosingCase(false);
+    if (!done) {
+      toast.show('Could not close the case', { variant: 'default', icon: 'alert-triangle' });
+      return;
+    }
+    toast.done(`Case ${caseLabel(c.case_number)} closed`);
+    setSupportCases(await fetchAdminSupportCases('all'));
+    loadSupportMessages(c.conversation_id);
+  };
 
   // ── Filtered KYC Verifications ────────────────────────────────────────────
   const filteredVerifications = useMemo(() => {
@@ -1774,6 +1816,7 @@ export default function AdminConsoleScreen() {
                       renderItem={({ item }) => {
                         const isSelected = selectedSupportConv?.id === item.id;
                         const initial = (item.full_name || item.username || 'U').charAt(0).toUpperCase();
+                        const rowCase = caseByConv.get(item.id);
 
                         return (
                           <Pressable
@@ -1795,6 +1838,20 @@ export default function AdminConsoleScreen() {
                               borderLeftColor: theme.purple,
                             })}
                           >
+                            {rowCase ? (
+                              <Text
+                                testID="admin-case-badge"
+                                style={{
+                                  fontSize: 11,
+                                  fontWeight: '700',
+                                  marginBottom: 6,
+                                  color: rowCase.status === 'open' ? theme.purple : theme.textMuted,
+                                }}
+                              >
+                                {caseLabel(rowCase.case_number)} · {rowCase.status === 'open' ? 'Open' : 'Closed'}
+                                {rowCase.topic ? ` · ${rowCase.topic}` : ''}
+                              </Text>
+                            ) : null}
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 }}>
                               <View
                                 style={{
@@ -1967,6 +2024,37 @@ export default function AdminConsoleScreen() {
                           </View>
 
                           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                            {(() => {
+                              const c = caseByConv.get(selectedSupportConv.id);
+                              if (!c) return null;
+                              return c.status === 'open' ? (
+                                <Pressable
+                                  testID="admin-close-case"
+                                  onPress={() => handleCloseCase(c)}
+                                  disabled={closingCase}
+                                  style={({ pressed }) => ({
+                                    height: 32,
+                                    paddingHorizontal: 12,
+                                    borderRadius: 6,
+                                    backgroundColor: theme.ink,
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexDirection: 'row',
+                                    gap: 6,
+                                    opacity: closingCase ? 0.6 : pressed ? 0.8 : 1,
+                                  })}
+                                >
+                                  <Feather name="check-circle" size={13} color={theme.background} />
+                                  <Text style={{ fontSize: 12, fontWeight: '700', color: theme.background }}>
+                                    Close {caseLabel(c.case_number)}
+                                  </Text>
+                                </Pressable>
+                              ) : (
+                                <Text style={{ fontSize: 12, fontWeight: '700', color: theme.textMuted }}>
+                                  {caseLabel(c.case_number)} closed
+                                </Text>
+                              );
+                            })()}
                             <Pressable
                               onPress={() => loadSupportMessages(selectedSupportConv.id)}
                               hitSlop={8}

@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CreateSupportCaseSheet } from '@/components/support/CreateSupportCaseSheet';
 import {
   View,
   FlatList,
@@ -27,7 +28,9 @@ import {
 } from '@/lib/chat';
 import {
   isSupportConversation,
-  getOrCreateSupportConversation,
+  getMySupportCase,
+  caseLabel,
+  type SupportCase,
   generateSupportResponse,
   SUPPORT_TOPICS,
   SUPPORT_BOT_NAME,
@@ -368,6 +371,7 @@ function SupportPage({
   refreshing,
   onRefresh,
   bottomInset,
+  openNewCase,
 }: {
   data: ConversationRow[];
   userId: string;
@@ -376,10 +380,10 @@ function SupportPage({
   refreshing: boolean;
   onRefresh: () => void;
   bottomInset: number;
+  openNewCase?: boolean;
 }) {
   const { theme, isDark } = useTheme();
   const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
-  const [opening, setOpening] = useState(false);
   const [bpVisible, setBpVisible] = useState(false);
 
   const toggleTopic = (id: string) => {
@@ -392,14 +396,30 @@ function SupportPage({
     setExpandedTopicId((prev) => (prev === id ? null : id));
   };
 
+  // Open case (if any): the button continues it instead of starting another.
+  const [supportCase, setSupportCase] = useState<SupportCase | null>(null);
+  const [caseSheet, setCaseSheet] = useState(false);
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      getMySupportCase().then((c) => live && setSupportCase(c));
+      return () => {
+        live = false;
+      };
+    }, []),
+  );
+  useEffect(() => {
+    if (openNewCase) setCaseSheet(true);
+  }, [openNewCase]);
+  const openCase = supportCase?.status === 'open' ? supportCase : null;
+
   const openSupportChat = () => {
-    if (opening) return;
     haptic();
-    setOpening(true);
-    getOrCreateSupportConversation(userId)
-      .then((conv) => router.push((conv ? `/conversation/${conv.id}` : '/conversation/new?support=true') as any))
-      .catch(() => router.push('/conversation/new?support=true' as any))
-      .finally(() => setOpening(false));
+    if (openCase) {
+      router.push(`/conversation/${openCase.conversation_id}` as any);
+      return;
+    }
+    setCaseSheet(true);
   };
 
   // Mirrors ChatGPTGroup / ChatGPTItem in components/settings/SettingsRow.tsx.
@@ -465,15 +485,15 @@ function SupportPage({
             marginTop: 16,
           }}
         >
-          Disputing an order opens a support chat automatically. For anything else, message the team directly.
+          {openCase
+            ? `You have an open case, ${caseLabel(openCase.case_number)}. Our team will reply in the chat.`
+            : 'Describe your issue to start a support chat. You get a case number and our team replies in the chat. Disputing an order opens one automatically.'}
         </Text>
 
         <PressableScale
           onPress={openSupportChat}
-          disabled={opening}
           accessibilityRole="button"
-          accessibilityLabel="Message support"
-          accessibilityState={{ busy: opening }}
+          accessibilityLabel={openCase ? `Open case ${caseLabel(openCase.case_number)}` : 'Create support chat'}
           testID="support-message-button"
           style={{
             height: 44,
@@ -484,12 +504,11 @@ function SupportPage({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
-            opacity: opening ? 0.7 : 1,
           }}
         >
-          <Feather name="message-circle" size={16} color={theme.background} />
+          <Feather name={openCase ? 'message-circle' : 'plus'} size={16} color={theme.background} />
           <Text style={{ fontFamily: typography.family.sansSemibold, fontSize: 15, color: theme.background }}>
-            {opening ? 'Opening chat…' : 'Message support'}
+            {openCase ? `Open case ${caseLabel(openCase.case_number)}` : 'Create support chat'}
           </Text>
         </PressableScale>
 
@@ -589,6 +608,11 @@ function SupportPage({
         </View>
       </ScrollView>
       <BuyerProtectionSheet visible={bpVisible} onClose={() => setBpVisible(false)} />
+      <CreateSupportCaseSheet
+        visible={caseSheet}
+        onClose={() => setCaseSheet(false)}
+        onCreated={(c) => setSupportCase(c)}
+      />
     </View>
   );
 }
@@ -723,6 +747,7 @@ export default function InboxScreen() {
     justPaid?: string;
     title?: string;
     amount?: string;
+    newCase?: string;
   }>();
 
   const requestedTab: InboxTab =
@@ -1054,6 +1079,7 @@ export default function InboxScreen() {
                     refreshing={refreshing}
                     onRefresh={onRefresh}
                     bottomInset={tabBarClearance}
+                    openNewCase={params.newCase === '1'}
                   />
                 );
               }

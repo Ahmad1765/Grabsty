@@ -36,10 +36,10 @@ import { getOptimizedImageUrl, cardImageUrl } from '@/lib/images';
 import { reportListing } from '@/lib/reports';
 import {
   isSupportConversation,
-  sendSupportBotReply,
-  SUPPORT_BOT_USER_ID,
+  getMySupportCase,
   SUPPORT_BOT_NAME,
   SUPPORT_BOT_AVATAR,
+  type SupportCase,
 } from '@/lib/support';
 import {
   fetchMessages,
@@ -366,24 +366,7 @@ export function useConversationThread(
         setConv(loaded[0]);
         const msgsResult = loaded[1];
         const isTimeout = msgsResult === FETCH_MESSAGES_TIMEOUT;
-        let initialMsgs: ChatMessage[] = isTimeout ? [] : msgsResult;
-        if (!isTimeout && isSupportConversation(loaded[0]) && initialMsgs.length === 0) {
-          initialMsgs = [
-            {
-              id: 'support-welcome-initial',
-              conversation_id: conversationId,
-              sender_id: SUPPORT_BOT_USER_ID,
-              content:
-                `👋 Welcome to Grabsty Support!\n\n` +
-                `How can we assist you today? Feel free to ask about your orders, Buyer Protection, payments, or selling on Grabsty.`,
-              kind: 'text',
-              metadata: null,
-              offer_status: null,
-              created_at: (loaded[0] as any)?.created_at || loaded[0]?.updated_at || new Date().toISOString(),
-              updated_at: loaded[0]?.updated_at || new Date().toISOString(),
-            },
-          ];
-        }
+        const initialMsgs: ChatMessage[] = isTimeout ? [] : msgsResult;
         setMessages(initialMsgs);
         setReactions(loaded[2]);
 
@@ -497,6 +480,26 @@ export function useConversationThread(
 
   // ── Derived Participant & Listing State ──────────────────────────────────
   const isSupport = useMemo(() => isSupportConversation(conv), [conv]);
+  // Support threads: the open (or last) case. Writing is only possible while a
+  // case is open; the team closes it from the admin dashboard.
+  const [supportCase, setSupportCase] = useState<SupportCase | null>(null);
+  const [supportCaseLoaded, setSupportCaseLoaded] = useState(false);
+  const caseEvents = useMemo(
+    () => messages.filter((m) => (m.metadata as any)?.case_event).length,
+    [messages],
+  );
+  useEffect(() => {
+    if (!isSupport || !user) return;
+    let live = true;
+    getMySupportCase().then((c) => {
+      if (!live) return;
+      setSupportCase(c);
+      setSupportCaseLoaded(true);
+    });
+    return () => {
+      live = false;
+    };
+  }, [isSupport, user, caseEvents]);
   const currentUserId = user?.id || (conversationId.startsWith('demo') ? (conversationId === 'demo-deal' ? 'demo-buyer' : 'demo-seller') : null);
   const other = useMemo(() => {
     if (!conv) return null;
@@ -597,28 +600,6 @@ export function useConversationThread(
             return prev.map((m) => (m.id === tempId ? delivered : m));
           });
 
-          // Trigger intelligent support concierge automated response ONLY on initial general inquiries
-          // (Disputes and active admin threads are personally handled by the administration team)
-          if (isSupport) {
-            const hasDispute = messagesRef.current.some((m) => (m.content || '').toLowerCase().includes('dispute'));
-            const isInitialInquiry = messagesRef.current.length <= 2;
-
-            if (!hasDispute && isInitialInquiry) {
-              let botReply: ChatMessage | null = null;
-              try {
-                botReply = await sendSupportBotReply(conversationId, text);
-              } catch (err) {
-                console.warn('[conversation] support bot reply error', err);
-              }
-
-              if (botReply) {
-                setMessages((prev) => {
-                  if (prev.some((m) => m.id === botReply!.id)) return prev;
-                  return [...prev, botReply!];
-                });
-              }
-            }
-          }
           return delivered;
         }
 
@@ -636,7 +617,7 @@ export function useConversationThread(
         activeDeliveriesRef.current.delete(tempId);
       }
     },
-    [conversationId, isSupport, toast, user],
+    [conversationId, toast, user],
   );
 
   const handleSend = useCallback(() => {
@@ -991,5 +972,8 @@ export function useConversationThread(
     handleCounterOffer,
     handleOfferResponse,
     handleReport,
+    isSupport,
+    supportCase,
+    supportCaseLoaded,
   };
 }

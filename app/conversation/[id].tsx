@@ -45,7 +45,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { formatPrice } from '@/lib/currency';
 import { confirm } from '@/lib/confirm';
 import { isImageMessage, type ChatMessage } from '@/lib/chat';
-import { SUPPORT_BOT_USER_ID } from '@/lib/support';
+import { SUPPORT_BOT_USER_ID, caseLabel } from '@/lib/support';
 import { EmptyState, SafeContainer } from '@/components/ui';
 import { explainCoverage } from '@/components/SafetyBanner';
 import { HIT_SLOP_8 } from '@/lib/responsive';
@@ -762,7 +762,49 @@ export default function ConversationScreen() {
           }}
         />
 
-        {block.blockStatus === 'unblocked' ? (
+        {thread.isSupport && thread.supportCase?.status === 'open' ? (
+          <View
+            testID="support-case-bar"
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingTop: 8 }}
+          >
+            <Feather name="life-buoy" size={13} color={theme.mute} />
+            <Text style={{ fontSize: 12.5, color: theme.mute, fontFamily: typography.family.sansMedium }}>
+              Case {caseLabel(thread.supportCase.case_number)} · open · our team replies here
+            </Text>
+          </View>
+        ) : null}
+
+        {thread.isSupport && thread.supportCaseLoaded && thread.supportCase?.status !== 'open' ? (
+          // Closed (or never opened): the thread is read-only until a new case.
+          <View
+            testID="support-case-closed"
+            style={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8, alignItems: 'center', gap: 10 }}
+          >
+            <Text style={{ fontSize: 13.5, color: theme.mute, textAlign: 'center', fontFamily: typography.family.sans }}>
+              {thread.supportCase
+                ? `Case ${caseLabel(thread.supportCase.case_number)} is closed.`
+                : 'Start a support chat to contact our team.'}
+            </Text>
+            <Pressable
+              testID="support-create-chat"
+              onPress={() => router.push('/(tabs)/chat?tab=support&newCase=1' as any)}
+              accessibilityRole="button"
+              style={({ pressed }) => ({
+                height: 44,
+                paddingHorizontal: 20,
+                borderRadius: 10,
+                backgroundColor: theme.ink,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: pressed ? 0.85 : 1,
+              })}
+            >
+              <Text style={{ fontSize: 14.5, color: theme.background, fontFamily: typography.family.sansBold }}>
+                Create support chat
+              </Text>
+            </Pressable>
+          </View>
+        ) : block.blockStatus === 'unblocked' ? (
           <Composer
             value={thread.input}
             onChangeText={(text) => {

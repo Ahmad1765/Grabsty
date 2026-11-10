@@ -1,12 +1,11 @@
 import { supabase } from '@/lib/supabase';
 import {
-  getOrCreateConversation,
   CONVERSATION_SELECT,
   isTransactionalConversation,
   type ConversationRow,
   type ChatMessage,
 } from '@/lib/chat';
-import { SUPPORT_KNOWLEDGE_BASE, SUPPORT_DEFAULT_REPLY, SUPPORT_WELCOME_MESSAGE } from '@/lib/supportReplies';
+import { SUPPORT_KNOWLEDGE_BASE, SUPPORT_DEFAULT_REPLY } from '@/lib/supportReplies';
 
 export const SUPPORT_BOT_USER_ID = '00000000-0000-0000-0000-000000000001';
 export const SUPPORT_BOT_NAME = 'Grabsty Support';
@@ -114,76 +113,95 @@ export function generateSupportResponse(query: string): string {
   return SUPPORT_DEFAULT_REPLY;
 }
 
-export async function ensureSupportProfile(): Promise<void> {
-  // Upsert the system support profile if not already present
-  try {
-    await supabase.from('profiles').upsert(
-      {
-        id: SUPPORT_BOT_USER_ID,
-        username: SUPPORT_BOT_USERNAME,
-        full_name: SUPPORT_BOT_NAME,
-        avatar_url: SUPPORT_BOT_AVATAR,
-        bio: 'Official Grabsty Customer Support & Help Assistant. Available 24/7.',
-        location: 'Grabsty Care, PK',
-        rating: 5.0,
-        total_sales: 9999,
-      },
-      { onConflict: 'id' },
-    );
-  } catch {
-    // Ignore if already exists or permission
+// ── Support cases ───────────────────────────────────────────────────────────
+// No bot: a user opens a case by describing the issue; the server numbers it
+// (GS-1001...) and posts it into their support thread, and the support team
+// answers and closes it from the admin dashboard
+// (supabase/migrations/20261111030000_support_cases.sql).
+
+export type SupportCase = {
+  id: string;
+  case_number: number;
+  user_id: string;
+  conversation_id: string;
+  topic: string | null;
+  description: string;
+  order_id: string | null;
+  status: 'open' | 'closed';
+  created_at: string;
+  closed_at: string | null;
+};
+
+export const caseLabel = (n: number | null | undefined) => (n ? `GS-${n}` : '');
+
+/** The caller's open case, or their latest closed one, or null. */
+export async function getMySupportCase(): Promise<SupportCase | null> {
+  const { data, error } = await supabase.rpc('get_my_support_case');
+  if (error) {
+    console.warn('[support] get_my_support_case', error.message);
+    return null;
   }
+  const row = (Array.isArray(data) ? data[0] : data) as SupportCase | null;
+  return row?.id ? row : null;
 }
 
-export async function getOrCreateSupportConversation(userId: string): Promise<ConversationRow | null> {
-  await ensureSupportProfile();
+/** Opens a case (or returns the one already open). Throws with the server message. */
+export async function createSupportCase(description: string, topic?: string | null): Promise<SupportCase> {
+  const { data, error } = await supabase.rpc('create_support_case', {
+    p_description: description.trim(),
+    p_topic: topic ?? null,
+  });
+  if (error) throw new Error(error.message);
+  return data as SupportCase;
+}
 
-  // Find existing conversation with support bot
-  const { data: existingRows, error: lookupError } = await supabase
+/** The caller's support thread, if they've ever opened a case. */
+export async function getSupportConversation(userId: string): Promise<ConversationRow | null> {
+  const { data, error } = await supabase
     .from('conversations')
     .select(CONVERSATION_SELECT)
     .is('listing_id', null)
     .or(`and(buyer_id.eq.${userId},seller_id.eq.${SUPPORT_BOT_USER_ID}),and(buyer_id.eq.${SUPPORT_BOT_USER_ID},seller_id.eq.${userId})`)
     .order('updated_at', { ascending: false })
     .limit(1);
-
-  if (lookupError) {
-    console.warn('[support] getOrCreateSupportConversation lookup', lookupError.message);
-  }
-
-  const existing = existingRows?.[0];
-  if (existing) return existing as unknown as ConversationRow;
-
-  // Otherwise create a new direct conversation
-  const created = await getOrCreateConversation({
-    buyerId: userId,
-    sellerId: SUPPORT_BOT_USER_ID,
-    listingId: null,
-  });
-
-  if (created) {
-    // Only the server can post as the bot (RLS rejects inserts with someone
-    // else's sender_id), and only one of its built-in replies.
-    const { error } = await supabase.rpc('dispatch_support_bot_reply', {
-      p_conversation_id: created.id,
-      p_content: SUPPORT_WELCOME_MESSAGE,
-    });
-    if (error) console.warn('[support] welcome message failed', error.message);
-  }
-
-  return created;
+  if (error) console.warn('[support] getSupportConversation', error.message);
+  return (data?.[0] as unknown as ConversationRow) ?? null;
 }
 
-export async function sendSupportBotReply(conversationId: string, userMessage: string): Promise<ChatMessage | null> {
-  const { data, error } = await supabase.rpc('dispatch_support_bot_reply', {
-    p_conversation_id: conversationId,
-    p_content: generateSupportResponse(userMessage),
-  });
+export type AdminSupportCase = {
+  case_id: string;
+  case_number: number;
+  status: 'open' | 'closed';
+  topic: string | null;
+  description: string;
+  order_id: string | null;
+  created_at: string;
+  closed_at: string | null;
+  conversation_id: string;
+  user_id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  last_message: string | null;
+  updated_at: string;
+};
+
+export async function fetchAdminSupportCases(status: 'open' | 'closed' | 'all' = 'all'): Promise<AdminSupportCase[]> {
+  const { data, error } = await supabase.rpc('admin_get_support_cases', { p_status: status });
   if (error) {
-    console.warn('[support] bot reply failed', error.message);
-    return null;
+    console.warn('[support] admin_get_support_cases', error.message);
+    return [];
   }
-  return (data as unknown as ChatMessage) ?? null;
+  return (data ?? []) as AdminSupportCase[];
+}
+
+export async function adminCloseSupportCase(caseId: string): Promise<boolean> {
+  const { error } = await supabase.rpc('admin_close_support_case', { p_case_id: caseId });
+  if (error) {
+    console.warn('[support] admin_close_support_case', error.message);
+    return false;
+  }
+  return true;
 }
 
 // ── Admin Support Team Interfaces & Helpers ─────────────────────────────────
@@ -213,13 +231,10 @@ export async function startDisputeSupportChat({
   buyerId: string;
 }): Promise<ConversationRow | null> {
   try {
-    const conv = await getOrCreateSupportConversation(buyerId);
-    if (!conv) return null;
-
+    // Opens (or reuses) a support case for the dispute, in the buyer's thread.
     const { error } = await supabase.rpc('post_dispute_support_notice', { p_order_id: orderId });
     if (error) console.warn('[support] dispute notice failed', error.message);
-
-    return conv;
+    return await getSupportConversation(buyerId);
   } catch (err) {
     console.warn('[support] startDisputeSupportChat failed', err);
     return null;

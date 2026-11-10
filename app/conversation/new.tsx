@@ -23,7 +23,7 @@ import { useListingQuery, useProfileQuery } from '@/lib/queries';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { getOrCreateConversation, sendMessage, sendOffer } from '@/lib/chat';
-import { getOrCreateSupportConversation, SUPPORT_BOT_USER_ID, SUPPORT_BOT_NAME, SUPPORT_BOT_AVATAR } from '@/lib/support';
+import { createSupportCase, caseLabel, SUPPORT_BOT_USER_ID, SUPPORT_BOT_NAME, SUPPORT_BOT_AVATAR } from '@/lib/support';
 import { getOptimizedImageUrl, cardImageUrl, IMAGE_TRANSITION } from '@/lib/images';
 import { formatPrice } from '@/lib/currency';
 import { orderTotal } from '@/lib/fees';
@@ -255,25 +255,13 @@ export default function NewConversationScreen() {
     if (isSupport) {
       setSending(true);
       try {
-        const conv = await getOrCreateSupportConversation(user.id);
-        if (!conv) {
-          Alert.alert('Could not connect to support', 'Please try again.');
-          return;
-        }
-        const saved = await sendMessage({
-          conversationId: conv.id,
-          senderId: user.id,
-          content: message.trim(),
-        });
-        if (!saved) {
-          Alert.alert('Could not send message', 'Please try again.');
-          return;
-        }
-        toast.done('Message sent to Support', 'send');
-        router.replace(`/conversation/${conv.id}` as any);
-      } catch (err) {
+        // Support = a numbered case opened from the description (no bot).
+        const c = await createSupportCase(message.trim(), 'other');
+        toast.done(`Case ${caseLabel(c.case_number)} created`, 'send');
+        router.replace(`/conversation/${c.conversation_id}` as any);
+      } catch (err: any) {
         captureError(err, { fn: 'conversationNew.sendSupport' });
-        Alert.alert('Error', 'Could not send message. Please try again.');
+        Alert.alert('Could not create the support chat', err?.message ?? 'Please try again.');
       } finally {
         setSending(false);
       }
