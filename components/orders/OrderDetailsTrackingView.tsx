@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Platform,
   Modal,
-  Share,
 } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,11 +20,14 @@ import { tap } from '@/lib/haptics';
 import { useToast } from '@/lib/toast';
 import { safeBack } from '@/lib/nav';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
-import { BRAND } from '@/lib/brand';
+import { BRAND, APP_URL } from '@/lib/brand';
+import QRCode from 'react-native-qrcode-svg';
+import { getOrCreateConversation } from '@/lib/chat';
 import type { Order } from '@/lib/payments';
 import type { Listing, FulfillmentStatus } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { conditionLabel } from '@/components/product/shared';
+import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 
 export interface OrderDetailsTrackingViewProps {
   order?: Order | null;
@@ -329,7 +331,6 @@ export function OrderDetailsTrackingView({
 
   // Seller Modals (Rule 1 & 2)
   const [labelModalVisible, setLabelModalVisible] = useState(false);
-  const [labelSubTab, setLabelSubTab] = useState<'label' | 'qr'>('label');
   const [readyDeliverModalVisible, setReadyDeliverModalVisible] = useState(false);
 
   // Dynamic status state synchronized reactively with incoming order
@@ -378,6 +379,18 @@ export function OrderDetailsTrackingView({
   const [pickupSelectedDate, setPickupSelectedDate] = useState<'tomorrow' | 'day_after'>('tomorrow');
   const [pickupConfirmed, setPickupConfirmed] = useState(false);
   const [pickupConfirmedDateStr, setPickupConfirmedDateStr] = useState<string | null>(null);
+  const [bookingPickup, setBookingPickup] = useState(false);
+  // Ready to deliver is one-time: once the order is past pending it's booked.
+  const pickupBooked =
+    pickupConfirmed ||
+    ['packing', 'picked', 'shifting', 'delivered', 'completed'].includes(String(order?.fulfillment_status ?? ''));
+  const orderClosed =
+    ['canceled', 'refunded', 'refund_due', 'failed'].includes(String(order?.status ?? '')) ||
+    order?.fulfillment_status === 'canceled';
+  const pickupCode = order?.pickup_code ?? null;
+  const courierUrl = order?.id ? `${APP_URL}/courier/${order.id}` : '';
+  const pickedUp = Boolean(order?.pickup_verified_at) ||
+    ['shifting', 'delivered', 'completed'].includes(String(order?.fulfillment_status ?? ''));
 
   // Dynamic values resolving to exact mockup defaults when not supplied
   const trackingNumber =
@@ -387,7 +400,7 @@ export function OrderDetailsTrackingView({
 
   // Derive status badge & item status badge (Clean & Role-Accurate)
   let statusBadge = propStatusLabel;
-  if (!isSeller && (statusBadge === 'Needs Label' || statusBadge === 'Packing')) {
+  if (!isSeller && (statusBadge === 'Ready to Deliver' || statusBadge === 'Awaiting Pickup' || statusBadge === 'Packing')) {
     statusBadge = 'Preparing Order';
   }
 
@@ -400,33 +413,37 @@ export function OrderDetailsTrackingView({
   } else if (currentFulfillment === 'completed') {
     statusBadge = statusBadge || 'Completed';
   } else if (currentFulfillment === 'packing') {
-    statusBadge = statusBadge || (isSeller ? 'Needs Label' : 'Preparing Order');
+    statusBadge = statusBadge || (isSeller ? 'Awaiting Pickup' : 'Preparing Order');
   } else if (currentFulfillment === 'disputed') {
     statusBadge = statusBadge || 'Refund Under Review';
   } else if (currentFulfillment === 'canceled') {
     statusBadge = statusBadge || 'Cancelled';
   } else {
-    statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Needs Label' : 'Paid') : (isSeller ? 'Needs Label' : 'Preparing Order'));
+    statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Ready to Deliver' : 'Paid') : (isSeller ? 'Ready to Deliver' : 'Preparing Order'));
   }
 
 
-  const addr = (order?.shipping_address as any) || {};
-  const recipient =
-    propReceiverName ||
-    addr.recipientName ||
-    addr.recipient_name ||
-    (order as any)?.buyer?.full_name ||
-    '—';
+  // Sellers never see the buyer's delivery details: the server doesn't send
+  // them (order_delivery_contacts is buyer/admin only), and the UI doesn't
+  // render them either.
+  const addr = isSeller ? {} : ((order?.shipping_address as any) || {});
+  const deliveryCity = ((order?.shipping_address as any)?.city as string | undefined) || null;
+  const buyerHandle = (order as any)?.buyer?.username ? `@${(order as any).buyer.username}` : 'Buyer';
+  const recipient = isSeller
+    ? buyerHandle
+    : propReceiverName ||
+      addr.recipientName ||
+      addr.recipient_name ||
+      (order as any)?.buyer?.full_name ||
+      '—';
 
-  const streetAddress =
-    propDeliveryAddress ||
-    [addr.line1, addr.city].filter(Boolean).join(', ') ||
-    '—';
+  const streetAddress = isSeller
+    ? deliveryCity || '—'
+    : propDeliveryAddress ||
+      [addr.line1, addr.city].filter(Boolean).join(', ') ||
+      '—';
 
-  const phone =
-    propContactPhone ||
-    addr.phone ||
-    '—';
+  const phone = isSeller ? '—' : propContactPhone || addr.phone || '—';
 
   const item =
     propItemTitle ||
@@ -434,10 +451,7 @@ export function OrderDetailsTrackingView({
     (order as any)?.listing?.title ||
     'Item';
 
-  const note =
-    propDeliveryNote ||
-    order?.delivery_notes ||
-    null;
+  const note = isSeller ? null : propDeliveryNote || order?.delivery_notes || null;
 
   const carrierName = (order as any)?.courier_name || `${BRAND} Express`;
 
@@ -494,9 +508,10 @@ export function OrderDetailsTrackingView({
   const isPicked =
     currentFulfillment === 'picked' ||
     isShipped ||
-    Boolean((order as any)?.picked_up_at || (order as any)?.picked_at || pickupConfirmed);
+    Boolean((order as any)?.picked_up_at || (order as any)?.picked_at);
   const isPacked =
     Boolean(order?.packed_at) ||
+    pickupConfirmed ||
     isPicked;
 
   const deliveredTimestamp = parseServerDate(order?.delivered_at || order?.completed_at);
@@ -571,7 +586,7 @@ export function OrderDetailsTrackingView({
             time: formatTime(deliveredTime),
             date: formatDate(deliveredTime),
             title: 'Package Delivered',
-            description: `Handed over directly to ${recipient} at ${streetAddress}.`,
+            description: isSeller ? 'Handed over to the buyer.' : `Handed over directly to ${recipient} at ${streetAddress}.`,
             completed: true,
             isLatest: true,
           },
@@ -645,14 +660,30 @@ export function OrderDetailsTrackingView({
 
 
 
-  // Message Seller / Buyer Handler (Matching Image 1)
-  const handleContactSeller = () => {
+  // Message the other party: straight into the order's chat thread (no
+  // compose screen). The thread normally exists from checkout; if not it's
+  // created, and anything unexpected falls back to the inbox.
+  const [openingChat, setOpeningChat] = useState(false);
+  const handleContactSeller = async () => {
     tap('light');
-    const targetListingId = listing?.id || order?.listing_id;
-    if (targetListingId) {
-      router.push(`/conversation/new?listing=${targetListingId}` as any);
-    } else {
+    if (openingChat) return;
+    const listingId = listing?.id || order?.listing_id || null;
+    if (!order?.buyer_id || !order?.seller_id) {
       router.push('/(tabs)/chat' as any);
+      return;
+    }
+    setOpeningChat(true);
+    try {
+      const conv = await getOrCreateConversation({
+        buyerId: order.buyer_id,
+        sellerId: order.seller_id,
+        listingId,
+      });
+      router.push((conv?.id ? `/conversation/${conv.id}` : '/(tabs)/chat') as any);
+    } catch {
+      router.push('/(tabs)/chat' as any);
+    } finally {
+      setOpeningChat(false);
     }
   };
 
@@ -680,10 +711,12 @@ export function OrderDetailsTrackingView({
       return;
     }
 
+    if (bookingPickup || pickupBooked) return;
     tap('medium');
     const chosenDateStr = pickupSelectedDate === 'tomorrow' ? tomorrowFormatted : dayAfterFormatted;
 
     if (onConfirmPickup) {
+      setBookingPickup(true);
       try {
         await onConfirmPickup({
           recipientName: pickupContactName,
@@ -697,32 +730,12 @@ export function OrderDetailsTrackingView({
         setPickupConfirmed(true);
         setPickupConfirmedDateStr(chosenDateStr);
         setReadyDeliverModalVisible(false);
-        toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
-      } catch (e: any) {
-        console.warn('pickup schedule error', e);
-        toast.show(e?.message || 'Could not schedule pickup', {
-          variant: 'default',
-          icon: 'alert-triangle',
-        });
+        toast.done(`Pickup booked for ${chosenDateStr}`);
+      } catch {
+        // invoice screen already showed the server's message
+      } finally {
+        setBookingPickup(false);
       }
-    } else {
-      setPickupConfirmed(true);
-      setPickupConfirmedDateStr(chosenDateStr);
-      setReadyDeliverModalVisible(false);
-      toast.done(`Pickup confirmed for ${chosenDateStr}! Driver scheduled.`);
-    }
-  };
-
-  // Download Label Action (Image 2)
-  const handleDownloadLabel = async () => {
-    tap('light');
-    try {
-      await Share.share({
-        message: `${BRAND} Shipping Label\nWaybill: ${trackingNumber}\nFrom: ${pickupContactName} (${pickupLine1}, ${pickupCity})\nTo: ${recipient} (${streetAddress})\nCarrier: ${carrierName}`,
-      });
-      toast.done('Shipping label ready & shared');
-    } catch {
-      toast.done('Label saved to documents');
     }
   };
 
@@ -1083,122 +1096,111 @@ export function OrderDetailsTrackingView({
 
         </GroupCard>
 
-        {/* ── Seller Actions: Combined "Get a label" & "Ready to deliver" (Seller Only) ── */}
-        {isSeller ? (
+        {/* ── Seller: Pickup QR code + Ready to deliver (the only booking button) ── */}
+        {isSeller && !orderClosed ? (
           <GroupCard>
-            {/* Row 1: Get a label (Opens Image 2) */}
             <Pressable
+              testID="pickup-qr-row"
+              disabled={!pickupBooked || !pickupCode}
               onPress={() => {
                 tap('light');
                 setLabelModalVisible(true);
               }}
               accessibilityRole="button"
-              accessibilityLabel="Get a label"
+              accessibilityLabel="Pickup QR code"
+              accessibilityState={{ disabled: !pickupBooked || !pickupCode }}
               style={({ pressed }) => [
                 {
                   flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
                   paddingHorizontal: 16,
                   paddingVertical: 14,
-                  minHeight: 54,
+                  minHeight: 60,
+                  gap: 12,
                   borderBottomWidth: StyleSheet.hairlineWidth,
                   borderBottomColor: isDark ? 'rgba(255,255,255,0.08)' : theme.hairline,
                 },
-                pressed && { opacity: 0.75, backgroundColor: theme.surface },
+                pressed && { backgroundColor: theme.surface },
               ]}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 8 }}>
-                <Feather name="printer" size={19} color={theme.ink} style={{ width: 26 }} />
-                <Text
-                  style={{
-                    fontSize: 15.5,
-                    fontFamily: typography.family.sansBold,
-                    color: theme.ink,
-                    letterSpacing: -0.2,
-                    marginLeft: 8,
-                  }}
-                >
-                  Get a label
+              <Ionicons name="qr-code-outline" size={20} color={pickupBooked ? theme.ink : theme.mute} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15.5, fontFamily: typography.family.sansBold, color: pickupBooked ? theme.ink : theme.mute }}>
+                  Pickup QR code
+                </Text>
+                <Text style={{ fontSize: 12.5, color: theme.mute, fontFamily: typography.family.sans, marginTop: 2 }}>
+                  {pickedUp
+                    ? 'Scanned by the courier · in transit'
+                    : pickupBooked
+                      ? 'Show it to the courier at pickup'
+                      : 'Available after Ready to deliver'}
                 </Text>
               </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 13.5,
-                    color: theme.mute,
-                    fontFamily: typography.family.sansMedium,
-                  }}
-                >
-                  Print / QR code
-                </Text>
-                <Feather name="chevron-right" size={16} color={theme.mute} />
-              </View>
+              {pickupBooked && pickupCode ? <Feather name="chevron-right" size={18} color={theme.mute} /> : null}
             </Pressable>
 
-            {/* Row 2: Ready to deliver (Opens Pickup Scheduler & Required Contact Modal) */}
             <Pressable
+              testID="ready-to-deliver-row"
+              disabled={pickupBooked}
               onPress={() => {
                 tap('light');
                 setReadyDeliverModalVisible(true);
               }}
               accessibilityRole="button"
               accessibilityLabel="Ready to deliver"
+              accessibilityState={{ disabled: pickupBooked }}
               style={({ pressed }) => [
                 {
                   flexDirection: 'row',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
                   paddingHorizontal: 16,
                   paddingVertical: 14,
-                  minHeight: 54,
+                  minHeight: 60,
+                  gap: 12,
                 },
-                pressed && { opacity: 0.75, backgroundColor: theme.surface },
+                pressed && { backgroundColor: theme.surface },
               ]}
             >
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, paddingRight: 8 }}>
-                <Ionicons name="cube-outline" size={20} color={theme.ink} style={{ width: 26 }} />
-                <Text
-                  style={{
-                    fontSize: 15.5,
-                    fontFamily: typography.family.sansBold,
-                    color: theme.ink,
-                    letterSpacing: -0.2,
-                    marginLeft: 8,
-                  }}
-                >
+              <Ionicons name="cube-outline" size={20} color={theme.ink} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 15.5, fontFamily: typography.family.sansBold, color: theme.ink }}>
                   Ready to deliver
                 </Text>
+                <Text style={{ fontSize: 12.5, color: theme.mute, fontFamily: typography.family.sans, marginTop: 2 }}>
+                  {pickupBooked
+                    ? `Pickup booked${pickupConfirmedDateStr ? ` for ${pickupConfirmedDateStr}` : ''} · can't be changed`
+                    : 'Book the courier once the item is packed'}
+                </Text>
               </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                {pickupConfirmed ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                    <Feather name="check-circle" size={14} color={theme.purple} />
-                    <Text
-                      style={{
-                        fontSize: 13,
-                        color: theme.purple,
-                        fontFamily: typography.family.sansBold,
-                      }}
-                    >
-                      {pickupConfirmedDateStr || 'Scheduled'}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 13.5,
-                      color: theme.purple,
-                      fontFamily: typography.family.sansBold,
-                    }}
-                  >
-                    Schedule pickup
-                  </Text>
-                )}
-                <Feather name="chevron-right" size={16} color={theme.mute} />
-              </View>
+              {pickupBooked ? (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 4,
+                    height: 26,
+                    paddingHorizontal: 10,
+                    borderRadius: 13,
+                    backgroundColor: theme.surface,
+                  }}
+                >
+                  <Feather name="lock" size={11} color={theme.ink} />
+                  <Text style={{ fontSize: 12, fontFamily: typography.family.sansSemibold, color: theme.ink }}>Booked</Text>
+                </View>
+              ) : (
+                <View
+                  style={{
+                    height: 32,
+                    paddingHorizontal: 14,
+                    borderRadius: 10,
+                    backgroundColor: theme.purple,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontFamily: typography.family.sansBold, color: '#FFFFFF' }}>Book pickup</Text>
+                </View>
+              )}
             </Pressable>
           </GroupCard>
         ) : null}
@@ -1314,10 +1316,21 @@ export function OrderDetailsTrackingView({
             {/* ── Section: Delivery Details ── */}
             <SectionEyebrow title="Delivery Details" icon="truck" />
             <GroupCard>
-              <KeyValueRow label="Receiver" value={recipient} />
-              <KeyValueRow label="Address" value={streetAddress} />
-              <KeyValueRow label="Contact" value={phone} />
-              <KeyValueRow label="Courier" value={carrierName} />
+              {isSeller ? (
+                // Sellers never get the buyer's address or phone; the courier handles delivery.
+                <>
+                  <KeyValueRow label="Buyer" value={recipient} />
+                  {deliveryCity ? <KeyValueRow label="Delivery city" value={deliveryCity} /> : null}
+                  <KeyValueRow label="Courier" value={carrierName} />
+                </>
+              ) : (
+                <>
+                  <KeyValueRow label="Receiver" value={recipient} />
+                  <KeyValueRow label="Address" value={streetAddress} />
+                  <KeyValueRow label="Contact" value={phone} />
+                  <KeyValueRow label="Courier" value={carrierName} />
+                </>
+              )}
               {note ? (
                 <KeyValueRow
                   label="Note"
@@ -1513,367 +1526,107 @@ export function OrderDetailsTrackingView({
 
 
 
-      {/* ── Modal 1: "Ship your item" (Exact Replica of Image 2) ── */}
+      {/* ── Pickup QR code: the courier scans it and enters the code to lock the order In Transit ── */}
       <Modal
         visible={labelModalVisible}
         transparent
         animationType="slide"
+        statusBarTranslucent
         onRequestClose={() => setLabelModalVisible(false)}
       >
         <View style={{ flex: 1, backgroundColor: theme.overlay, justifyContent: 'flex-end' }}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLabelModalVisible(false)} />
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setLabelModalVisible(false)} accessibilityLabel="Close" />
           <View
-            style={[
-              {
-                backgroundColor: theme.panel,
-                borderTopLeftRadius: 24,
-                borderTopRightRadius: 24,
-                borderWidth: 1,
-                borderColor: theme.border,
-                paddingHorizontal: 20,
-                paddingTop: 16,
-                paddingBottom: Math.max(insets.bottom, 20) + 12,
-                maxHeight: '92%',
-                maxWidth: CONTENT_MAX_WIDTH,
-                width: '100%',
-                alignSelf: 'center',
-              },
-              shadow.lg,
-            ]}
+            style={{
+              backgroundColor: theme.panel,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              borderTopWidth: StyleSheet.hairlineWidth,
+              borderColor: theme.border,
+              paddingHorizontal: 20,
+              paddingTop: 12,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              maxWidth: CONTENT_MAX_WIDTH,
+              width: '100%',
+              alignSelf: 'center',
+            }}
           >
-            {/* Header with Circular 'X' on top-left and Centered "Ship your item" */}
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                paddingVertical: 6,
-                marginBottom: 16,
-              }}
-            >
+            <View style={{ alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: theme.hairline, marginBottom: 14 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <Text style={{ fontSize: 18, fontFamily: typography.family.sansBold, color: theme.ink, letterSpacing: -0.3 }}>
+                Pickup QR code
+              </Text>
               <Pressable
                 onPress={() => setLabelModalVisible(false)}
                 hitSlop={HIT_SLOP_8}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
                 style={({ pressed }) => ({
-                  position: 'absolute',
-                  left: 0,
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : '#F3F4F6',
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: theme.surface,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: pressed ? 0.75 : 1,
+                  opacity: pressed ? 0.7 : 1,
                 })}
               >
                 <Feather name="x" size={18} color={theme.ink} />
               </Pressable>
-
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontFamily: typography.family.sansBold,
-                  color: theme.ink,
-                  letterSpacing: -0.3,
-                  textAlign: 'center',
-                }}
-              >
-                Ship your item
-              </Text>
             </View>
 
-            {/* Sub-toggle: QR code vs Shipping label */}
-            <View
-              style={{
-                flexDirection: 'row',
-                backgroundColor: isDark ? '#1C1C1E' : '#F3F4F6',
-                borderRadius: radii.pill,
-                padding: 3,
-                marginBottom: 16,
-              }}
-            >
-              <Pressable
-                onPress={() => {
-                  tap('light');
-                  setLabelSubTab('qr');
-                }}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  borderRadius: radii.pill,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: labelSubTab === 'qr' ? (isDark ? '#2C2C2E' : '#FFFFFF') : 'transparent',
-                  ...(labelSubTab === 'qr' && Platform.OS !== 'web' ? shadow.sm : {}),
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 13.5,
-                    fontFamily: labelSubTab === 'qr' ? typography.family.sansBold : typography.family.sansMedium,
-                    color: labelSubTab === 'qr' ? theme.ink : theme.mute,
-                  }}
-                >
-                  QR code
+            {pickedUp ? (
+              <View style={{ alignItems: 'center', paddingVertical: 28 }}>
+                <Feather name="truck" size={30} color={theme.ink} />
+                <Text style={{ fontSize: 16, fontFamily: typography.family.sansBold, color: theme.ink, marginTop: 12 }}>
+                  Picked up · in transit
                 </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  tap('light');
-                  setLabelSubTab('label');
-                }}
-                style={{
-                  flex: 1,
-                  paddingVertical: 8,
-                  borderRadius: radii.pill,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: labelSubTab === 'label' ? (isDark ? '#2C2C2E' : '#FFFFFF') : 'transparent',
-                  ...(labelSubTab === 'label' && Platform.OS !== 'web' ? shadow.sm : {}),
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 13.5,
-                    fontFamily: labelSubTab === 'label' ? typography.family.sansBold : typography.family.sansMedium,
-                    color: labelSubTab === 'label' ? theme.ink : theme.mute,
-                  }}
-                >
-                  Shipping label
+                <Text style={{ fontSize: 13, color: theme.mute, marginTop: 6, textAlign: 'center' }}>
+                  The courier verified the pickup code. This order is locked.
                 </Text>
-              </Pressable>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 12 }}>
-              {labelSubTab === 'label' ? (
-                /* ── Shipping Label Document Box (Image 2) ── */
-                <View
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 12,
-                    borderWidth: 1.5,
-                    borderColor: '#000000',
-                    padding: 16,
-                    marginBottom: 16,
-                  }}
-                >
-                  {/* Top Bar: Big "G" + Postage Box */}
+              </View>
+            ) : (
+              <>
+                <View style={{ alignItems: 'center' }}>
                   <View
                     style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      borderBottomWidth: 2,
-                      borderBottomColor: '#000000',
-                      paddingBottom: 10,
-                      marginBottom: 8,
-                    }}
-                  >
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={{ fontSize: 44, fontWeight: '900', color: '#000000', lineHeight: 46 }}>
-                        G
-                      </Text>
-                      <View style={{ width: 1.5, height: 44, backgroundColor: '#000000', marginHorizontal: 12 }} />
-                      <Text style={{ fontSize: 13, fontWeight: '800', color: '#000000' }}>
-                        USPS GROUND ADVANTAGE
-                      </Text>
-                    </View>
-
-                    <View
-                      style={{
-                        borderWidth: 1.5,
-                        borderColor: '#000000',
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text style={{ fontSize: 7, fontWeight: '800', color: '#000000' }}>
-                        USPS GROUND ADVANTAGE
-                      </Text>
-                      <Text style={{ fontSize: 7, fontWeight: '700', color: '#000000' }}>
-                        U.S. POSTAGE PAID
-                      </Text>
-                      <Text style={{ fontSize: 7, color: '#000000' }}>Shippo</Text>
-                      <Text style={{ fontSize: 7, fontWeight: '700', color: '#000000' }}>USPS Ship</Text>
-                    </View>
-                  </View>
-
-                  {/* Sender & Ship Date Row */}
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <View style={{ flex: 1, paddingRight: 8 }}>
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: '#000000', textTransform: 'uppercase' }}>
-                        {pickupContactName}
-                      </Text>
-                      <Text style={{ fontSize: 9.5, color: '#000000', textTransform: 'uppercase' }}>
-                        {pickupLine1}
-                      </Text>
-                      <Text style={{ fontSize: 9.5, color: '#000000', textTransform: 'uppercase' }}>
-                        {pickupCity} {pickupPostalCode}
-                      </Text>
-                    </View>
-
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ fontSize: 9.5, color: '#000000' }}>
-                        Ship Date: {formatDate(new Date())}
-                      </Text>
-                      <Text style={{ fontSize: 9.5, color: '#000000' }}>
-                        Weight: 12 oz
-                      </Text>
-                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#000000', marginTop: 4 }}>
-                        RDC 01
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Recipient Address with Mini QR box */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 18 }}>
-                    <View
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderWidth: 1.5,
-                        borderColor: '#000000',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 14,
-                      }}
-                    >
-                      <Ionicons name="qr-code" size={34} color="#000000" />
-                    </View>
-
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#000000', textTransform: 'uppercase' }}>
-                        {recipient}
-                      </Text>
-                      <Text style={{ fontSize: 11, color: '#000000', textTransform: 'uppercase' }}>
-                        {streetAddress}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Tracking Barcode Graphic (Image 2) */}
-                  <View style={{ borderTopWidth: 2, borderTopColor: '#000000', paddingTop: 10, alignItems: 'center' }}>
-                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#000000', letterSpacing: 0.5, marginBottom: 6 }}>
-                      USPS TRACKING # USPS Ship
-                    </Text>
-
-                    {/* Barcode Stripes */}
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        height: 52,
-                        width: '100%',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: 2,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {[3, 1, 2, 4, 1, 3, 2, 1, 4, 1, 2, 3, 1, 4, 2, 1, 3, 2, 1, 4, 1, 3, 2, 1, 3, 4, 1, 2, 3, 1, 4, 2, 1, 3].map(
-                        (w, i) => (
-                          <View
-                            key={i}
-                            style={{
-                              width: w,
-                              height: 52,
-                              backgroundColor: '#000000',
-                            }}
-                          />
-                        ),
-                      )}
-                    </View>
-
-                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#000000', letterSpacing: 1.5 }}>
-                      9300 1107 9340 0008 6372 98
-                    </Text>
-
-                    <View style={{ alignSelf: 'flex-end', marginTop: 4 }}>
-                      <Ionicons name="qr-code" size={26} color="#000000" />
-                    </View>
-                  </View>
-                </View>
-              ) : (
-                /* ── QR Code Option Box (Image 2) ── */
-                <View
-                  style={{
-                    backgroundColor: theme.surface,
-                    borderRadius: 14,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    padding: 24,
-                    alignItems: 'center',
-                    marginBottom: 16,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 180,
-                      height: 180,
-                      backgroundColor: '#FFFFFF',
+                      padding: 14,
                       borderRadius: 16,
-                      borderWidth: 2,
-                      borderColor: '#000000',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 16,
-                      ...shadow.md,
+                      backgroundColor: '#FFFFFF',
+                      borderWidth: StyleSheet.hairlineWidth,
+                      borderColor: theme.border,
                     }}
                   >
-                    <Ionicons name="qr-code" size={150} color="#000000" />
+                    {courierUrl ? <QRCode value={courierUrl} size={196} color="#111111" backgroundColor="#FFFFFF" /> : null}
                   </View>
-
-                  <Text style={{ fontSize: 16, fontFamily: typography.family.sansBold, color: theme.ink, marginBottom: 4 }}>
-                    {trackingNumber}
+                  <Text style={{ fontSize: 12, color: theme.mute, fontFamily: typography.family.sansSemibold, marginTop: 18, letterSpacing: 0.4 }}>
+                    PICKUP CODE
                   </Text>
                   <Text
-                    style={{
-                      fontSize: 12.5,
-                      color: theme.mute,
-                      textAlign: 'center',
-                      lineHeight: 18,
-                      fontFamily: typography.family.sans,
-                      paddingHorizontal: 16,
-                    }}
+                    testID="pickup-code"
+                    selectable
+                    style={[
+                      { fontSize: 34, fontFamily: typography.family.sansBold, color: theme.ink, letterSpacing: 6, marginTop: 4 },
+                      tabularNumberStyle,
+                    ]}
                   >
-                    No printer needed. Simply show this digital QR code to your pickup courier or at any parcel station.
+                    {pickupCode ? `${pickupCode.slice(0, 3)} ${pickupCode.slice(3)}` : '— — —'}
                   </Text>
                 </View>
-              )}
-
-
-
-              {/* Download Label CTA Button */}
-              <Pressable
-                onPress={handleDownloadLabel}
-                accessibilityRole="button"
-                accessibilityLabel="Download label"
-                style={({ pressed }) => ({
-                  height: 48,
-                  borderRadius: radii.pill,
-                  backgroundColor: theme.ink,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: pressed ? 0.88 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                })}
-              >
-                <Text
-                  style={{
-                    fontSize: 15,
-                    fontFamily: typography.family.sansBold,
-                    color: theme.background,
-                    letterSpacing: -0.2,
-                  }}
-                >
-                  Download label
-                </Text>
-              </Pressable>
-            </ScrollView>
+                <View style={{ marginTop: 18, gap: 10 }}>
+                  {[
+                    'Hand the packed item to the courier.',
+                    'The courier scans this QR and enters the pickup code.',
+                    'The order locks as In Transit automatically. Only share the code with the courier in person.',
+                  ].map((t, i) => (
+                    <View key={i} style={{ flexDirection: 'row', gap: 10 }}>
+                      <Text style={{ width: 18, fontSize: 13, fontFamily: typography.family.sansBold, color: theme.ink }}>{i + 1}.</Text>
+                      <Text style={{ flex: 1, fontSize: 13, lineHeight: 19, color: theme.mute, fontFamily: typography.family.sans }}>{t}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
           </View>
         </View>
       </Modal>
@@ -1883,22 +1636,28 @@ export function OrderDetailsTrackingView({
         visible={readyDeliverModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setReadyDeliverModalVisible(false)}
+        statusBarTranslucent
+        onRequestClose={() => (bookingPickup ? undefined : setReadyDeliverModalVisible(false))}
       >
         <View style={{ flex: 1, backgroundColor: theme.overlay, justifyContent: 'flex-end' }}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setReadyDeliverModalVisible(false)} />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => (bookingPickup ? undefined : setReadyDeliverModalVisible(false))}
+            accessibilityLabel="Close"
+          />
+          <KeyboardAvoider style={{ width: '100%', maxHeight: '92%' }}>
           <View
             style={[
               {
                 backgroundColor: theme.panel,
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
-                borderWidth: 1,
+                borderTopWidth: StyleSheet.hairlineWidth,
                 borderColor: theme.border,
                 paddingHorizontal: 20,
                 paddingTop: 16,
                 paddingBottom: Math.max(insets.bottom, 20) + 12,
-                maxHeight: '92%',
+                maxHeight: '100%',
                 maxWidth: CONTENT_MAX_WIDTH,
                 width: '100%',
                 alignSelf: 'center',
@@ -1923,7 +1682,7 @@ export function OrderDetailsTrackingView({
                   Ready to deliver
                 </Text>
                 <Text style={{ fontSize: 12, color: theme.mute, fontFamily: typography.family.sans, marginTop: 2 }}>
-                  Set your exact pickup location &amp; select a pickup date
+                  Where and when the courier should collect the item
                 </Text>
               </View>
 
@@ -1946,15 +1705,15 @@ export function OrderDetailsTrackingView({
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 16 }}>
               {/* Pickup Address Fields */}
-              <Text style={{ fontSize: 12, fontFamily: typography.family.sansBold, color: theme.mute, textTransform: 'uppercase', marginBottom: 8 }}>
-                Exact Pickup Point Address (Required)
+              <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginBottom: 8 }}>
+                Pickup address
               </Text>
 
               <View style={{ gap: 10, marginBottom: 16 }}>
                 <TextInput
                   value={pickupLine1}
                   onChangeText={setPickupLine1}
-                  placeholder="Street Address (e.g. 210 Dan Allen Drive)"
+                  placeholder="House / street (e.g. 12 Main Boulevard, Gulberg)"
                   placeholderTextColor={theme.mute}
                   style={{
                     height: 46,
@@ -1971,7 +1730,7 @@ export function OrderDetailsTrackingView({
                 <TextInput
                   value={pickupLine2}
                   onChangeText={setPickupLine2}
-                  placeholder="Apt, Suite, Floor (Optional)"
+                  placeholder="Apartment, floor (optional)"
                   placeholderTextColor={theme.mute}
                   style={{
                     height: 46,
@@ -2007,7 +1766,7 @@ export function OrderDetailsTrackingView({
                   <TextInput
                     value={pickupPostalCode}
                     onChangeText={setPickupPostalCode}
-                    placeholder="Postal Code"
+                    placeholder="Postal code"
                     placeholderTextColor={theme.mute}
                     style={{
                       width: 110,
@@ -2026,15 +1785,15 @@ export function OrderDetailsTrackingView({
               </View>
 
               {/* Necessary Contact Details */}
-              <Text style={{ fontSize: 12, fontFamily: typography.family.sansBold, color: theme.mute, textTransform: 'uppercase', marginBottom: 8 }}>
-                Pickup Contact Details (Required)
+              <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginBottom: 8 }}>
+                Contact at pickup
               </Text>
 
               <View style={{ gap: 10, marginBottom: 18 }}>
                 <TextInput
                   value={pickupContactName}
                   onChangeText={setPickupContactName}
-                  placeholder="Contact Person Name"
+                  placeholder="Name"
                   placeholderTextColor={theme.mute}
                   style={{
                     height: 46,
@@ -2051,7 +1810,7 @@ export function OrderDetailsTrackingView({
                 <TextInput
                   value={pickupContactPhone}
                   onChangeText={setPickupContactPhone}
-                  placeholder="Contact Phone (for Driver call/SMS)"
+                  placeholder="Phone, for the courier (03XXXXXXXXX)"
                   keyboardType="phone-pad"
                   placeholderTextColor={theme.mute}
                   style={{
@@ -2069,8 +1828,8 @@ export function OrderDetailsTrackingView({
               </View>
 
               {/* 2 Dates Selection: Tomorrow vs Day After (Rule 2) */}
-              <Text style={{ fontSize: 12, fontFamily: typography.family.sansBold, color: theme.mute, textTransform: 'uppercase', marginBottom: 8 }}>
-                Select Pickup Date (2 Available Slots)
+              <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginBottom: 8 }}>
+                Pickup day
               </Text>
 
               <View style={{ gap: 10, marginBottom: 22 }}>
@@ -2126,18 +1885,6 @@ export function OrderDetailsTrackingView({
                     </View>
                   </View>
 
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                      borderRadius: radii.pill,
-                      backgroundColor: isDark ? 'rgba(108, 71, 255, 0.22)' : 'rgba(108, 71, 255, 0.10)',
-                    }}
-                  >
-                    <Text style={{ fontSize: 11, fontFamily: typography.family.sansBold, color: isDark ? '#FFFFFF' : theme.purple }}>
-                      Recommended
-                    </Text>
-                  </View>
                 </Pressable>
 
                 {/* Date Option 2: The Day After That */}
@@ -2194,19 +1941,37 @@ export function OrderDetailsTrackingView({
                 </Pressable>
               </View>
 
+              {/* Final step: can't be undone */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  gap: 10,
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: theme.surface,
+                  marginBottom: 14,
+                }}
+              >
+                <Feather name="lock" size={14} color={theme.ink} style={{ marginTop: 2 }} />
+                <Text style={{ flex: 1, fontSize: 12.5, lineHeight: 18, color: theme.ink, fontFamily: typography.family.sans }}>
+                  This books the courier and can&apos;t be undone or booked again. After confirming you won&apos;t be able to cancel the order.
+                </Text>
+              </View>
+
               {/* Confirm CTA */}
               <Pressable
+                testID="confirm-ready-to-deliver"
                 onPress={handleConfirmPickupSchedule}
+                disabled={bookingPickup}
                 accessibilityRole="button"
-                accessibilityLabel="Confirm pickup schedule"
+                accessibilityLabel="Confirm ready to deliver"
                 style={({ pressed }) => ({
                   height: 48,
-                  borderRadius: radii.pill,
+                  borderRadius: 10,
                   backgroundColor: theme.ink,
                   alignItems: 'center',
                   justifyContent: 'center',
-                  opacity: pressed ? 0.88 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                  opacity: bookingPickup ? 0.6 : pressed ? 0.88 : 1,
                 })}
               >
                 <Text
@@ -2217,11 +1982,12 @@ export function OrderDetailsTrackingView({
                     letterSpacing: -0.2,
                   }}
                 >
-                  Confirm Pickup &amp; Mark Ready
+                  {bookingPickup ? 'Booking pickup…' : 'Confirm ready to deliver'}
                 </Text>
               </Pressable>
             </ScrollView>
           </View>
+          </KeyboardAvoider>
         </View>
       </Modal>
 

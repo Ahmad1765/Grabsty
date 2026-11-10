@@ -1,3 +1,4 @@
+import { withDeliveryContact } from '@/lib/orderDelivery';
 import { Linking, Platform } from "react-native";
 import { supabase } from "@/lib/supabase";
 // Type-only in the other direction (lib/orders.ts imports `type MyOrder` from
@@ -27,7 +28,7 @@ export async function fetchOrderForListing(
   idOrListingId: string,
 ): Promise<Order | null> {
   const SELECT_ORDER_COLS =
-    "id, status, fulfillment_status, fulfillment_type, amount_cents, fee_cents, currency, payment_method, shipping_method, shipping_fee_cents, order_seller_pickups(pickup_address), shipping_address, delivery_notes, courier_name, tracking_number, cancel_reason, cancelled_by, dispute_reason, dispute_evidence_urls, disputed_at, dispute_resolved_at, payment_authorized_at, packed_at, shifted_at, shipped_at, delivered_at, completed_at, cod_paid_at, cod_buyer_confirmed_at, cod_seller_confirmed_at, supplier_name, supplier_order_id, created_at, listing_id, buyer_id, seller_id, listing:listings(id, title, images, thumbnails, price, category, seller_id, is_sold), buyer:profiles!orders_buyer_id_fkey(id, username, full_name, avatar_url), seller:profiles!orders_seller_id_fkey(id, username, full_name, avatar_url)";
+    "id, status, fulfillment_status, fulfillment_type, amount_cents, fee_cents, currency, payment_method, shipping_method, shipping_fee_cents, order_seller_pickups(pickup_address, pickup_code, pickup_verified_at), order_delivery_contacts(address, delivery_notes), shipping_address, delivery_notes, courier_name, tracking_number, cancel_reason, cancelled_by, dispute_reason, dispute_evidence_urls, disputed_at, dispute_resolved_at, payment_authorized_at, packed_at, shifted_at, shipped_at, delivered_at, completed_at, cod_paid_at, cod_buyer_confirmed_at, cod_seller_confirmed_at, supplier_name, supplier_order_id, created_at, listing_id, buyer_id, seller_id, listing:listings(id, title, images, thumbnails, price, category, seller_id, is_sold), buyer:profiles!orders_buyer_id_fkey(id, username, full_name, avatar_url), seller:profiles!orders_seller_id_fkey(id, username, full_name, avatar_url)";
 
   const formatOrderRow = (row: any): Order => {
     const rawPickup = row.order_seller_pickups;
@@ -38,13 +39,16 @@ export async function fetchOrderForListing(
     const buyerObj = Array.isArray(rawBuyer) ? rawBuyer[0] : rawBuyer;
     const rawSeller = row.seller;
     const sellerObj = Array.isArray(rawSeller) ? rawSeller[0] : rawSeller;
-    return {
+    return withDeliveryContact({
       ...row,
       listing: listingObj ?? null,
       buyer: buyerObj ?? null,
       seller: sellerObj ?? null,
       seller_pickup_address: pickupObj?.pickup_address ?? null,
-    } as Order;
+      // Seller + admins only (RLS); null for the buyer.
+      pickup_code: pickupObj?.pickup_code ?? null,
+      pickup_verified_at: pickupObj?.pickup_verified_at ?? null,
+    }) as Order;
   };
 
   // Check if idOrListingId is a valid UUID (Postgres UUID column requires valid syntax)

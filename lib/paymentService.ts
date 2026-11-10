@@ -1,3 +1,4 @@
+import { withDeliveryContact } from '@/lib/orderDelivery';
 import { Platform } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { BUYER_PROTECTION_FEE } from '@/lib/fees';
@@ -669,7 +670,8 @@ export class PaymentService {
         listing:listings(id, title, price, images, brand, category),
         buyer:profiles!orders_buyer_id_fkey(id, username, full_name, avatar_url),
         seller:profiles!orders_seller_id_fkey(id, username, full_name, avatar_url),
-        order_seller_pickups(pickup_address)
+        order_seller_pickups(pickup_address),
+        order_delivery_contacts(address, delivery_notes)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -709,10 +711,10 @@ export class PaymentService {
     return (((data as any[]) ?? []).map((row) => {
       const rawPickup = row.order_seller_pickups;
       const pickupObj = Array.isArray(rawPickup) ? rawPickup[0] : rawPickup;
-      return {
+      return withDeliveryContact({
         ...row,
         seller_pickup_address: pickupObj?.pickup_address ?? row.seller_pickup_address ?? null,
-      };
+      });
     })) as Order[];
   }
 

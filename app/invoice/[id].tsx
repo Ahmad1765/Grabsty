@@ -23,7 +23,8 @@ import { OrderDetailsTrackingView } from '@/components/orders/OrderDetailsTracki
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { Confetti } from '@/components/ui/Confetti';
 import { CancelOrderModal } from '@/components/orders/CancelOrderModal';
-import { SellerPickupModal, type SellerPickupAddressInput } from '@/components/orders/SellerPickupModal';
+import type { SellerPickupAddressInput } from '@/components/orders/SellerPickupModal';
+import { mergeOrderUpdate } from '@/lib/orderDelivery';
 
 function tap(style: 'light' | 'medium' = 'light') {
   if (Platform.OS !== 'ios') return;
@@ -63,7 +64,7 @@ export default function InvoiceScreen() {
   }>();
   // Celebrate a just-placed order once (checkout passes placed=1; Stripe's return URL adds paid=1).
   const [showConfetti, setShowConfetti] = useState(placed === '1' || paid === '1');
-  const { profile, user } = useAuth();
+  const { user } = useAuth();
   const toast = useToast();
   const { theme } = useTheme();
 
@@ -96,7 +97,6 @@ export default function InvoiceScreen() {
   const [completingReceipt, setCompletingReceipt] = useState(false);
   const [advancingPacking, setAdvancingPacking] = useState(false);
   const [openingDispute, setOpeningDispute] = useState(false);
-  const [showPickupModal, setShowPickupModal] = useState(false);
   const [sellerDefaultAddress, setSellerDefaultAddress] = useState<any>(null);
 
   const priceRef = useRef(listing?.price);
@@ -221,7 +221,7 @@ export default function InvoiceScreen() {
         },
         (payload) => {
           if (payload.new) {
-            setOrder((prev) => ({ ...(prev ?? {}), ...(payload.new as Order) }));
+            setOrder((prev) => mergeOrderUpdate(prev, payload.new as Order));
           }
         },
       )
@@ -334,7 +334,7 @@ export default function InvoiceScreen() {
         listingId: listing?.id || order.listing_id || String(id),
         reason,
       });
-      setOrder(updated);
+      setOrder((prev) => mergeOrderUpdate(prev, updated));
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
@@ -361,49 +361,19 @@ export default function InvoiceScreen() {
         targetStatus: 'packing',
         sellerPickupAddress: address,
       });
-      setOrder(updated);
+      setOrder((prev) => mergeOrderUpdate(prev, updated));
+      // The pickup code is generated server-side and isn't in the RPC result.
+      const fresh = await fetchOrderForListing(order.id).catch(() => null);
+      if (fresh) setOrder((prev) => mergeOrderUpdate(prev, fresh));
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
-      toast.done('Ready for pickup. Our courier will collect it from your address.');
     } catch (e: any) {
       toast.show(e?.message || 'Failed to update order status', {
         variant: 'default',
         icon: 'alert-triangle',
       });
       throw e;
-    } finally {
-      setAdvancingPacking(false);
-    }
-  };
-
-  // Seller Start Packing Handler
-  const handleStartPacking = async () => {
-    if (!order?.id || advancingPacking) return;
-    // If order is managed delivery, require confirming pickup address first
-    if ((order as any)?.shipping_method === 'managed' || !(order as any)?.shipping_method) {
-      setShowPickupModal(true);
-      return;
-    }
-    tap('medium');
-    setAdvancingPacking(true);
-    try {
-      const updated = await paymentService.advanceOrderFulfillment({
-        orderId: order.id,
-        targetStatus: 'packing',
-      });
-      setOrder(updated);
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
-      }
-      toast.done(order.fulfillment_type === 'dropship'
-          ? 'Sent to supplier for processing'
-          : 'Marked ready for pickup', 'send');
-    } catch (e: any) {
-      toast.show(e?.message || 'Failed to update order status', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
     } finally {
       setAdvancingPacking(false);
     }
@@ -429,7 +399,7 @@ export default function InvoiceScreen() {
         orderId: order.id,
         reason: 'Item damaged / defective on arrival',
       });
-      setOrder(updated);
+      setOrder((prev) => mergeOrderUpdate(prev, updated));
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
       }
@@ -460,7 +430,7 @@ export default function InvoiceScreen() {
     setCompletingReceipt(true);
     try {
       const updated = await paymentService.confirmOrderReceived({ orderId: order.id });
-      setOrder(updated);
+      setOrder((prev) => mergeOrderUpdate(prev, updated));
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
         queryClient.invalidateQueries({ queryKey: ['myOrders'] });
@@ -496,7 +466,7 @@ export default function InvoiceScreen() {
 
     try {
       const updated = await paymentService.markCodOrderPaid(order.id);
-      setOrder(updated);
+      setOrder((prev) => mergeOrderUpdate(prev, updated));
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
         queryClient.invalidateQueries({ queryKey: ['myOrders'] });
@@ -513,12 +483,6 @@ export default function InvoiceScreen() {
     }
   };
 
-  const isOrderActive =
-    order?.status === 'paid' ||
-    order?.status === 'pending' ||
-    order?.status === 'packing' ||
-    order?.status === 'shifting' ||
-    order?.status === 'delivered';
   const isShipped = Boolean(
     order?.shipped_at ||
     (order as any)?.shifted_at ||
@@ -527,38 +491,60 @@ export default function InvoiceScreen() {
     order?.fulfillment_status === 'shifting'
   );
 
-  // Mirrors cancel_order: either party, until the courier has the parcel.
-  const canCancel =
+  // Mirrors cancel_order: either party until the courier has the parcel,
+  // except the seller, who is locked out once Ready to deliver is confirmed.
+  const orderOpen =
     (isBuyer || isSeller) &&
     (order?.status === 'pending' || order?.status === 'paid') &&
     !isShipped &&
     ['pending', 'awaiting_payment', 'packing', undefined, null].includes(order?.fulfillment_status as any);
+  const sellerLocked = isSeller && !isBuyer && order?.fulfillment_status === 'packing';
+  const canCancel = orderOpen && !sellerLocked;
   const withCancel = (primary: React.ReactNode) =>
-    primary || canCancel ? (
+    primary || orderOpen ? (
       <View style={{ gap: 10 }}>
         {primary}
-        {canCancel ? (
-          <Pressable
-            testID="cancel-order-button"
-            onPress={() => setShowCancelModal(true)}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              {
-                height: 40,
-                borderRadius: radii.pill,
-                borderWidth: 1,
-                borderColor: theme.border,
-                backgroundColor: theme.panel,
-                alignItems: 'center',
-                justifyContent: 'center',
-              },
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: theme.danger, fontFamily: typography.family.sansSemibold }}>
-              Cancel order
-            </Text>
-          </Pressable>
+        {orderOpen ? (
+          <View style={{ gap: 6 }}>
+            <Pressable
+              testID="cancel-order-button"
+              onPress={() => setShowCancelModal(true)}
+              disabled={!canCancel}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !canCancel }}
+              style={({ pressed }) => [
+                {
+                  height: 48,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: theme.border,
+                  backgroundColor: theme.panel,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  opacity: canCancel ? 1 : 0.5,
+                },
+                pressed && canCancel && { opacity: 0.8 },
+              ]}
+            >
+              <Feather name={canCancel ? 'x-circle' : 'lock'} size={16} color={canCancel ? theme.danger : theme.mute} />
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: canCancel ? theme.danger : theme.mute,
+                  fontFamily: typography.family.sansSemibold,
+                }}
+              >
+                Cancel order
+              </Text>
+            </Pressable>
+            {sellerLocked ? (
+              <Text style={{ fontSize: 12.5, color: theme.mute, textAlign: 'center', fontFamily: typography.family.sans }}>
+                You confirmed Ready to deliver, so this order can no longer be cancelled. Contact support if something is wrong.
+              </Text>
+            ) : null}
+          </View>
         ) : null}
       </View>
     ) : null;
@@ -580,58 +566,12 @@ export default function InvoiceScreen() {
         isSeller={isSeller}
         sellerDefaultAddress={sellerDefaultAddress}
         onConfirmPickup={handleConfirmPickupAndPack}
-        onOrderUpdate={(updated) => setOrder(updated)}
+        onOrderUpdate={(updated) => setOrder((prev) => mergeOrderUpdate(prev, updated))}
         onBack={() => safeBack()}
         onShare={onShare}
         actionButtons={withCancel(
-          isSeller && (order?.fulfillment_status === 'pending' || !order?.fulfillment_status || order?.fulfillment_status === 'awaiting_payment') && isOrderActive && order?.status !== 'completed' && order?.status !== 'canceled' && order?.status !== 'refunded' ? (
-            <Pressable
-              onPress={handleStartPacking}
-              disabled={advancingPacking}
-              style={({ pressed }) => [
-                {
-                  height: 48,
-                  borderRadius: radii.pill,
-                  backgroundColor: theme.primary,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                },
-                pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
-              ]}
-            >
-              {advancingPacking ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <Feather name="package" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                  <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', fontFamily: typography.family.sansBold }}>
-                    Ready for Pickup
-                  </Text>
-                </>
-              )}
-            </Pressable>
-          ) : isSeller && order?.fulfillment_status === 'packing' ? (
-            <View
-              style={{
-                minHeight: 48,
-                paddingVertical: 8,
-                borderRadius: radii.pill,
-                backgroundColor: theme.surface,
-                borderWidth: 1,
-                borderColor: theme.border,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 20,
-              }}
-            >
-              <Feather name="truck" size={16} color={theme.mute} style={{ marginRight: 8 }} />
-              <Text style={{ flexShrink: 1, textAlign: 'center', fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
-                Ready for Pickup · Our courier will collect it
-              </Text>
-            </View>
-          ) : isSeller && order?.payment_method === 'cod' && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
+          // Ready to deliver lives in the seller card above (one button, not two).
+          isSeller && order?.payment_method === 'cod' && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
             // Only the buyer confirms COD; the seller waits. Server auto-completes 24h after delivery.
             <View
               style={{
@@ -777,14 +717,6 @@ export default function InvoiceScreen() {
         isSeller={isSeller}
       />
 
-      {/* Seller Pickup Modal (Managed Delivery) */}
-      <SellerPickupModal
-        visible={showPickupModal}
-        onClose={() => setShowPickupModal(false)}
-        onConfirmPickup={handleConfirmPickupAndPack}
-        initialAddress={sellerDefaultAddress}
-        defaultContactName={profile?.full_name || profile?.username}
-      />
       {showConfetti ? <Confetti onDone={() => setShowConfetti(false)} /> : null}
     </SafeAreaView>
   );

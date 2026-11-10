@@ -116,8 +116,11 @@ export function BottomSheetModal({
       }
       translateY.value = withSpring(0, SPRING_CONFIG);
     } else {
-      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, () => {
-        runOnJS(setInternalVisible)(false);
+      // Only unmount when the slide-out actually finished: reopening while it
+      // runs cancels it (finished = false), and unmounting then hid the sheet
+      // that was just opened (e.g. tapping a button right as a screen loads).
+      translateY.value = withTiming(SCREEN_HEIGHT, { duration: 220 }, (finished) => {
+        if (finished) runOnJS(setInternalVisible)(false);
       });
     }
     // Resize alone must not replay the open haptic/spring.
@@ -144,8 +147,8 @@ export function BottomSheetModal({
     .onEnd((event) => {
       // Dismiss if dragged down by > 120px or with strong downward velocity
       if (event.translationY > 120 || event.velocityY > 600) {
-        translateY.value = withTiming(fallbackDismissHeight + 100, { duration: 200 }, () => {
-          runOnJS(handleDismiss)();
+        translateY.value = withTiming(fallbackDismissHeight + 100, { duration: 200 }, (finished) => {
+          if (finished) runOnJS(handleDismiss)();
         });
       } else {
         translateY.value = withSpring(0, SPRING_CONFIG);

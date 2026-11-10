@@ -126,6 +126,10 @@ export interface Order {
   shipping_fee_cents?: number | null;
   /** Attached value sourced through get_order_seller_pickup(p_order_id); not returned by standard reads of public.orders. */
   seller_pickup_address?: SellerPickupAddress | null;
+  /** Courier pickup code from Ready to deliver. Seller + admins only (RLS). */
+  pickup_code?: string | null;
+  /** Set when the courier entered the pickup code (order locked In Transit). */
+  pickup_verified_at?: string | null;
   stripe_session_id?: string | null;
   stripe_payment_intent?: string | null;
   offer_message_id?: string | null;

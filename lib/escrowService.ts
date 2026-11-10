@@ -1,3 +1,4 @@
+import { withDeliveryContact } from '@/lib/orderDelivery';
 import { supabase } from '@/lib/supabase';
 import type { EscrowStatus, Transaction, TransactionEventLog, Order } from '@/types';
 
@@ -156,7 +157,8 @@ export const escrowService = {
         seller:profiles!transactions_seller_id_fkey(id, username, full_name, avatar_url),
         order:orders!transactions_order_id_fkey(
           *,
-          order_seller_pickups(pickup_address)
+          order_seller_pickups(pickup_address),
+          order_delivery_contacts(address, delivery_notes)
         )
       `)
       .order('created_at', { ascending: false })
@@ -188,7 +190,9 @@ export const escrowService = {
       throw new Error(error.message || 'Failed to fetch logistics transactions');
     }
 
-    return (data || []) as EscrowLogisticsItem[];
+    return ((data || []) as EscrowLogisticsItem[]).map((t) =>
+      t.order ? { ...t, order: withDeliveryContact(t.order as any) } : t,
+    );
   },
 
   /**
