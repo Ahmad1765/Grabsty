@@ -22,6 +22,8 @@ import { formatPrice } from '@/lib/currency';
 import type { Listing } from '@/types';
 
 import { useTheme } from '@/context/ThemeContext';
+import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { type as typography } from '@/lib/theme';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Mode = 'signin' | 'signup';
@@ -152,7 +154,7 @@ function LoginScreen() {
   // Pills need ~190px under the headline; short heroes skip them entirely.
   // Room under the headline. Short heroes keep only the rows that fit; tall
   // ones spread the pile upward instead of leaving a dead band.
-  const pillArea = Math.min(welcomeHeight - (compact ? 220 : 270), 250);
+  const pillArea = Math.min(welcomeHeight - (compact ? 240 : 280), 250);
   const pillScale = Math.max(1, pillArea / 190);
   const fitSlots = PILL_SLOTS.filter((slot) => slot.bottom + 52 <= pillArea);
   const pills = pillListings.slice(0, fitSlots.length).map((l, i) => ({ l, slot: fitSlots[i] }));
@@ -322,9 +324,9 @@ function LoginScreen() {
 
   // [first line, last word]: the last word renders a tone quieter.
   const headline: [string, string] = step === 'welcome'
-    ? ['Your story\nstarts', 'now.']
+    ? ['Pre-loved fashion,', 'protected.']
     : mode === 'signup'
-      ? ['Make it', 'yours.']
+      ? ['Create your', 'account.']
       : ['Welcome', 'back.'];
 
   return (
@@ -384,34 +386,14 @@ function LoginScreen() {
               ) : (
                 <View />
               )}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  paddingHorizontal: 12,
-                  height: 30,
-                  borderRadius: 999,
-                  backgroundColor: 'rgba(255,255,255,0.14)',
-                }}
-              >
-                <View
-                  style={{
-                    width: 6,
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: colors.white,
-                    marginRight: 8,
-                  }}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Image
+                  source={require('@/assets/images/icon.png')}
+                  style={{ width: 28, height: 28, borderRadius: 8 }}
+                  contentFit="cover"
+                  accessibilityIgnoresInvertColors
                 />
-                <Text
-                  style={{
-                    fontSize: 11,
-                    fontWeight: '700',
-                    color: colors.white,
-                    letterSpacing: 1.4,
-                    textTransform: 'uppercase',
-                  }}
-                >
+                <Text style={{ fontSize: 16, fontFamily: typography.family.sansBold, color: colors.white, letterSpacing: -0.3 }}>
                   {BRAND}
                 </Text>
               </View>
@@ -419,18 +401,25 @@ function LoginScreen() {
 
             <Text
               style={{
-                fontSize: step === 'welcome' ? (compact ? 46 : 58) : compact ? 38 : 44,
-                fontWeight: '900',
+                fontSize: compact ? 34 : 40,
+                fontFamily: typography.family.sansBold,
                 color: colors.white,
-                lineHeight: step === 'welcome' ? (compact ? 46 : 58) : compact ? 40 : 46,
-                letterSpacing: -2,
+                lineHeight: compact ? 38 : 45,
+                letterSpacing: -1.2,
               }}
             >
               {headline[0]}
               {'\n'}
-              {/* Last word sits back a tone, like a second voice in the line. */}
-              <Text style={{ color: 'rgba(255,255,255,0.42)' }}>{headline[1]}</Text>
+              {/* Second line sits back a tone. */}
+              <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: typography.family.sansBold }}>{headline[1]}</Text>
             </Text>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: compact ? 12 : 16 }}>
+              <ShieldCheckIcon size={20} />
+              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.78)', fontFamily: typography.family.sansMedium }}>
+                Buyer Protection on every order
+              </Text>
+            </View>
 
             {showPills && (
               <Animated.View

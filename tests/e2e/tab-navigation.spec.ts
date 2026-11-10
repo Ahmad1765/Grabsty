@@ -53,7 +53,7 @@ test.describe('Tab navigation', () => {
   test('Account tab routes (auth gate or profile)', async ({ page }) => {
     await page.getByRole('button', { name: 'Account' }).click();
     await expect(
-      page.getByText(/Posts|Continue as guest|Your story[\s\S]*starts now\./i).first(),
+      page.getByText(/Posts|Continue as guest|Pre-loved fashion,[\s\S]*protected\./i).first(),
     ).toBeVisible();
   });
 });

@@ -403,7 +403,7 @@ function RootLayoutNav() {
         </NavThemeProvider>
         )}
         <OfflineBanner />
-        {Platform.OS !== 'web' && <AnimatedSplash appReady={ready && hydrated} />}
+        {Platform.OS !== 'web' && <AnimatedSplash appReady={ready && hydrated} fontsReady={ready} />}
         </DiscoverSheetProvider>
         </SellSheetProvider>
         </GuestGateProvider>
