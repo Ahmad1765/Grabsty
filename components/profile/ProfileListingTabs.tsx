@@ -16,6 +16,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { EmptyState } from '@/components/ui';
 import type { SaveList } from '@/lib/saves';
 import { StatusFilterChips } from './StatusFilterChips';
+import { isVisibleListChip } from './useProfileCollections';
 
 export type ProfileTab = 'selling' | 'liked' | 'collections' | 'details';
 
@@ -216,7 +217,9 @@ export const ProfileListingTabs = memo(function ProfileListingTabs({
             </Text>
           </Pressable>
 
-          {saveLists.map((list) => {
+          {/* Only All, the default "Saved" list (once it has items) and +;
+              custom collection chips are hidden. */}
+          {saveLists.filter(isVisibleListChip).map((list) => {
             const isListActive = activeListId === list.id;
             return (
               <Pressable

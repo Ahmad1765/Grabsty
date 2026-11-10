@@ -128,6 +128,8 @@ function ProfileScreenInner() {
     savedRefetch,
   });
 
+  const { saveListsRefetch } = collections;
+
   const visibleSavedListings = useMemo(
     () => (collections.activeListId ? collections.listListings : savedItems),
     [collections.activeListId, collections.listListings, savedItems],
@@ -216,6 +218,8 @@ function ProfileScreenInner() {
       if (sellingStale) sellingRefetch();
       if (likedStale) likedRefetch();
       if (savedStale) savedRefetch();
+      // List counts drive the "Saved" chip; saving elsewhere doesn't touch this cache.
+      saveListsRefetch();
       refreshProfile().catch(() => {});
     }, [
       userId,
@@ -225,6 +229,7 @@ function ProfileScreenInner() {
       likedRefetch,
       savedStale,
       savedRefetch,
+      saveListsRefetch,
       refreshProfile,
     ]),
   );

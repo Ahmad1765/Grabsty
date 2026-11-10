@@ -30,11 +30,18 @@ test.describe('Profile tab (signed in)', () => {
     ).toBeVisible();
   });
 
-  test('Collections tab shows its list chips and a grid or empty state', async ({ page }) => {
+  test('Collections tab shows only All, Saved (when non-empty) and +', async ({ page }) => {
     await page.getByRole('tab', { name: 'Collections', exact: true }).click();
     await expect(page.getByText(/^All \(\d+\)$/).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Create collection' })).toBeVisible();
+    // Every other "Name (n)" chip in the row must be the default Saved list,
+    // and only while it holds something. Custom collections never show.
+    const chips = await page.getByText(/^.+ \(\d+\)$/).allTextContents();
+    for (const chip of chips.filter((c) => !/^All \(/.test(c))) {
+      expect(chip).toMatch(/^Saved \([1-9]\d*\)$/);
+    }
     await expect(
-      page.locator(`text=/${PRICE_PATTERN}|No saved items yet|This list is empty/`).first(),
+      page.locator(`text=/${PRICE_PATTERN}|No saved items|This list is empty/`).first(),
     ).toBeVisible();
   });
 

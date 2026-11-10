@@ -1,4 +1,5 @@
 import { capture } from '@/lib/analytics';
+import { isVisibleListChip } from '@/components/profile/useProfileCollections';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
@@ -783,7 +784,8 @@ export default function UserProfileScreen() {
                   </Text>
                 </Pressable>
 
-                {saveLists.map((list) => {
+                {/* Same rule as your own profile: All + the Saved list while non-empty. */}
+                {saveLists.filter(isVisibleListChip).map((list) => {
                   const isListActive = activeListId === list.id;
                   return (
                     <Pressable
