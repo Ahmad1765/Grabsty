@@ -461,24 +461,16 @@ export const HomeSearchView = memo(function HomeSearchView({
   // Focus-scoped: this overlay stays mounted under any pushed screen (product,
   // profile), and an always-on listener returning true swallowed Back there.
   useFocusEffect(useCallback(() => {
+    // Back always returns to where search was opened from. Stepping back to
+    // the search landing first (and popping the keyboard) made it take two
+    // presses to leave results.
     const onBackPress = () => {
-      if (hasSubmitted) {
-        setHasSubmitted(false);
-        inputRef.current?.focus?.();
-        setQuery('');
-        setSearchFilters(EMPTY_SEARCH_FILTERS);
-        ++searchRequestIdRef.current;
-        setSellerResults([]);
-        setListingResults([]);
-        setLoading(false);
-        return true;
-      }
       handleClose();
       return true;
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => subscription.remove();
-  }, [hasSubmitted, handleClose]));
+  }, [handleClose]));
 
   // Opens in place (no slide): the overlay fades over Home while the search
   // bar starts exactly on Home's bar (HomeHeader FeedSearch: x=16, width
@@ -1324,27 +1316,13 @@ export const HomeSearchView = memo(function HomeSearchView({
             borderBottomWidth: 0,
           }}
         >
-          {/* Back: returns to the search landing after a submit, else closes search. */}
+          {/* Back: leaves search, back to where it was opened from (one press, no keyboard). */}
           <Animated.View style={closeAnimatedStyle}>
             <Pressable
-              onPress={() => {
-                haptic();
-                if (hasSubmitted) {
-                  setHasSubmitted(false);
-                  inputRef.current?.focus?.();
-                  setQuery('');
-                  setSearchFilters(EMPTY_SEARCH_FILTERS);
-                  ++searchRequestIdRef.current;
-                  setSellerResults([]);
-                  setListingResults([]);
-                  setLoading(false);
-                } else {
-                  handleClose();
-                }
-              }}
+              onPress={handleClose}
               hitSlop={8}
               accessibilityRole="button"
-              accessibilityLabel={hasSubmitted ? 'Back to search' : 'Close search'}
+              accessibilityLabel="Close search"
               style={({ pressed }) => ({
                 width: 32,
                 height: 44,
