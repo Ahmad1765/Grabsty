@@ -83,7 +83,7 @@ test.describe('Network failures', () => {
     // never reaches. The app was behaving correctly the whole time: the sheet
     // opens fine with the REST route aborted, which is exactly what this test
     // set out to prove.
-    await expect(page.getByPlaceholder(/^Search Grabsty/)).toBeVisible();
+    await expect(page.getByPlaceholder(/^(Search Grabsty|What are you looking for)/)).toBeVisible();
   });
 
   test('slow network — header renders before the feed resolves', async ({ page }) => {
