@@ -7,8 +7,8 @@ import { join } from 'node:path';
 import { ImageResponse } from '@vercel/og';
 import { getListing, meta, price } from './_listing.js';
 
-// .mts so Vercel always emits an ES module (a .tsx here was loaded as CommonJS
-// and crashed). No JSX in .mts: satori takes plain { type, props } nodes.
+// Plain .ts, no JSX: the .tsx version was loaded as CommonJS on Vercel
+// and crashed. satori takes plain { type, props } nodes.
 type Node = { type: string; props: Record<string, unknown> } | string | null;
 const h = (type: string, props: Record<string, unknown>, ...children: Node[]): Node => {
   const kids = children.filter((c) => c !== null);
