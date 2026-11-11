@@ -3,7 +3,7 @@
 // see "<title>Grabsty</title>". This serves the same index.html with the
 // listing's Open Graph / Twitter tags injected; browsers boot the app as usual.
 
-import { getListing, meta, price } from './_listing';
+import { getListing, meta, price } from './_listing.js';
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

@@ -1,8 +1,7 @@
 // Shared by the link-preview functions (files starting with _ aren't routes).
+// api/ is an ES module package (api/package.json): relative imports need ".js".
 // Reads one public listing via Supabase REST with the anon key — same access
 // a signed-out browser has, so RLS decides what's visible.
-
-import { formatPrice } from '../lib/currency';
 
 export type PreviewListing = {
   id: string;
@@ -36,5 +35,7 @@ export async function getListing(id: string | null): Promise<PreviewListing | nu
   }
 }
 
-export { listingMeta as meta } from '../lib/listingMeta';
-export const price = (n: number) => formatPrice(n, { whole: true });
+export { listingMeta as meta } from './_listingMeta.js';
+// Same output as formatPrice(n, { whole: true }) in lib/currency.ts. Restated so
+// this ES module package imports nothing from the CommonJS app tree.
+export const price = (n: number) => `Rs ${Math.round(Number(n) || 0).toLocaleString('en-US')}`;

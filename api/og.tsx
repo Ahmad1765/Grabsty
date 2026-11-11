@@ -7,7 +7,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from '@vercel/og';
-import { getListing, meta, price } from './_listing';
+import { getListing, meta, price } from './_listing.js';
 
 const INK = '#111111';
 const MUTE = '#6B6B6B';
