@@ -4,7 +4,7 @@
 // Monochrome targets (no brand-coloured logos) per UI_GUARDRAILS three-hue rule.
 
 import { useRef, useState } from 'react';
-import { View, Pressable, Share, Linking, Platform, ActivityIndicator } from 'react-native';
+import { View, Pressable, Share, Linking, Platform, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { Image } from 'expo-image';
 import * as Clipboard from 'expo-clipboard';
@@ -25,6 +25,11 @@ type Props = { visible: boolean; onClose: () => void; listing: Listing };
 export function ShareListingSheet({ visible, onClose, listing }: Props) {
   const { theme } = useTheme();
   const toast = useToast();
+  // The sheet is capped at 88% of the window and doesn't scroll, so on short
+  // viewports (phone browsers with their toolbars) shrink the card instead of
+  // letting the share targets fall off the bottom. 320 = header + text + targets.
+  const { height: windowHeight } = useWindowDimensions();
+  const cardWidth = Math.round(Math.max(170, Math.min(280, (windowHeight * 0.88 - 320) / 1.25 + 24)));
 
   const url = `${APP_URL}/product/${listing.id}`;
   const price = formatPrice(listing.price);
@@ -114,7 +119,7 @@ export function ShareListingSheet({ visible, onClose, listing }: Props) {
           collapsable={false}
           style={{
             alignSelf: 'center',
-            width: 280,
+            width: cardWidth,
             padding: 12,
             borderRadius: 18,
             borderWidth: HAIRLINE,
@@ -136,8 +141,8 @@ export function ShareListingSheet({ visible, onClose, listing }: Props) {
             </Text>
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 }}>
-            <Text style={{ fontSize: 18, fontFamily: 'Inter_700Bold', color: theme.ink }}>{price}</Text>
-            <Text numberOfLines={1} style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', color: theme.purple }}>
+            <Text numberOfLines={1} style={{ fontSize: 18, fontFamily: 'Inter_700Bold', color: theme.ink, flexShrink: 0 }}>{price}</Text>
+            <Text numberOfLines={1} style={{ fontSize: 12, fontFamily: 'Inter_600SemiBold', color: theme.purple, flexShrink: 1, marginLeft: 8 }}>
               {BRAND} · {APP_URL.replace(/^https?:\/\//, '')}
             </Text>
           </View>

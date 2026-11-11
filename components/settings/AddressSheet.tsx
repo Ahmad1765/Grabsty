@@ -16,7 +16,6 @@ import { Text, TextInput } from '@/lib/rnText';
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/lib/auth';
-import { useToast } from '@/lib/toast';
 import { tap } from '@/lib/haptics';
 import { getCurrentLocationAddress } from '@/lib/location';
 import type { ShippingAddress } from '@/types';
@@ -60,11 +59,12 @@ export function AddressSheet({
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const { profile } = useAuth();
-  const toast = useToast();
 
   const [form, setForm] = useState<AddressForm>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  // Errors show inside the sheet: a toast renders under this Modal.
+  const [notice, setNotice] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const prevVisibleRef = useRef(visible);
@@ -103,6 +103,7 @@ export function AddressSheet({
       setLocating(false);
       setFocusedField(null);
       setAttemptedSubmit(false);
+      setNotice(null);
     }
     prevVisibleRef.current = visible;
   }, [visible, initial, profile]);
@@ -134,6 +135,7 @@ export function AddressSheet({
   const handleUseCurrentLocation = async () => {
     if (locating) return;
     tap('medium');
+    setNotice(null);
     setLocating(true);
 
     try {
@@ -147,10 +149,7 @@ export function AddressSheet({
         country: loc.country || s.country || 'Pakistan',
       }));
     } catch (e: any) {
-      toast.show(e?.message ?? 'Could not detect location', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
+      setNotice(e?.message ?? 'Could not detect location');
     } finally {
       setLocating(false);
     }
@@ -159,20 +158,14 @@ export function AddressSheet({
   const handleSubmit = async () => {
     setAttemptedSubmit(true);
     if (!canSave) {
-      toast.show('Please fill in the required address fields', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
+      setNotice('Please fill in the required address fields');
       return;
     }
     setSaving(true);
     try {
       await onSave(form);
     } catch (e: any) {
-      toast.show(e?.message ?? 'Failed to save address', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
+      setNotice(e?.message ?? 'Failed to save address');
     } finally {
       setSaving(false);
     }
@@ -184,10 +177,7 @@ export function AddressSheet({
     try {
       await onRemove();
     } catch (e: any) {
-      toast.show(e?.message ?? 'Failed to remove address', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
+      setNotice(e?.message ?? 'Failed to remove address');
     } finally {
       setSaving(false);
     }
@@ -269,6 +259,11 @@ export function AddressSheet({
                   </>
                 )}
               </Pressable>
+              {notice ? (
+                <Text testID="address-notice" accessibilityRole="alert" style={{ fontSize: 13, color: '#EF4444', marginBottom: 12 }}>
+                  {notice}
+                </Text>
+              ) : null}
 
               {/* Recipient Name */}
               <View style={styles.fieldGroup}>

@@ -121,7 +121,16 @@ export async function getCurrentLocationAddress(): Promise<GeocodedAddress> {
             longitude: pos.coords.longitude,
           });
         },
-        (err) => reject(new Error(err.message || 'Location permission denied')),
+        (err) =>
+          reject(
+            new Error(
+              err.code === 1
+                ? 'Location is blocked. Allow location for this site in your browser settings, then try again.'
+                : err.code === 3
+                  ? 'Location request timed out. Please try again.'
+                  : 'Could not get your location. Check that location is turned on.',
+            ),
+          ),
         { timeout: 10000, enableHighAccuracy: true },
       );
     });
