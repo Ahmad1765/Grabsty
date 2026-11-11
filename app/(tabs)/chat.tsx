@@ -562,7 +562,8 @@ function SupportPage({
                   >
                     <View style={{ width: 28, marginRight: 10, alignItems: 'flex-start' }}>
                       {topic.icon === 'shield' ? (
-                        <ShieldCheckIcon size={20} />
+                        // Ink, no circle: approved one-off so it matches the other topic icons (AGENTS.md).
+                        <ShieldCheckIcon size={20} color={theme.ink} bgColor="transparent" />
                       ) : (
                         <Feather name={topic.icon as any} size={18} color={theme.ink} />
                       )}
