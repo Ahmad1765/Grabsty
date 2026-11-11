@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/og.tsx": { "includeFiles": "node_modules/@expo-google-fonts/inter/{500Medium,700Bold}/*.ttf" }
+    "api/og.tsx": { "includeFiles": "{api/package.json,node_modules/@expo-google-fonts/inter/{500Medium,700Bold}/*.ttf}" }
   },
   "rewrites": [
     {"source": "/relay-gs/static/:path*", "destination": "https://us-assets.i.posthog.com/static/:path*"},
