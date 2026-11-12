@@ -25,8 +25,8 @@ setup('authenticate user', async ({ page }) => {
   await page.goto('/auth/login');
   await waitForAppReady(page);
 
-  // Welcome → form (Log in mode).
-  await page.getByText('Log in', { exact: true }).click();
+  // Welcome → email form (opens in Sign in mode).
+  await page.getByTestId('welcome-login-button').click();
   await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
 
   await page.getByPlaceholder('you@example.com').fill(E2E_USER_EMAIL);

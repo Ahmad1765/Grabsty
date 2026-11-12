@@ -12,7 +12,8 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { View, Pressable, Modal, Platform } from 'react-native';
+import { View, Pressable, Modal, Platform, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Text } from '@/lib/rnText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Feather from '@expo/vector-icons/Feather';
@@ -48,7 +49,7 @@ type GuestGateApi = { prompt: (opts: GuestPrompt) => void };
 const Ctx = createContext<GuestGateApi | undefined>(undefined);
 
 export function GuestGateProvider({ children }: { children: ReactNode }) {
-  const { theme: colors } = useTheme();
+  const { theme: colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [content, setContent] = useState<GuestPrompt | null>(null);
@@ -115,59 +116,75 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
         statusBarTranslucent
         navigationBarTranslucent
       >
-        <Pressable
-          onPress={close}
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' }}
-        >
+        {/* Same shape as BuyerProtectionSheet: grab handle, close, centred mark,
+            title, one line, one filled button and a text link. */}
+        <Pressable onPress={close} style={{ flex: 1, justifyContent: 'flex-end' }}>
+          {Platform.OS === 'ios' ? (
+            <BlurView intensity={22} tint={isDark ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+          )}
+
           {/* Inner press swallows taps so tapping the sheet doesn't dismiss it. */}
           <Pressable
             onPress={() => {}}
             style={{
-              backgroundColor: colors.paper,
-              borderTopLeftRadius: 28,
-              borderTopRightRadius: 28,
+              backgroundColor: colors.panel,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
               paddingHorizontal: 24,
-              paddingTop: 12,
-              paddingBottom: (insets.bottom || 16) + 12,
+              paddingTop: 8,
+              paddingBottom: (insets.bottom || 16) + 8,
+              width: '100%',
+              maxWidth: 560,
+              alignSelf: 'center',
             }}
           >
-            <View
-              style={{
-                alignSelf: 'center',
-                width: 40,
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: colors.hairline,
-                marginBottom: 22,
-              }}
-            />
+            <View style={{ alignSelf: 'center', width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+
+            <Pressable
+              onPress={close}
+              accessibilityRole="button"
+              accessibilityLabel="Not now"
+              testID="guest-gate-close"
+              hitSlop={8}
+              style={{ position: 'absolute', top: 12, right: 12, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Feather name="x" size={24} color={colors.ink} />
+            </Pressable>
+
             {content && (
               <>
                 <View
                   style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 28,
+                    alignSelf: 'center',
+                    marginTop: 28,
+                    width: 64,
+                    height: 64,
+                    borderRadius: 32,
                     backgroundColor: 'rgba(108,71,255,0.10)',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    marginBottom: 16,
                   }}
                 >
-                  <Feather name={content.icon ?? 'lock'} size={24} color={colors.primary} />
+                  <Feather name={content.icon ?? 'lock'} size={26} color={colors.ink} />
                 </View>
                 <Text
-                  style={{
-                    fontSize: 22,
-                    fontWeight: '900',
-                    color: colors.ink,
-                    letterSpacing: -0.4,
-                    marginBottom: 8,
-                  }}
+                  accessibilityRole="header"
+                  style={{ fontSize: 22, fontFamily: 'Inter_600SemiBold', color: colors.ink, textAlign: 'center', marginTop: 16 }}
                 >
                   {content.title}
                 </Text>
-                <Text style={{ fontSize: 15, color: colors.mute, lineHeight: 22, marginBottom: 22 }}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    fontFamily: 'Inter_400Regular',
+                    color: colors.mute,
+                    lineHeight: 21,
+                    textAlign: 'center',
+                    marginTop: 6,
+                  }}
+                >
                   {content.message}
                 </Text>
 
@@ -175,35 +192,37 @@ export function GuestGateProvider({ children }: { children: ReactNode }) {
                   onPress={() => goAuth('signup')}
                   accessibilityRole="button"
                   accessibilityLabel={content.cta ?? 'Create free account'}
+                  testID="guest-gate-signup"
                   style={({ pressed }) => ({
-                    height: 54,
-                    borderRadius: 16,
-                    backgroundColor: colors.primary,
+                    height: 48,
+                    marginTop: 28,
+                    borderRadius: 10,
+                    backgroundColor: colors.purple,
                     alignItems: 'center',
                     justifyContent: 'center',
                     opacity: pressed ? 0.9 : 1,
-                    transform: [{ scale: pressed ? 0.99 : 1 }],
                   })}
                 >
-                  <Text style={{ color: colors.background, fontSize: 16, fontWeight: '800' }}>
+                  <Text style={{ color: '#FFFFFF', fontSize: 16, fontFamily: 'Inter_600SemiBold' }}>
                     {content.cta ?? 'Create free account'}
                   </Text>
                 </Pressable>
 
                 <Pressable
                   onPress={() => goAuth('signin')}
-                  style={({ pressed }) => ({ paddingVertical: 14, alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
+                  accessibilityRole="link"
+                  testID="guest-gate-signin"
+                  style={({ pressed }) => ({
+                    alignSelf: 'center',
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    marginTop: 8,
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
-                  <Text style={{ fontSize: 14, color: colors.ink, fontWeight: '700' }}>
+                  <Text style={{ fontSize: 15, fontFamily: 'Inter_600SemiBold', color: colors.purple }}>
                     I already have an account
                   </Text>
-                </Pressable>
-
-                <Pressable
-                  onPress={close}
-                  style={({ pressed }) => ({ paddingVertical: 4, alignItems: 'center', opacity: pressed ? 0.6 : 1 })}
-                >
-                  <Text style={{ fontSize: 13, color: colors.mute, fontWeight: '600' }}>Not now</Text>
                 </Pressable>
               </>
             )}

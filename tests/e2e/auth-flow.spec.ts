@@ -12,16 +12,14 @@ test.describe("Auth modal", () => {
     await waitForAppReady(page);
   });
 
-  test("welcome step shows brand, hero copy, and three CTAs", async ({
+  test("welcome step shows brand, heading, and the sign-in options", async ({
     page,
   }) => {
     await expect(page.getByText("Grabsty").first()).toBeVisible();
-    await expect(
-      page.getByText(/Pre-loved fashion,[\s\S]*protected\./i),
-    ).toBeVisible();
+    await expect(page.getByText("Sign in to continue")).toBeVisible();
+    await expect(page.getByText("Continue with Google")).toBeVisible();
+    await expect(page.getByText("Continue with email")).toBeVisible();
     await expect(page.getByText("Continue as guest")).toBeVisible();
-    await expect(page.getByText("Sign up with email")).toBeVisible();
-    await expect(page.getByText("Log in", { exact: true })).toBeVisible();
   });
 
   test("Continue as guest exits the modal back to the tab feed", async ({
@@ -39,7 +37,7 @@ test.describe("Auth modal", () => {
   test("Log in step renders the form with email + password fields", async ({
     page,
   }) => {
-    await page.getByText("Log in", { exact: true }).click();
+    await page.getByTestId("welcome-login-button").click();
     await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
     await expect(passwordField(page)).toBeVisible();
     // "Sign in" appears twice on the form step: in the mode toggle and on
@@ -58,7 +56,7 @@ test.describe("Auth modal", () => {
   // unchanged). That proves the submit didn't proceed.
   test.describe("Sign in validation (web-observable signals only)", () => {
     test.beforeEach(async ({ page }) => {
-      await page.getByText("Log in", { exact: true }).click();
+      await page.getByTestId("welcome-login-button").click();
       await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
     });
 
@@ -99,7 +97,8 @@ test.describe("Auth modal", () => {
   test("Sign-up form renders the input fields and submit copy", async ({
     page,
   }) => {
-    await page.getByText("Sign up with email").click();
+    await page.getByTestId("welcome-login-button").click();
+    await page.getByText("Sign up", { exact: true }).click();
     await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
     await expect(passwordField(page)).toBeVisible();
     await expect(
@@ -107,14 +106,15 @@ test.describe("Auth modal", () => {
     ).toBeVisible();
   });
 
-  test("Sign up with email opens the form step in signup mode", async ({
+  test("Continue with email then Sign up shows the signup form", async ({
     page,
   }) => {
     // We don't drive the back-arrow press here because RN-Web's Pressable
     // doesn't always expose role="button" — clicking it from outside is
     // brittle. Going forward (welcome → signup → form) covers the same
     // routing semantics: the welcome panel collapses and the form appears.
-    await page.getByText("Sign up with email").click();
+    await page.getByTestId("welcome-login-button").click();
+    await page.getByText("Sign up", { exact: true }).click();
     await expect(page.getByPlaceholder("you@example.com")).toBeVisible();
     await expect(
       page.getByText("Create account", { exact: true }),

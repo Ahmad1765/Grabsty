@@ -19,7 +19,7 @@ test.describe('Auth edges', () => {
     await waitForAppReady(page);
     // /upload opens the Sell sheet, whose signed-out state is a sign-in gate.
     await expect(
-      page.getByText(/Sign in to sell|Continue as guest|Sign up with email|Pre-loved fashion,[\s\S]*protected\./i).first(),
+      page.getByText(/Sign in to sell|Continue as guest|Continue with email|Sign in to continue/i).first(),
     ).toBeVisible();
   });
 
@@ -27,7 +27,7 @@ test.describe('Auth edges', () => {
     await page.goto('/profile');
     await waitForAppReady(page);
     await expect(
-      page.getByText(/Continue as guest|Sign up with email|Pre-loved fashion,[\s\S]*protected\./i).first(),
+      page.getByText(/Continue as guest|Continue with email|Sign in to continue/i).first(),
     ).toBeVisible();
   });
 
@@ -75,7 +75,7 @@ test.describe('Auth edges', () => {
   test('rapid double-submit on login does not raise an error overlay', async ({ page }) => {
     await page.goto('/auth/login');
     await waitForAppReady(page);
-    await page.getByText('Log in', { exact: true }).click();
+    await page.getByTestId('welcome-login-button').click();
     await expect(page.getByPlaceholder('you@example.com')).toBeVisible();
     await page.getByPlaceholder('you@example.com').fill('test@example.test');
     await passwordField(page).fill('hunter22');

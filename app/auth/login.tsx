@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+// Login & Sign Up. Two steps on a plain page (no banner):
+//   welcome - mark, "Sign in to continue", then Google / Apple / email
+//   form    - Sign in | Sign up switch, email + password
+import { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
 import { SafeContainer } from '@/components/ui/SafeContainer';
@@ -14,15 +17,10 @@ import { renderGoogleWebButton } from '@/lib/googleOneTap';
 import { capture } from '@/lib/analytics';
 import { ToastProvider, useToast } from '@/lib/toast';
 import { BRAND } from '@/lib/brand';
-import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFeedListingsQuery } from '@/lib/queries';
-import { cardImageUrl, getOptimizedImageUrl } from '@/lib/images';
-import { formatPrice } from '@/lib/currency';
-import type { Listing } from '@/types';
 
 import { useTheme } from '@/context/ThemeContext';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
+import { UserPlusIcon } from '@/components/ui/UserPlusIcon';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type as typography } from '@/lib/theme';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -78,7 +76,7 @@ export default function LoginRoute() {
 }
 
 function LoginScreen() {
-  const { theme: colors, isDark } = useTheme();
+  const { theme: colors } = useTheme();
   const toast = useToast();
   const params = useLocalSearchParams<{ mode?: string; step?: string }>();
   const { width, height } = useWindowDimensions();
@@ -109,21 +107,7 @@ function LoginScreen() {
     return () => clearInterval(timer);
   }, [forgotCooldown]);
 
-  const [stepAnim] = useState(() => new Animated.Value(0));
   const [switchAnim] = useState(() => new Animated.Value(mode === 'signin' ? 0 : 1));
-
-  useEffect(() => {
-    Animated.timing(stepAnim, {
-      toValue: step === 'welcome' ? 0 : 1,
-      duration: 280,
-      easing: Easing.bezier(0.23, 1, 0.32, 1),
-      // MUST stay false: stepAnim is interpolated into `panelHeight` and applied
-      // as a `height` (see below). The native driver only supports transform and
-      // opacity, so driving a layout prop natively throws on iOS/Android — web
-      // never hit it because useNativeDriver is a no-op there.
-      useNativeDriver: false,
-    }).start();
-  }, [step, stepAnim]);
 
   useEffect(() => {
     Animated.timing(switchAnim, {
@@ -133,37 +117,6 @@ function LoginScreen() {
       useNativeDriver: false,
     }).start();
   }, [mode, switchAnim]);
-
-  // Short or narrow phones: smaller headline, and a height floor so the
-  // panel's chip + headline + subtitle never clip.
-  const compact = height < 760 || width < 375;
-  // Welcome: the hero takes whatever the three buttons + log-in line leave.
-  const welcomeHeight = Math.max(
-    Math.min(height - insets.top - insets.bottom - 300, 600),
-    compact ? 300 : 340,
-  );
-  // Same query key as Discover's browse grid, so this is usually a cache hit.
-  const feedQ = useFeedListingsQuery({ tab: 'popular', limit: 60 });
-  const pillListings = useMemo(
-    () =>
-      (feedQ.data ?? [])
-        .filter((l) => !l.is_sold && cardImageUrl(l))
-        .slice(0, PILL_SLOTS.length),
-    [feedQ.data],
-  );
-  // Pills need ~190px under the headline; short heroes skip them entirely.
-  // Room under the headline. Short heroes keep only the rows that fit; tall
-  // ones spread the pile upward instead of leaving a dead band.
-  const pillArea = Math.min(welcomeHeight - (compact ? 240 : 280), 250);
-  const pillScale = Math.max(1, pillArea / 190);
-  const fitSlots = PILL_SLOTS.filter((slot) => slot.bottom + 52 <= pillArea);
-  const pills = pillListings.slice(0, fitSlots.length).map((l, i) => ({ l, slot: fitSlots[i] }));
-  const showPills = step === 'welcome' && pills.length > 0;
-  const formHeight = Math.max(Math.min(height * 0.28, 240), 180);
-  const panelHeight = stepAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [welcomeHeight, formHeight],
-  });
 
   const validate = (): { email?: string; password?: string } => {
     const next: { email?: string; password?: string } = {};
@@ -322,12 +275,39 @@ function LoginScreen() {
     setStep('welcome');
   };
 
-  // [first line, last word]: the last word renders a tone quieter.
-  const headline: [string, string] = step === 'welcome'
-    ? ['Pre-loved fashion,', 'protected.']
-    : mode === 'signup'
-      ? ['Create your', 'account.']
-      : ['Welcome', 'back.'];
+  const outlineButton = {
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.panel,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  } as const;
+  const buttonLabel = { marginLeft: 10, fontSize: 15.5, fontFamily: typography.family.sansSemibold, color: colors.ink } as const;
+  const legal = (
+    <Text style={{ textAlign: 'center', fontSize: 12, color: colors.mute, lineHeight: 17, paddingHorizontal: 16 }}>
+      {mode === 'signup' && step === 'form' ? 'By creating an account you agree to our ' : 'By continuing you agree to our '}
+      <Text
+        accessibilityRole="link"
+        onPress={() => router.push('/legal/terms' as any)}
+        style={{ textDecorationLine: 'underline', color: colors.ink }}
+      >
+        Terms
+      </Text>
+      {' and '}
+      <Text
+        accessibilityRole="link"
+        onPress={() => router.push('/legal/privacy' as any)}
+        style={{ textDecorationLine: 'underline', color: colors.ink }}
+      >
+        Privacy Policy
+      </Text>
+      .
+    </Text>
+  );
 
   return (
     <SafeContainer
@@ -338,196 +318,84 @@ function LoginScreen() {
       contentContainerStyle={{
         flexGrow: 1,
         paddingBottom: 24,
+        minHeight: isDesktop ? undefined : height - insets.top - insets.bottom,
         // Desktop: the phone layout as a centred card-width column.
-        ...(isDesktop && { width: '100%', maxWidth: 480, alignSelf: 'center', justifyContent: 'center' }),
+        ...(isDesktop && { width: '100%', maxWidth: 440, alignSelf: 'center', justifyContent: 'center' }),
       }}
       scrollViewProps={{ bounces: false }}
     >
-          {/* Hero panel: controls ride inside it, listing pills tumble along the bottom */}
-          <Animated.View
-            style={{
-              marginHorizontal: 16,
-              marginTop: 8,
-              height: panelHeight,
-              // Hero carries white text/overlays, so it stays dark in both themes
-              // (`primary` flips to white in dark mode).
-              backgroundColor: isDark ? colors.panel : colors.primary,
-              borderRadius: 32,
-              padding: 24,
-              overflow: 'hidden',
-            }}
-          >
+          {/* Top bar: close on welcome (when there is something to go back to), back on the form */}
+          <View style={{ height: 52, paddingHorizontal: 12, justifyContent: 'center' }}>
+            {step === 'form' || router.canDismiss() ? (
+              <Pressable
+                onPress={step === 'form' ? backToWelcome : () => router.dismiss()}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={step === 'form' ? 'Back' : 'Close'}
+                style={({ pressed }) => ({
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
+                <Feather name={step === 'form' ? 'arrow-left' : 'x'} size={22} color={colors.ink} />
+              </Pressable>
+            ) : null}
+          </View>
+
+          {step === 'welcome' ? (
             <View
               style={{
-                flexDirection: 'row',
+                flex: 1,
+                minHeight: isDesktop ? 260 : 220,
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: compact ? 18 : 26,
+                justifyContent: 'center',
+                paddingHorizontal: 32,
               }}
             >
-              {step === 'form' || router.canDismiss() ? (
-                <Pressable
-                  onPress={step === 'form' ? backToWelcome : () => router.dismiss()}
-                  hitSlop={12}
-                  accessibilityRole="button"
-                  accessibilityLabel={step === 'form' ? 'Back' : 'Close'}
-                  style={({ pressed }) => ({
-                    width: 38,
-                    height: 38,
-                    borderRadius: 19,
-                    backgroundColor: 'rgba(255,255,255,0.14)',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transform: [{ scale: pressed ? 0.94 : 1 }],
-                  })}
-                >
-                  <Feather name={step === 'form' ? 'arrow-left' : 'x'} size={18} color={colors.white} />
-                </Pressable>
-              ) : (
-                <View />
-              )}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Image
-                  source={require('@/assets/images/icon.png')}
-                  style={{ width: 28, height: 28, borderRadius: 8 }}
-                  contentFit="cover"
-                  accessibilityIgnoresInvertColors
-                />
-                <Text style={{ fontSize: 16, fontFamily: typography.family.sansBold, color: colors.white, letterSpacing: -0.3 }}>
-                  {BRAND}
-                </Text>
-              </View>
-            </View>
-
-            <Text
-              style={{
-                fontSize: compact ? 34 : 40,
-                fontFamily: typography.family.sansBold,
-                color: colors.white,
-                lineHeight: compact ? 38 : 45,
-                letterSpacing: -1.2,
-              }}
-            >
-              {headline[0]}
-              {'\n'}
-              {/* Second line sits back a tone. */}
-              <Text style={{ color: 'rgba(255,255,255,0.5)', fontFamily: typography.family.sansBold }}>{headline[1]}</Text>
-            </Text>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: compact ? 12 : 16 }}>
-              <ShieldCheckIcon size={20} />
-              <Text style={{ fontSize: 14, color: 'rgba(255,255,255,0.78)', fontFamily: typography.family.sansMedium }}>
-                Buyer Protection on every order
-              </Text>
-            </View>
-
-            {showPills && (
-              <Animated.View
-                pointerEvents="none"
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
+              <UserPlusIcon size={64} color={colors.purple} strokeWidth={1.5} />
+              <Text
+                accessibilityRole="header"
                 style={{
-                  position: 'absolute',
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: pillArea,
-                  opacity: stepAnim.interpolate({ inputRange: [0, 0.4], outputRange: [1, 0], extrapolate: 'clamp' }),
+                  fontSize: 26,
+                  fontFamily: typography.family.sansSemibold,
+                  color: colors.ink,
+                  letterSpacing: -0.6,
+                  textAlign: 'center',
+                  marginTop: 24,
                 }}
               >
-                {pills.map(({ l, slot }, i) => (
-                  <ListingPill key={l.id} listing={l} slot={slot} index={i} scale={pillScale} />
-                ))}
-              </Animated.View>
-            )}
-          </Animated.View>
+                Sign in to continue
+              </Text>
+              <Text style={{ fontSize: 15, lineHeight: 22, color: colors.mute, textAlign: 'center', marginTop: 8, maxWidth: 300 }}>
+                Choose how you&apos;d like to sign in or create your {BRAND} account.
+              </Text>
+            </View>
+          ) : (
+            <View style={{ paddingHorizontal: 20, paddingTop: 8 }}>
+              <Text
+                accessibilityRole="header"
+                style={{ fontSize: 26, fontFamily: typography.family.sansSemibold, color: colors.ink, letterSpacing: -0.6 }}
+              >
+                {mode === 'signup' ? 'Create your account' : 'Welcome back'}
+              </Text>
+              <Text style={{ fontSize: 15, lineHeight: 22, color: colors.mute, marginTop: 6 }}>
+                {mode === 'signup' ? `Join ${BRAND} with your email.` : `Sign in to your ${BRAND} account.`}
+              </Text>
+            </View>
+          )}
 
           {/* Action area */}
           <View style={{ paddingHorizontal: 16, paddingTop: 20 }}>
             {step === 'welcome' ? (
               <View style={{ gap: 12 }}>
-                <PressableScale onPress={goGuest} style={{}}>
-                  <View
-                    style={{
-                      height: 56,
-                      borderRadius: 16,
-                      // Resting controls stay Paper White + hairline (UI_GUARDRAILS: no grey fills).
-                      backgroundColor: colors.paper,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingHorizontal: 20,
-                    }}
-                  >
-                    <Feather name="user" size={18} color={colors.ink} />
-                    <Text
-                      style={{
-                        marginLeft: 10,
-                        fontSize: 15.5,
-                        fontWeight: '700',
-                        color: colors.ink,
-                        letterSpacing: 0.1,
-                      }}
-                    >
-                      Continue as guest
-                    </Text>
-                  </View>
-                </PressableScale>
-
-                <PressableScale onPress={() => openForm('signup')} style={{}}>
-                  <View
-                    style={{
-                      height: 56,
-                      borderRadius: 16,
-                      backgroundColor: colors.primary,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingHorizontal: 20,
-                    }}
-                  >
-                    <Feather name="mail" size={18} color={colors.background} />
-                    <Text
-                      style={{
-                        marginLeft: 10,
-                        fontSize: 15.5,
-                        fontWeight: '800',
-                        color: colors.background,
-                        letterSpacing: 0.1,
-                      }}
-                    >
-                      Sign up with email
-                    </Text>
-                  </View>
-                </PressableScale>
-
                 <PressableScale onPress={handleGoogle} disabled={oauthLoading} style={{}}>
-                  <View
-                    style={{
-                      height: 56,
-                      borderRadius: 16,
-                      // Resting controls stay Paper White + hairline (UI_GUARDRAILS: no grey fills).
-                      backgroundColor: colors.paper,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingHorizontal: 20,
-                    }}
-                  >
-                    <Ionicons name="logo-google" size={18} color={colors.ink} />
-                    <Text
-                      style={{
-                        marginLeft: 10,
-                        fontSize: 15.5,
-                        fontWeight: '700',
-                        color: colors.ink,
-                        letterSpacing: 0.1,
-                      }}
-                    >
+                  <View style={[outlineButton, { backgroundColor: colors.ink, borderColor: colors.ink }]}>
+                    <Ionicons name="logo-google" size={18} color={colors.background} />
+                    <Text style={[buttonLabel, { color: colors.background }]}>
                       {oauthLoading ? 'Connecting…' : 'Continue with Google'}
                     </Text>
                   </View>
@@ -545,8 +413,8 @@ function LoginScreen() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         opacity: 0.01,
-                        // Google's iframe is 40px tall; stretch it over the 56px button.
-                        transform: [{ scaleY: 1.4 }],
+                        // Google's iframe is 40px tall; stretch it over the 52px button.
+                        transform: [{ scaleY: 1.3 }],
                       }}
                     />
                   ) : null}
@@ -554,67 +422,31 @@ function LoginScreen() {
 
                 {Platform.OS === 'ios' ? (
                   <PressableScale onPress={handleApple} disabled={oauthLoading} style={{}}>
-                    <View
-                      style={{
-                        height: 56,
-                        borderRadius: 16,
-                        backgroundColor: colors.paper,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        paddingHorizontal: 20,
-                      }}
-                    >
+                    <View style={outlineButton}>
                       <Ionicons name="logo-apple" size={19} color={colors.ink} />
-                      <Text
-                        style={{
-                          marginLeft: 10,
-                          fontSize: 15.5,
-                          fontWeight: '700',
-                          color: colors.ink,
-                          letterSpacing: 0.1,
-                        }}
-                      >
-                        Continue with Apple
-                      </Text>
+                      <Text style={buttonLabel}>Continue with Apple</Text>
                     </View>
                   </PressableScale>
                 ) : null}
 
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginTop: 14,
-                  }}
+                {/* Opens the form; the Sign in | Sign up switch is there. */}
+                <PressableScale testID="welcome-login-button" onPress={() => openForm(mode)} style={{}}>
+                  <View style={outlineButton}>
+                    <Feather name="mail" size={18} color={colors.ink} />
+                    <Text style={buttonLabel}>Continue with email</Text>
+                  </View>
+                </PressableScale>
+
+                <View style={{ marginTop: 8 }}>{legal}</View>
+
+                <Pressable
+                  onPress={goGuest}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  style={({ pressed }) => ({ alignSelf: 'center', paddingVertical: 8, opacity: pressed ? 0.6 : 1 })}
                 >
-                  <Text style={{ fontSize: 14, color: colors.mute }}>
-                    Already have an account?
-                  </Text>
-                  <Pressable
-                    testID="welcome-login-button"
-                    onPress={() => openForm('signin')}
-                    hitSlop={10}
-                    style={({ pressed }) => ({
-                      marginLeft: 6,
-                      opacity: pressed ? 0.6 : 1,
-                    })}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '800',
-                        color: colors.ink,
-                        textDecorationLine: 'underline',
-                      }}
-                    >
-                      Log in
-                    </Text>
-                  </Pressable>
-                </View>
+                  <Text style={{ fontSize: 14, fontFamily: typography.family.sansSemibold, color: colors.mute }}>Continue as guest</Text>
+                </Pressable>
               </View>
             ) : (
               <View>
@@ -740,77 +572,18 @@ function LoginScreen() {
                   disabled={loading}
                   style={{}}
                 >
-                  <View
-                    style={{
-                      marginTop: 8,
-                      height: 58,
-                      borderRadius: 18,
-                      backgroundColor: colors.primary,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 16,
-                        fontWeight: '800',
-                        color: colors.background,
-                        letterSpacing: 0.2,
-                      }}
-                    >
+                  <View style={[outlineButton, { marginTop: 8, backgroundColor: colors.ink, borderColor: colors.ink }]}>
+                    <Text style={[buttonLabel, { marginLeft: 0, fontSize: 16, color: colors.background }]}>
                       {loading
                         ? 'One moment…'
                         : mode === 'signup'
                           ? 'Create account'
                           : 'Sign in'}
                     </Text>
-                    <View
-                      style={{
-                        position: 'absolute',
-                        right: 12,
-                        width: 38,
-                        height: 38,
-                        borderRadius: 19,
-                        backgroundColor: 'rgba(255,255,255,0.18)',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Feather name="arrow-right" size={18} color={colors.background} />
-                    </View>
                   </View>
                 </PressableScale>
 
-                <Text
-                  style={{
-                    marginTop: 16,
-                    textAlign: 'center',
-                    fontSize: 12,
-                    color: colors.mute,
-                    lineHeight: 17,
-                    paddingHorizontal: 16,
-                  }}
-                >
-                  {mode === 'signup' ? 'By creating an account you agree to our ' : 'By continuing you agree to our '}
-                  <Text
-                    accessibilityRole="link"
-                    onPress={() => router.push('/legal/terms' as any)}
-                    style={{ textDecorationLine: 'underline', color: colors.ink }}
-                  >
-                    Terms
-                  </Text>
-                  {' and '}
-                  <Text
-                    accessibilityRole="link"
-                    onPress={() => router.push('/legal/privacy' as any)}
-                    style={{ textDecorationLine: 'underline', color: colors.ink }}
-                  >
-                    Privacy Policy
-                  </Text>
-                  .
-                </Text>
+                <View style={{ marginTop: 16 }}>{legal}</View>
               </View>
             )}
           </View>
@@ -971,116 +744,5 @@ function Field({
         </View>
       ) : null}
     </View>
-  );
-}
-
-// ── Hero listing pills ──────────────────────────────────────────────────────
-// Real live listings scattered along the hero's bottom edge, tilted and
-// clipped by the panel so they read as a pile rather than a grid. Positions are
-// ordered so any count from 1 to 6 still looks composed. One inverted pill
-// breaks the run of white without adding a colour.
-type PillSlot = { left: `${number}%`; bottom: number; rotate: string; inverted?: boolean };
-const PILL_SLOTS: PillSlot[] = [
-  { left: '-6%', bottom: 124, rotate: '-8deg' },
-  { left: '52%', bottom: 70, rotate: '7deg' },
-  { left: '-3%', bottom: 16, rotate: '5deg' },
-  { left: '46%', bottom: 14, rotate: '-5deg', inverted: true },
-  { left: '58%', bottom: 128, rotate: '-6deg' },
-  { left: '-14%', bottom: 70, rotate: '-3deg' },
-];
-
-const PILL_INK = '#0F0F0F';
-
-function ListingPill({
-  listing,
-  slot,
-  index,
-  scale,
-}: {
-  listing: Listing;
-  slot: PillSlot;
-  index: number;
-  scale: number;
-}) {
-  const [enter] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    Animated.timing(enter, {
-      toValue: 1,
-      duration: 520,
-      delay: 120 + index * 70,
-      easing: Easing.bezier(0.23, 1, 0.32, 1),
-      useNativeDriver: Platform.OS !== 'web',
-    }).start();
-  }, [enter, index]);
-
-  const thumb = getOptimizedImageUrl(cardImageUrl(listing), { width: 96 });
-  const name = listing.brand || listing.title;
-  const sub = [formatPrice(listing.price, { whole: true }), listing.size].filter(Boolean).join(' · ');
-  const inverted = !!slot.inverted;
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        left: slot.left,
-        bottom: Math.round(slot.bottom * scale),
-        opacity: enter,
-        transform: [
-          { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) },
-          { rotate: slot.rotate },
-        ],
-      }}
-    >
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          height: 48,
-          maxWidth: 190,
-          paddingLeft: 5,
-          paddingRight: 16,
-          borderRadius: 24,
-          backgroundColor: inverted ? 'rgba(255,255,255,0.14)' : '#FFFFFF',
-          borderWidth: inverted ? 1 : 0,
-          borderColor: 'rgba(255,255,255,0.22)',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: inverted ? 0 : 0.14,
-          shadowRadius: 10,
-          elevation: inverted ? 0 : 3,
-        }}
-      >
-        <Image
-          source={{ uri: thumb }}
-          style={{ width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(15,15,15,0.08)' }}
-          contentFit="cover"
-          cachePolicy="memory-disk"
-        />
-        <View style={{ marginLeft: 9, flexShrink: 1 }}>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: 'Inter_700Bold',
-              fontSize: 13,
-              letterSpacing: -0.2,
-              color: inverted ? '#FFFFFF' : PILL_INK,
-            }}
-          >
-            {name}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: 'Inter_500Medium',
-              fontSize: 11,
-              marginTop: 1,
-              color: inverted ? 'rgba(255,255,255,0.65)' : 'rgba(15,15,15,0.55)',
-            }}
-          >
-            {sub}
-          </Text>
-        </View>
-      </View>
-    </Animated.View>
   );
 }
