@@ -80,36 +80,4 @@ test.describe('Adversarial UI Kinetics', () => {
     // If it isn't disabled, the test fails.
     await expect(buyButton).toBeDisabled({ timeout: 500 });
   });
-
-  test('Network Chaos: Drop connection exact millisecond of Delivery Confirmation', async ({ page, context }) => {
-    // Auto-accept confirmation modal on web
-    page.on('dialog', dialog => dialog.accept());
-
-    // Buyer marks item as delivered to release escrow
-    await page.goto('/activity/orders/12345678-1234-1234-1234-123456789012');
-    
-    const confirmDeliveryBtn = page.getByTestId('confirm-delivery-button');
-    await expect(confirmDeliveryBtn).toBeVisible();
-
-    // Intercept the RPC call `advance_order_fulfillment`
-    let rpcCalled = false;
-    await page.route('**/rest/v1/rpc/advance_order_fulfillment', async route => {
-      rpcCalled = true;
-      // Abort the request simulating a sudden network drop (e.g. entering a tunnel)
-      await route.abort('failed');
-    });
-
-    await confirmDeliveryBtn.click();
-
-    // Ensure the RPC was intercepted and dropped
-    expect(rpcCalled).toBe(true);
-
-    // The UI MUST NOT show a "Success" toast or navigate away.
-    // It must gracefully recover and show a network error state.
-    const successToast = page.locator('text="Delivery confirmed"');
-    await expect(successToast).not.toBeVisible();
-    
-    const errorToast = page.locator('text="Network error. Please try again."');
-    await expect(errorToast).toBeVisible();
-  });
 });

@@ -327,7 +327,7 @@ export default function AdminLogisticsScreen() {
     let list = transactions;
 
     if (!searchQuery.trim()) return list;
-    const q = searchQuery.toLowerCase().trim();
+    const q = searchQuery.toLowerCase().trim().replace(/^(grb-?|#)/, '');
     return list.filter((t) => {
       const ref = deriveRef(t.id).toLowerCase();
       const orderRef = deriveRef(t.order_id).toLowerCase();
@@ -339,6 +339,8 @@ export default function AdminLogisticsScreen() {
       return (
         ref.includes(q) ||
         orderRef.includes(q) ||
+        // a pasted 12-character order number / tracking ID
+        (q.length > orderRef.length && q.startsWith(orderRef)) ||
         title.includes(q) ||
         buyerName.includes(q) ||
         sellerName.includes(q) ||
@@ -937,6 +939,83 @@ type SellerPayout = {
 
 // Seller's default payout method + CNIC name, via an admin-only RPC. Shown on
 // every transaction so whoever releases funds can send them without asking.
+// Which rider delivers this order. Scanning the Pickup QR assigns the rider
+// automatically; this is for orders the team marked picked up, or to hand an
+// order to someone else. Only the assigned rider can confirm delivery.
+type RiderOption = { id: string; username: string | null; full_name: string | null };
+function RiderAssignCard({ orderId }: { orderId: string }) {
+  const [state, setState] = useState<{ loading: boolean; riderId: string | null; riders: RiderOption[]; error: string | null }>({
+    loading: true,
+    riderId: null,
+    riders: [],
+    error: null,
+  });
+  const [saving, setSaving] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setState((s) => ({ ...s, loading: true, error: null }));
+    supabase.rpc('admin_rider_assignment', { p_order_id: orderId }).then(({ data, error }) => {
+      if (!live) return;
+      const d = (data ?? {}) as { rider_id?: string | null; riders?: RiderOption[] };
+      setState({ loading: false, riderId: d.rider_id ?? null, riders: d.riders ?? [], error: error?.message ?? null });
+    });
+    return () => {
+      live = false;
+    };
+  }, [orderId]);
+
+  const assign = async (riderId: string | null) => {
+    if (saving) return;
+    setSaving(riderId ?? 'none');
+    const { error } = await supabase.rpc('admin_assign_rider', { p_order_id: orderId, p_rider_id: riderId });
+    setSaving(null);
+    setState((s) => (error ? { ...s, error: error.message } : { ...s, riderId, error: null }));
+  };
+
+  return (
+    <View style={[styles.ledgerCard, { marginTop: 12 }]}>
+      <Text style={styles.sectionHeaderTitle}>DELIVERY RIDER · TAP TO ASSIGN</Text>
+      {state.loading ? (
+        <ActivityIndicator color="#6C47FF" size="small" />
+      ) : state.riders.length === 0 ? (
+        <Text style={styles.ledgerLabel}>No riders yet. Make an account a rider in Admin → Users (truck button).</Text>
+      ) : (
+        <>
+          {state.riders.map((r) => {
+            const active = state.riderId === r.id;
+            return (
+              <Pressable
+                key={r.id}
+                testID="assign-rider-row"
+                onPress={() => assign(active ? null : r.id)}
+                disabled={!!saving}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                style={[styles.ledgerRow, saving ? { opacity: 0.6 } : null]}
+              >
+                <Text style={styles.ledgerLabel}>
+                  {r.full_name || r.username || 'Rider'}
+                  {r.username ? ` · @${r.username}` : ''}
+                </Text>
+                <Text style={[styles.ledgerValue, { marginLeft: 12 }]}>
+                  {saving === r.id ? 'Saving…' : active ? 'Assigned ✓' : 'Assign'}
+                </Text>
+              </Pressable>
+            );
+          })}
+          {!state.riderId ? (
+            <Text style={[styles.ledgerLabel, { marginTop: 6 }]}>
+              No rider assigned: only an admin can mark this order delivered.
+            </Text>
+          ) : null}
+        </>
+      )}
+      {state.error ? <Text style={[styles.ledgerLabel, { color: '#EF4444', marginTop: 6 }]}>{state.error}</Text> : null}
+    </View>
+  );
+}
+
 function SellerPayoutCard({ sellerId, onCopy }: { sellerId: string; onCopy: (text: string, label: string) => void }) {
   const [state, setState] = useState<{ loading: boolean; data: SellerPayout | null; error: string | null }>({
     loading: true,
@@ -1285,6 +1364,10 @@ function DetailContent({
           </Text>
         </View>
       </View>
+
+      {tx.order_id && (tx.status === 'READY_FOR_PICKUP' || tx.status === 'IN_TRANSIT') ? (
+        <RiderAssignCard orderId={tx.order_id} />
+      ) : null}
 
       {/* ── Where the seller gets paid (needed to release funds) ── */}
       <SellerPayoutCard sellerId={tx.seller_id} onCopy={onCopy} />

@@ -28,6 +28,7 @@ import type { Listing, FulfillmentStatus } from '@/types';
 import { getOptimizedImageUrl } from '@/lib/images';
 import { conditionLabel } from '@/components/product/shared';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
+import { orderReference, trackingIdFor } from '@/lib/orderTracking';
 
 export interface OrderDetailsTrackingViewProps {
   order?: Order | null;
@@ -393,10 +394,9 @@ export function OrderDetailsTrackingView({
     ['shifting', 'delivered', 'completed'].includes(String(order?.fulfillment_status ?? ''));
 
   // Dynamic values resolving to exact mockup defaults when not supplied
-  const trackingNumber =
-    propTrackingId ||
-    (order as any)?.tracking_number ||
-    (order?.id ? `PAQ-${order.id.slice(0, 3).toUpperCase()}-${order.id.slice(-3).toUpperCase()}` : 'PAQ-327-P21');
+  // Grabsty tracking ID: resolves on /track (track_order) for the buyer, the
+  // seller and the team.
+  const trackingNumber = propTrackingId || (order?.id ? trackingIdFor(order.id) : '—');
 
   // Derive status badge & item status badge (Clean & Role-Accurate)
   let statusBadge = propStatusLabel;
@@ -460,7 +460,7 @@ export function OrderDetailsTrackingView({
     (listing as any)?.photos?.[0] ||
     null;
   const itemCondition = conditionLabel((listing as any)?.condition);
-  const orderIdNumber = order?.id ? (order.id.replace(/[^0-9]/g, '').slice(0, 7) || order.id.slice(0, 7).toUpperCase()) : '—';
+  const orderIdNumber = order?.id ? orderReference(order.id) : '—';
 
   const actualItems = useMemo(() => {
     const rawItems = (order as any)?.order_items;
@@ -516,7 +516,9 @@ export function OrderDetailsTrackingView({
 
   const deliveredTimestamp = parseServerDate(order?.delivered_at || order?.completed_at);
   const shippedTimestamp = parseServerDate(order?.shipped_at || (order as any)?.shifted_at);
-  const pickedTimestamp = parseServerDate((order as any)?.picked_up_at || (order as any)?.picked_at);
+  const pickedTimestamp = parseServerDate(
+    (order as any)?.picked_up_at || (order as any)?.picked_at || order?.pickup_verified_at || order?.shipped_at || (order as any)?.shifted_at,
+  );
   const packedTimestamp = parseServerDate(order?.packed_at);
 
   // Exact localized timestamps bounded so no stage ever prints into the future
@@ -918,6 +920,31 @@ export function OrderDetailsTrackingView({
                 </View>
             </View>
 
+            {order?.id ? (
+              <Pressable
+                testID="track-order-link"
+                onPress={() => {
+                  tap('light');
+                  router.push(`/track?code=${encodeURIComponent(trackingNumber)}` as any);
+                }}
+                hitSlop={HIT_SLOP_8}
+                accessibilityRole="link"
+                accessibilityLabel="Open tracking page"
+                style={({ pressed }) => ({
+                  alignSelf: 'flex-start',
+                  height: 30,
+                  borderRadius: 15,
+                  paddingHorizontal: 14,
+                  justifyContent: 'center',
+                  backgroundColor: theme.panel,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: theme.border,
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink }}>Track</Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {/* Stepper Progress Nodes: Picked -> In Transit -> Delivered */}
@@ -1616,8 +1643,8 @@ export function OrderDetailsTrackingView({
                 <View style={{ marginTop: 18, gap: 10 }}>
                   {[
                     'Hand the packed item to the courier.',
-                    'The courier scans this QR and enters the pickup code.',
-                    'The order locks as In Transit automatically. Only share the code with the courier in person.',
+                    'The rider scans this QR, signs in to the rider dashboard and enters the pickup code.',
+                    'The order locks as In Transit automatically. Only share the code with the rider in person.',
                   ].map((t, i) => (
                     <View key={i} style={{ flexDirection: 'row', gap: 10 }}>
                       <Text style={{ width: 18, fontSize: 13, fontFamily: typography.family.sansBold, color: theme.ink }}>{i + 1}.</Text>

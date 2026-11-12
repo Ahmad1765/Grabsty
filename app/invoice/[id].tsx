@@ -16,15 +16,15 @@ import { safeBack } from '@/lib/nav';
 import { buyerProtectionFee, formatPrice } from '@/lib/fees';
 import { fetchOrderForListing, type Order } from '@/lib/payments';
 import { deriveInvoiceAmounts } from '@/lib/invoiceStatus';
-import { confirm } from '@/lib/confirm';
 import { paymentService } from '@/lib/paymentService';
 import { supabase } from '@/lib/supabase';
 import { OrderDetailsTrackingView } from '@/components/orders/OrderDetailsTrackingView';
-import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { Confetti } from '@/components/ui/Confetti';
 import { CancelOrderModal } from '@/components/orders/CancelOrderModal';
+import { ReportIssueSheet } from '@/components/orders/ReportIssueSheet';
 import type { SellerPickupAddressInput } from '@/components/orders/SellerPickupModal';
 import { mergeOrderUpdate } from '@/lib/orderDelivery';
+import { orderReference } from '@/lib/orderTracking';
 
 function tap(style: 'light' | 'medium' = 'light') {
   if (Platform.OS !== 'ios') return;
@@ -33,13 +33,6 @@ function tap(style: 'light' | 'medium' = 'light') {
       ? Haptics.ImpactFeedbackStyle.Light
       : Haptics.ImpactFeedbackStyle.Medium,
   );
-}
-
-function deriveInvoiceNumber(id: string): string {
-  const hex = id.replace(/-/g, '').slice(0, 12);
-  const n = parseInt(hex, 16);
-  if (!Number.isFinite(n)) return '00000000';
-  return String(Math.abs(n) % 100000000).padStart(8, '0');
 }
 
 export default function InvoiceScreen() {
@@ -92,11 +85,9 @@ export default function InvoiceScreen() {
     : null;
   const listing = listingQ.data ?? (order as any)?.listing ?? fallbackListing;
   const [confirming, setConfirming] = useState(false);
-  const [completingCod, setCompletingCod] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [completingReceipt, setCompletingReceipt] = useState(false);
   const [advancingPacking, setAdvancingPacking] = useState(false);
-  const [openingDispute, setOpeningDispute] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [sellerDefaultAddress, setSellerDefaultAddress] = useState<any>(null);
 
   const priceRef = useRef(listing?.price);
@@ -311,7 +302,7 @@ export default function InvoiceScreen() {
   const seller = listing?.seller ?? (order as any)?.seller ?? null;
   const isSeller = role ? role === 'seller' : Boolean(user?.id && (user.id === listing?.seller_id || user.id === seller?.id || user.id === order?.seller_id));
   const isBuyer = Boolean(user?.id && (order?.buyer_id ? user.id === order.buyer_id : !isSeller));
-  const invoiceNumber = deriveInvoiceNumber(order?.id || listing?.id || String(id));
+  const invoiceNumber = orderReference(order?.id || listing?.id || String(id));
 
   const onShare = async () => {
     tap('light');
@@ -376,110 +367,6 @@ export default function InvoiceScreen() {
       throw e;
     } finally {
       setAdvancingPacking(false);
-    }
-  };
-
-  // Buyer Open Dispute Handler
-  const handleOpenDispute = async () => {
-    if (!order?.id || openingDispute) return;
-    tap('medium');
-
-    const confirmed = await confirm({
-      title: 'Report Damaged Item / Issue?',
-      message: 'Opening a dispute will place payout funds on hold under Buyer Protection while support mediates.',
-      confirmLabel: 'Open Dispute',
-      destructive: true,
-    });
-
-    if (!confirmed) return;
-
-    setOpeningDispute(true);
-    try {
-      const updated = await paymentService.openOrderDispute({
-        orderId: order.id,
-        reason: 'Item damaged / defective on arrival',
-      });
-      setOrder((prev) => mergeOrderUpdate(prev, updated));
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
-      }
-      toast.done('Dispute opened. Funds placed on hold.', 'shield');
-    } catch (e: any) {
-      toast.show(e?.message || 'Failed to open dispute', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
-    } finally {
-      setOpeningDispute(false);
-    }
-  };
-
-  // Buyer Confirm Received Handler
-  const handleConfirmReceived = async () => {
-    if (!order?.id || completingReceipt) return;
-    tap('medium');
-
-    const confirmed = await confirm({
-      title: 'Confirm Package Received?',
-      message: 'Confirm that you have received your order in good condition. This will complete the transaction.',
-      confirmLabel: 'Everything is OK',
-    });
-
-    if (!confirmed) return;
-
-    setCompletingReceipt(true);
-    try {
-      const updated = await paymentService.confirmOrderReceived({ orderId: order.id });
-      setOrder((prev) => mergeOrderUpdate(prev, updated));
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
-        queryClient.invalidateQueries({ queryKey: ['myOrders'] });
-      }
-      toast.done('Order completed');
-    } catch (e: any) {
-      toast.show(e?.message || 'Could not confirm delivery. Please try again.', { variant: 'default', icon: 'alert-triangle' });
-    } finally {
-      setCompletingReceipt(false);
-    }
-  };
-
-  // COD: only the buyer confirms. Confirming completes the order and releases payment.
-  const handleConfirmCodPayment = async (_role: 'buyer' = 'buyer') => {
-    if (!order?.id || completingCod) return;
-    tap('medium');
-
-    const confirmed = await confirm({
-      title: 'Confirm order received?',
-      message: `Confirm that your order arrived as described and you paid ${formatPrice(total)} in cash. This completes the order and releases payment to the seller. If something is wrong, report a problem instead.`,
-      confirmLabel: 'Confirm received',
-    });
-    if (!confirmed) return;
-
-    const previousOrder = order;
-    const nowIso = new Date().toISOString();
-    setOrder((prev) =>
-      prev
-        ? { ...prev, cod_buyer_confirmed_at: nowIso, status: 'completed', fulfillment_status: 'completed', payment_status: 'paid', cod_paid_at: nowIso }
-        : null,
-    );
-    setCompletingCod(true);
-
-    try {
-      const updated = await paymentService.markCodOrderPaid(order.id);
-      setOrder((prev) => mergeOrderUpdate(prev, updated));
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
-        queryClient.invalidateQueries({ queryKey: ['myOrders'] });
-      }
-      toast.done('Order completed. Thanks for confirming.');
-    } catch (e: any) {
-      setOrder(previousOrder);
-      toast.show(e?.message ?? 'Could not confirm the order', {
-        variant: 'default',
-        icon: 'alert-triangle',
-      });
-    } finally {
-      setCompletingCod(false);
     }
   };
 
@@ -549,6 +436,27 @@ export default function InvoiceScreen() {
       </View>
     ) : null;
 
+  // Report an issue: either party, on a real order.
+  const fulfillment = order?.fulfillment_status;
+  const canReport =
+    !!user?.id &&
+    (isBuyer || isSeller) &&
+    !!order?.id &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(order.id) &&
+    order.status !== 'awaiting_payment';
+  const deliveryNote =
+    order?.status === 'disputed' || fulfillment === 'disputed'
+      ? 'Issue reported · our team is reviewing this order'
+      : fulfillment === 'delivered' && order?.status !== 'completed'
+        ? `Delivered · completes automatically in ${
+            order?.delivered_at
+              ? Math.max(1, Math.ceil(24 - (Date.now() - new Date(order.delivered_at).getTime()) / 3_600_000))
+              : 24
+          }h unless an issue is reported`
+        : fulfillment === 'shifting'
+          ? 'In transit · our rider confirms the delivery'
+          : null;
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
       {/* ── Screen Reader & E2E Test Compatibility Anchors (Playwright) ── */}
@@ -570,118 +478,44 @@ export default function InvoiceScreen() {
         onBack={() => safeBack()}
         onShare={onShare}
         actionButtons={withCancel(
-          // Ready to deliver lives in the seller card above (one button, not two).
-          isSeller && order?.payment_method === 'cod' && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
-            // Only the buyer confirms COD; the seller waits. Server auto-completes 24h after delivery.
-            <View
-              style={{
-                height: 48,
-                borderRadius: radii.pill,
-                backgroundColor: theme.surface,
-                borderWidth: 1,
-                borderColor: theme.border,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingHorizontal: 16,
-              }}
-            >
-              <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
-              <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
-                {order?.delivered_at
-                  ? `Waiting for buyer · auto-completes in ${Math.max(1, Math.ceil(24 - (Date.now() - new Date(order.delivered_at).getTime()) / 3_600_000))}h`
-                  : 'Waiting for buyer to confirm delivery'}
-              </Text>
-            </View>
-          ) : isBuyer && (isShipped || order?.fulfillment_status === 'shifting' || order?.fulfillment_status === 'delivered' || order?.status === 'shifting' || order?.status === 'delivered') && order?.status !== 'completed' && order?.fulfillment_status !== 'completed' ? (
+          // Delivery is confirmed by the rider / the Grabsty team, never by the
+          // buyer or seller. Either side can report an issue to support.
+          canReport ? (
             <View style={{ gap: 8, width: '100%' }}>
-              {order?.payment_method === 'cod' ? (
-                order?.cod_buyer_confirmed_at ? (
-                  <View
-                    style={{
-                      height: 48,
-                      borderRadius: radii.pill,
-                      backgroundColor: theme.surface,
-                      borderWidth: 1,
-                      borderColor: theme.border,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      paddingHorizontal: 16,
-                    }}
-                  >
-                    <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
-                    <Text style={{ fontSize: 14, fontWeight: '600', color: theme.mute, fontFamily: typography.family.sansSemibold }}>
-                      Confirmed · completing order
-                    </Text>
-                  </View>
-                ) : (
-                  <>
-                    <Pressable
-                      testID="confirm-delivery-button"
-                      onPress={() => handleConfirmCodPayment('buyer')}
-                      disabled={completingCod}
-                      style={({ pressed }) => [
-                        {
-                          height: 48,
-                          borderRadius: radii.pill,
-                          backgroundColor: theme.primary,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        },
-                        pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
-                      ]}
-                    >
-                      {completingCod ? (
-                        <ActivityIndicator color="#FFFFFF" size="small" />
-                      ) : (
-                        <>
-                          <Feather name="check-circle" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                          <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', fontFamily: typography.family.sansBold }}>
-                            Confirm order received
-                          </Text>
-                        </>
-                      )}
-                    </Pressable>
-                  </>
-                )
-              ) : (
-                <Pressable
-                  testID="confirm-delivery-button"
-                  onPress={handleConfirmReceived}
-                  disabled={completingReceipt}
-                  style={({ pressed }) => [
-                    {
-                      height: 48,
-                      borderRadius: radii.pill,
-                      backgroundColor: theme.primary,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    },
-                    pressed && { opacity: 0.88, transform: [{ scale: 0.99 }] },
-                  ]}
+              {deliveryNote ? (
+                <View
+                  style={{
+                    minHeight: 48,
+                    borderRadius: 24,
+                    backgroundColor: theme.surface,
+                    borderWidth: 1,
+                    borderColor: theme.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                  }}
                 >
-                  {completingReceipt ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <>
-                      <Feather name="check" size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
-                      <Text style={{ fontSize: 15, fontWeight: '700', color: '#FFFFFF', fontFamily: typography.family.sansBold }}>
-                        Confirm Delivery (Everything is OK)
-                      </Text>
-                    </>
-                  )}
-                </Pressable>
-              )}
-
+                  <Feather name="clock" size={16} color={theme.mute} style={{ marginRight: 8 }} />
+                  <Text
+                    testID="delivery-status-note"
+                    style={{ flexShrink: 1, fontSize: 14, color: theme.mute, fontFamily: typography.family.sansSemibold }}
+                  >
+                    {deliveryNote}
+                  </Text>
+                </View>
+              ) : null}
               <Pressable
-                onPress={handleOpenDispute}
-                disabled={openingDispute}
+                testID="report-issue-button"
+                onPress={() => {
+                  tap('light');
+                  setShowReport(true);
+                }}
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   {
-                    height: 40,
+                    height: 48,
                     borderRadius: radii.pill,
                     borderWidth: 1,
                     borderColor: theme.border,
@@ -689,20 +523,13 @@ export default function InvoiceScreen() {
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: 8,
                   },
                   pressed && { opacity: 0.8 },
                 ]}
               >
-                {openingDispute ? (
-                  <ActivityIndicator color={theme.ink} size="small" />
-                ) : (
-                  <>
-                    <ShieldCheckIcon size={14} style={{ marginRight: 6 }} />
-                    <Text style={{ fontSize: 13, fontWeight: '600', color: theme.ink, fontFamily: typography.family.sansSemibold }}>
-                      Report Damaged Item / Dispute
-                    </Text>
-                  </>
-                )}
+                <Feather name="alert-circle" size={16} color={theme.ink} />
+                <Text style={{ fontSize: 15, color: theme.ink, fontFamily: typography.family.sansSemibold }}>Report an issue</Text>
               </Pressable>
             </View>
           ) : null
@@ -716,6 +543,22 @@ export default function InvoiceScreen() {
         onConfirmCancel={handleCancelOrder}
         isSeller={isSeller}
       />
+
+      {canReport && order?.id && user?.id ? (
+        <ReportIssueSheet
+          visible={showReport}
+          orderId={order.id}
+          userId={user.id}
+          isSeller={isSeller && !isBuyer}
+          onClose={() => setShowReport(false)}
+          onSubmitted={async () => {
+            // A buyer's report can put the order on hold: show the new state.
+            const fresh = await fetchOrderForListing(order.id).catch(() => null);
+            if (fresh) setOrder((prev) => mergeOrderUpdate(prev, fresh));
+            queryClient.invalidateQueries({ queryKey: qk.myOrders(user.id) });
+          }}
+        />
+      ) : null}
 
       {showConfetti ? <Confetti onDone={() => setShowConfetti(false)} /> : null}
     </SafeAreaView>

@@ -72,6 +72,28 @@ export function AdminUsers() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Delivery riders (public.riders): who may use the rider dashboard at /courier.
+  const [riders, setRiders] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    supabase
+      .from('riders')
+      .select('user_id')
+      .then(({ data }) => setRiders(new Set(((data ?? []) as { user_id: string }[]).map((r) => r.user_id))));
+  }, []);
+  const toggleRider = async (userId: string) => {
+    const make = !riders.has(userId);
+    const { error: err } = await supabase.rpc('admin_set_rider', { p_user_id: userId, p_is_rider: make });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setRiders((prev) => {
+      const next = new Set(prev);
+      if (make) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+  };
 
   // Debounce typing so every keystroke doesn't hit the database.
   useEffect(() => {
@@ -327,7 +349,7 @@ export function AdminUsers() {
                     </Pressable>
                   );
                 })}
-                <View style={{ width: 54 }} />
+                <View style={{ width: 92 }} />
               </View>
             )}
 
@@ -459,7 +481,25 @@ ${u.listings} listings (${u.live_listings} live) · ${u.sales} sales · ${u.purc
                         <Text style={cell(100)}>{u.offers}</Text>
                       </>
                     )}
-                    <View style={{ width: 54, alignItems: 'flex-end' }}>
+                    <View style={{ width: 92, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
+                      <Pressable
+                        testID="admin-rider-toggle"
+                        onPress={() => toggleRider(u.id)}
+                        accessibilityRole="switch"
+                        accessibilityState={{ checked: riders.has(u.id) }}
+                        accessibilityLabel={riders.has(u.id) ? 'Remove delivery rider access' : 'Make delivery rider'}
+                        style={({ pressed }) => ({
+                          width: 32,
+                          height: 32,
+                          borderRadius: 16,
+                          backgroundColor: riders.has(u.id) ? theme.ink : theme.surface,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                      >
+                        <Feather name="truck" size={14} color={riders.has(u.id) ? theme.background : theme.text} />
+                      </Pressable>
                       <Pressable
                         onPress={() => router.push(`/user/${u.id}` as any)}
                         style={({ pressed }) => ({
