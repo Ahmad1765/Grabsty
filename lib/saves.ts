@@ -28,6 +28,8 @@ export type SaveList = {
   name: string;
   emoji: string;
   is_default: boolean;
+  /** One of the collections every account is seeded with (hidden while empty). */
+  is_starter?: boolean;
   created_at: string;
   // Filled in by listSaveLists — not part of the raw row.
   item_count?: number;

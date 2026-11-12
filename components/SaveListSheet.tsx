@@ -4,7 +4,9 @@
 //
 // Mounting is cheap — the heavy fetch only runs when `visible` flips on.
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { qk } from '@/lib/queries/keys';
 import { View, Pressable, Modal, StyleSheet, ActivityIndicator, Platform, ScrollView, useWindowDimensions } from 'react-native';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { Text, TextInput } from '@/lib/rnText';
@@ -57,6 +59,16 @@ export function SaveListSheet({
   const [newName, setNewName] = useState('');
   const [busyListId, setBusyListId] = useState<string | null>(null);
 
+  // The profile's collection chips and grids read these caches. Without this a
+  // list created (or filled) here didn't show on the profile until the cache
+  // went stale.
+  const queryClient = useQueryClient();
+  const refreshCollections = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: qk.saveLists(userId) });
+    queryClient.invalidateQueries({ queryKey: ['listingsInList'] });
+    queryClient.invalidateQueries({ queryKey: qk.savedListings(userId) });
+  }, [queryClient, userId]);
+
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
@@ -81,6 +93,7 @@ export function SaveListSheet({
           contained.add(def.id);
           def.item_count = (def.item_count ?? 0) + 1;
           onChanged?.(true);
+          refreshCollections();
           tap('light');
         }
       }
@@ -92,7 +105,8 @@ export function SaveListSheet({
     return () => {
       cancelled = true;
     };
-  }, [visible, userId, listingId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onChanged is the caller's inline handler
+  }, [visible, userId, listingId, refreshCollections]);
 
   // Reset the inline-create UI whenever the sheet closes so it opens clean
   // next time.
@@ -137,6 +151,7 @@ export function SaveListSheet({
       );
     } else {
       onChanged?.(nextContained.size > 0);
+      refreshCollections();
     }
     setBusyListId(null);
   };
@@ -149,6 +164,7 @@ export function SaveListSheet({
     // New list starts empty; immediately add this listing to it — matches
     // the user's intent ("create a list to put this in").
     const ok = await addToList(created.id, listingId, userId);
+    refreshCollections();
     setLists((prev) => [
       ...prev,
       { ...created, item_count: ok ? 1 : 0 },

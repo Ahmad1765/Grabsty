@@ -26,12 +26,20 @@ import {
 
 const EMPTY_SAVE_LISTS: SaveList[] = [];
 
+// The lists every account is seeded with (ensure_save_lists) carry
+// is_starter. The name match is only for a backend that doesn't have that
+// column yet.
+const STARTER_LIST_NAMES = new Set(['wishlist', 'gift ideas', 'saved for later']);
+
 /**
- * Profile chip row = All, the default "Saved" list (only while it holds
- * something) and +. Custom collection chips are not shown.
+ * Profile chip row = All, then the collections, then +.
+ * A collection the user created always shows, so a new one appears right
+ * away. The seeded ones (Saved, Wishlist, Gift ideas, Saved for later) show
+ * only while they hold something.
  */
-export const isVisibleListChip = (l: Pick<SaveList, 'is_default' | 'item_count'>) =>
-  l.is_default && (l.item_count ?? 0) > 0;
+export const isVisibleListChip = (l: Pick<SaveList, 'is_default' | 'is_starter' | 'item_count' | 'name'>) =>
+  (l.item_count ?? 0) > 0 ||
+  (!l.is_default && !(l.is_starter ?? STARTER_LIST_NAMES.has(l.name.trim().toLowerCase())));
 
 type UseProfileCollectionsProps = {
   userId: string | null;
@@ -77,8 +85,7 @@ export function useProfileCollections({
         ...(prev ?? []),
         { ...created, item_count: 0 },
       ]);
-      // List chips aren't shown on the profile (only All and +), so stay on
-      // All instead of switching to the new, empty list.
+      // The new chip appears in the row; stay on All rather than an empty list.
       toast.done('List created');
     } else {
       toast.show("Couldn't create list", { variant: 'info', icon: 'alert-circle' });

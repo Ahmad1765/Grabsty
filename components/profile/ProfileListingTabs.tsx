@@ -217,8 +217,8 @@ export const ProfileListingTabs = memo(function ProfileListingTabs({
             </Text>
           </Pressable>
 
-          {/* Only All, the default "Saved" list (once it has items) and +;
-              custom collection chips are hidden. */}
+          {/* All, the user's own collections, seeded ones once they hold
+              something, and +. See isVisibleListChip. */}
           {saveLists.filter(isVisibleListChip).map((list) => {
             const isListActive = activeListId === list.id;
             return (
