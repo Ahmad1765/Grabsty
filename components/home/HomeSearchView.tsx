@@ -108,6 +108,8 @@ interface HomeSearchViewProps {
   initialQuery?: string;
   initialTab?: SearchTab;
   initialCategory?: string | null;
+  /** Opens straight on results for everything in this order (Browse → Freshly Out → See all). */
+  initialSort?: SearchFilterState['sort'];
 }
 
 export const HomeSearchView = memo(function HomeSearchView({
@@ -116,6 +118,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   initialQuery = '',
   initialTab = 'listings',
   initialCategory,
+  initialSort = null,
 }: HomeSearchViewProps) {
   const toast = useToast();
   const { theme, isDark } = useTheme();
@@ -152,6 +155,7 @@ export const HomeSearchView = memo(function HomeSearchView({
   const [searchFilters, setSearchFilters] = useState<SearchFilterState>(() => ({
     ...EMPTY_SEARCH_FILTERS,
     category: isCategorySearch ? (initialCategory as Category) : null,
+    sort: initialSort,
   }));
   const [loading, setLoading] = useState(false);
 
@@ -576,15 +580,8 @@ export const HomeSearchView = memo(function HomeSearchView({
     async (searchTerm: string, categoryFilter: Category | null, requestId: number) => {
       const trimmed = searchTerm.trim();
 
-      if (!trimmed && !categoryFilter) {
-        if (searchRequestIdRef.current === requestId) {
-          setSellerResults([]);
-          setListingResults([]);
-          setLoading(false);
-        }
-        return;
-      }
-
+      // No term and no category = everything (the "All" topic, and "See all"
+      // from Freshly Out). The caller only gets here once a search is submitted.
       if (searchRequestIdRef.current !== requestId) return;
       setLoading(true);
 
@@ -1252,7 +1249,13 @@ export const HomeSearchView = memo(function HomeSearchView({
                 marginBottom: 4,
               }}
             >
-              {query.trim() ? (activeTab === 'seller' ? 'Members matching' : 'Results for') : 'Category'}
+              {query.trim()
+                ? activeTab === 'seller'
+                  ? 'Members matching'
+                  : 'Results for'
+                : searchFilters.category
+                ? 'Category'
+                : 'Browse'}
             </Text>
             <Text
               numberOfLines={1}
@@ -1260,7 +1263,8 @@ export const HomeSearchView = memo(function HomeSearchView({
             >
               {query.trim()
                 ? `“${query.trim()}”`
-                : categoryLabel(searchFilters.category) || 'Search'}
+                : categoryLabel(searchFilters.category) ||
+                  (searchFilters.sort === 'newest' ? 'Freshly listed' : 'All items')}
             </Text>
           </View>
           {hasSubmitted && (

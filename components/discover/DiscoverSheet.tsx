@@ -408,9 +408,10 @@ export function DiscoverSheetBody({
   );
 
   const onSort = useCallback(
-    (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => {
+    (sort: SortKey) => {
       onClose();
-      router.push(withNonce(`/?sort=${sort}&chipLabel=${encodeURIComponent(label)}&chipIcon=${icon}`) as any);
+      // Search results for everything, in that order (not a Home feed chip).
+      router.push(withNonce(`/?searchOpen=1&searchCategory=all&searchSort=${sort}`) as any);
     },
     [onClose],
   );

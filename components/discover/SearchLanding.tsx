@@ -5,7 +5,7 @@
 //                          (public top_sellers_week RPC: 7-day sales, then all-time)
 //   3. Popular brands    - the most-listed brands in the live feed
 //   4. Freshly Out       - the newest unsold listings (created_at desc), own items
-//                          hidden; "See all" opens Home sorted by New
+//                          hidden; "See all" opens the Search page sorted by newest
 //
 // Complies with UI_GUARDRAILS.md (three-hue palette, 30px chips, Inter via rnText,
 // inline styles on Pressable).
@@ -87,7 +87,7 @@ export function SearchLanding({
   listings?: Listing[];
   userId?: string | null;
   onTopic: (action: TopicAction) => void;
-  onSort: (sort: SortKey, label: string, icon: keyof typeof Feather.glyphMap) => void;
+  onSort: (sort: SortKey) => void;
   onTab: (tab: DiscoverTab, label: string, icon: keyof typeof Feather.glyphMap) => void;
   onSearch?: (query: string) => void;
   onSelectSeller?: (sellerIdOrUsername: string) => void;
@@ -305,7 +305,7 @@ export function SearchLanding({
             <Pressable
               onPress={() => {
                 haptic();
-                onSort('newest', 'New', 'clock');
+                onSort('newest');
               }}
               hitSlop={8}
               accessibilityRole="button"

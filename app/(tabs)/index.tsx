@@ -81,6 +81,7 @@ export default function HomeScreen() {
     searchCategory?: string;
     searchQuery?: string;
     searchTab?: string;
+    searchSort?: string;
     category?: string;
     q?: string;
   }>();
@@ -92,12 +93,13 @@ export default function HomeScreen() {
     setSearchModeOpen(false);
     setInitialSearchCategory(null);
     setInitialSearchQuery('');
-    if (params.searchOpen || params.searchCategory || params.searchQuery || params.searchTab || params.category || params.q) {
+    if (params.searchOpen || params.searchCategory || params.searchQuery || params.searchTab || params.searchSort || params.category || params.q) {
       router.setParams({
         searchOpen: undefined,
         searchCategory: undefined,
         searchQuery: undefined,
         searchTab: undefined,
+        searchSort: undefined,
         category: undefined,
         q: undefined,
       });
@@ -361,7 +363,12 @@ export default function HomeScreen() {
         <View style={[StyleSheet.absoluteFillObject, { top: insets.top, left: gutter, right: gutter, zIndex: 100, elevation: 10 }]}>
           <HomeSearchView
             // Desktop: a new header search remounts results with fresh state.
-            key={isDesktop ? `${initialSearchCategory ?? ''}|${initialSearchQuery}|${params.searchTab ?? ''}` : undefined}
+            key={
+              isDesktop
+                ? `${initialSearchCategory ?? ''}|${initialSearchQuery}|${params.searchTab ?? ''}|${params.searchSort ?? ''}`
+                : params.searchSort
+            }
+            initialSort={params.searchSort === 'newest' ? 'newest' : null}
             initialTab={params.searchTab === 'seller' ? 'seller' : 'listings'}
             onClose={closeSearch}
             initialCategory={initialSearchCategory}
