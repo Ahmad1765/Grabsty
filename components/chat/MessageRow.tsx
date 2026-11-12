@@ -690,19 +690,31 @@ function OfferBubble(
     msg.created_at &&
     Date.now() - new Date(msg.created_at).getTime() > 48 * 3600 * 1000
   );
-  const status = isExpiredTtl ? 'expired' : (msg.offer_status ?? 'pending');
   const isPaid = Boolean(
     msg.metadata?.paid ||
     msg.metadata?.order_status === 'paid' ||
     msg.metadata?.payment_status === 'paid'
   );
+  const rawStatus = isExpiredTtl ? 'expired' : (msg.offer_status ?? 'pending');
+  // The item is sold: an offer still waiting for an answer has nothing left to
+  // act on. The server settles these (expire_offer_on_purchase); this covers
+  // the moment before that update arrives. Accepted offers are left to the
+  // server: a listing is also held as sold while its buyer's card payment is
+  // pending, and they must still be able to pay.
+  const status =
+    listingSold && !isPaid && (rawStatus === 'pending' || rawStatus === 'proposed')
+      ? 'canceled'
+      : rawStatus;
   const isBundle = Boolean(msg.metadata?.is_bundle || (msg.metadata?.bundle_item_ids && msg.metadata.bundle_item_ids.length > 0));
   const isBundleInvalid = isBundle && (Boolean(msg.metadata?.bundle_invalid) || status === 'canceled');
-  const canPay = !isSeller && status === 'accepted' && !!listingId && !isPaid && !isBundleInvalid;
+  // Set by the server when an order is placed through this offer
+  // (expire_offer_on_purchase): the deal is used up and can't be bought again.
+  const isPurchased = Boolean(msg.metadata?.purchased);
+  const canPay = !isSeller && status === 'accepted' && !!listingId && !isPaid && !isPurchased && !isBundleInvalid;
   const { label: expiryLabel, isExpiringSoon } = getOfferExpiryLabel(msg.created_at);
 
   // 1. Paid Offer Confirmation
-  if (isPaid) {
+  if (isPaid || isPurchased) {
     return (
       <View
         style={{
@@ -719,7 +731,7 @@ function OfferBubble(
       >
         <ShieldCheckIcon size={15} />
         <Text style={{ fontSize: 14, fontFamily: typography.family.sansBold, color: theme.purple }}>
-          Paid · {formatPrice(amount)}
+          {isPaid ? 'Paid' : 'Purchased'} · {formatPrice(amount)}
         </Text>
       </View>
     );
@@ -755,7 +767,8 @@ function OfferBubble(
   }
 
   // 4. Image 2 & 3: Outgoing Special Offer Card
-  if (mine && (msg.metadata?.is_special_offer || (isSeller && (status === 'pending' || status === 'proposed')))) {
+  const isClosed = status === 'canceled' || status === 'expired' || status === 'declined';
+  if (mine && !isClosed && (msg.metadata?.is_special_offer || (isSeller && (status === 'pending' || status === 'proposed')))) {
     return (
       <SpecialOfferCard
         amount={amount}

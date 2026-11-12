@@ -28,6 +28,8 @@ export interface ChatMessage {
     order_status?: string;
     payment_status?: string;
     paid?: boolean;
+    /** An order was placed through this offer; the deal is used up. */
+    purchased?: boolean;
     is_bundle?: boolean;
     is_special_offer?: boolean;
     actionable?: boolean;
