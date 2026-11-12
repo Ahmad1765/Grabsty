@@ -51,6 +51,9 @@ const PRIVATE_QUERY_PREFIXES = new Set([
   'savedSearches',
   'savedSearchMatches',
   'recentlyViewed',
+  // Not private, but must come from the server each launch: a restored value
+  // is up to a day old and would bring back unread dots already cleared.
+  'notificationsSeenAt',
 ]);
 
 /** Drops every cached query, in memory and on disk. Called on any sign-out. */

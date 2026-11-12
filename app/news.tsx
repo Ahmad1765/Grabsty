@@ -1,8 +1,10 @@
 // Notifications: orders, offers and activity (followers, likes, price drops,
 // new listings from sellers you follow) in one feed. Opening the screen marks
-// everything seen (clears the bell badge); unread dots stay for this visit.
+// everything seen (clears the bell badge). A row's unread dot goes when the row
+// is opened; the rest go when the screen is left. Rows can be archived, which
+// moves them to the Archived filter.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Pressable, FlatList, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { Text } from '@/lib/rnText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +15,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { HIT_SLOP_8, CONTENT_MAX_WIDTH } from '@/lib/responsive';
 import { safeBack } from '@/lib/nav';
 import { useAuth } from '@/lib/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/lib/toast';
 import { tap } from '@/lib/haptics';
 import { type as typography } from '@/lib/theme';
 import { getOptimizedImageUrl } from '@/lib/images';
@@ -21,19 +25,24 @@ import { EmptyState } from '@/components/ui';
 import { NewsSkeletonList } from '@/components/news/NewsRowSkeleton';
 import {
   isUnread,
+  notificationKeys,
+  useArchiveNotifications,
+  useArchivedNotificationIds,
   useMarkNotificationsSeen,
   useNotificationsQuery,
   useSeenAtQuery,
+  useSetNotificationArchived,
   type AppNotification,
   type NotificationCategory,
 } from '@/lib/notificationsFeed';
 
-type Filter = 'all' | NotificationCategory;
+type Filter = 'all' | NotificationCategory | 'archived';
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'orders', label: 'Orders' },
   { key: 'offers', label: 'Offers' },
   { key: 'activity', label: 'Activity' },
+  { key: 'archived', label: 'Archived' },
 ];
 
 const KIND_ICON: Record<string, keyof typeof Feather.glyphMap> = {
@@ -57,25 +66,45 @@ const EMPTY_COPY: Record<Filter, { title: string; body: string; icon: keyof type
   orders: { title: 'No order updates', body: 'When you buy or sell, every step of the order shows up here.', icon: 'shopping-bag' },
   offers: { title: 'No offers', body: 'Offers on your items, and answers to offers you make, show up here.', icon: 'tag' },
   activity: { title: 'No activity', body: 'New followers, likes on your items and price drops on things you like show up here.', icon: 'heart' },
+  archived: { title: 'Nothing archived', body: 'Archive a notification to move it out of your feed. You can find it here later.', icon: 'archive' },
 };
 
-function NotificationRow({ n, unread }: { n: AppNotification; unread: boolean }) {
+function NotificationRow({
+  n,
+  unread,
+  archived,
+  onRead,
+  onToggleArchive,
+}: {
+  n: AppNotification;
+  unread: boolean;
+  archived: boolean;
+  onRead: (id: string) => void;
+  onToggleArchive: (id: string, archived: boolean) => void;
+}) {
   const { theme } = useTheme();
   const isSocial = n.category === 'activity' && !!n.actor_username;
   return (
+    // Archive is a sibling of the row button, not a child: a button inside a
+    // button is invalid on web.
+    <View style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 10 }}>
     <Pressable
       testID="notification-row"
       onPress={() => {
         tap('light');
+        onRead(n.id);
         router.push(n.route as any);
       }}
       accessibilityRole="button"
       accessibilityLabel={`${n.title}. ${isSocial ? `@${n.actor_username} ` : ''}${n.body}`}
       style={({ pressed }) => ({
+        flex: 1,
+        minWidth: 0,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        paddingHorizontal: 16,
+        paddingLeft: 16,
+        paddingRight: 8,
         paddingVertical: 14,
         backgroundColor: pressed ? theme.surface : theme.background,
       })}
@@ -136,6 +165,20 @@ function NotificationRow({ n, unread }: { n: AppNotification; unread: boolean })
         <View style={{ width: 8 }} />
       )}
     </Pressable>
+      <Pressable
+        testID="notification-archive"
+        onPress={() => {
+          tap('light');
+          onToggleArchive(n.id, !archived);
+        }}
+        hitSlop={HIT_SLOP_8}
+        accessibilityRole="button"
+        accessibilityLabel={archived ? 'Move back to notifications' : 'Archive notification'}
+        style={({ pressed }) => ({ width: 28, height: 28, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.5 : 1 })}
+      >
+        <Feather name={archived ? 'inbox' : 'archive'} size={17} color={theme.mute} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -158,39 +201,97 @@ export default function NotificationsScreen() {
   const [filter, setFilter] = useState<Filter>('all');
 
   const feedQ = useNotificationsQuery(userId);
+  // Archived rows load only when that filter is opened.
+  const archivedFeedQ = useNotificationsQuery(userId, true, filter === 'archived');
   const seenQ = useSeenAtQuery(userId);
   const markSeen = useMarkNotificationsSeen(userId);
-  // Captured on open: rows newer than this keep their dot for this visit.
+  const archivedQ = useArchivedNotificationIds(userId);
+  const setArchived = useSetNotificationArchived(userId);
+  const qc = useQueryClient();
+  const toast = useToast();
+  // Captured on open: rows newer than this keep their dot until opened or the screen is left.
   const seenAt = seenQ.data;
+  // Rows opened during this visit.
+  const [readIds, setReadIds] = useState<ReadonlySet<string>>(() => new Set());
+  const onRead = useCallback((id: string) => setReadIds((prev) => new Set(prev).add(id)), []);
 
-  // Opening the screen = seen (clears the bell badge).
+  // Opening the screen = seen (clears the bell badge). Leaving it moves the
+  // cached seen-at forward, so the next visit starts with no stale dots.
+  const markedAt = useRef<string | null>(null);
+  const mark = useCallback(async () => {
+    const at = await markSeen();
+    if (at) markedAt.current = at;
+  }, [markSeen]);
   useEffect(() => {
-    if (feedQ.isSuccess && seenQ.isSuccess) markSeen();
-  }, [feedQ.isSuccess, seenQ.isSuccess, markSeen]);
+    if (feedQ.isSuccess && seenQ.isSuccess) mark();
+  }, [feedQ.isSuccess, seenQ.isSuccess, mark]);
+  useEffect(
+    () => () => {
+      if (userId && markedAt.current) qc.setQueryData(notificationKeys.seenAt(userId), markedAt.current);
+    },
+    [qc, userId],
+  );
+
+  const archivedIds = useMemo(() => new Set(archivedQ.data ?? []), [archivedQ.data]);
+  const onToggleArchive = useCallback(
+    (id: string, archived: boolean) => {
+      setArchived(id, archived).catch(() =>
+        toast.show(archived ? "Couldn't archive. Try again." : "Couldn't move it back. Try again."),
+      );
+    },
+    [setArchived, toast],
+  );
+
+  const unreadOf = useCallback(
+    (n: AppNotification) => !readIds.has(n.id) && isUnread(n, seenAt),
+    [readIds, seenAt],
+  );
+
+  // Live + archived rows as one list; archivedIds (updated the moment a row is
+  // archived or moved back) decides which view each row is in.
+  const allRows = useMemo(() => {
+    const seen = new Set<string>();
+    return [...(feedQ.data ?? []), ...(archivedFeedQ.data ?? [])]
+      .filter((n) => (seen.has(n.id) ? false : (seen.add(n.id), true)))
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+  }, [feedQ.data, archivedFeedQ.data]);
 
   const items = useMemo(() => {
-    const all = feedQ.data ?? [];
-    return filter === 'all' ? all : all.filter((n) => n.category === filter);
-  }, [feedQ.data, filter]);
+    const all = allRows;
+    if (filter === 'archived') return all.filter((n) => archivedIds.has(n.id));
+    const live = all.filter((n) => !archivedIds.has(n.id));
+    return filter === 'all' ? live : live.filter((n) => n.category === filter);
+  }, [allRows, filter, archivedIds]);
+
+  // Clear all = archive everything in the current filter (still under Archived).
+  const archiveMany = useArchiveNotifications(userId);
+  const canClear = filter !== 'archived' && items.length > 0;
+  const onClearAll = useCallback(() => {
+    const n = items.length;
+    archiveMany(items.map((i) => i.id)).then(
+      () => toast.show(`Moved ${n} to Archived`),
+      () => toast.show("Couldn't clear. Try again."),
+    );
+  }, [items, archiveMany, toast]);
 
   const counts = useMemo(() => {
-    const c: Record<Filter, number> = { all: 0, orders: 0, offers: 0, activity: 0 };
+    const c: Record<Filter, number> = { all: 0, orders: 0, offers: 0, activity: 0, archived: 0 };
     for (const n of feedQ.data ?? []) {
-      if (isUnread(n, seenAt)) {
+      if (!archivedIds.has(n.id) && unreadOf(n)) {
         c.all += 1;
         c[n.category] += 1;
       }
     }
     return c;
-  }, [feedQ.data, seenAt]);
+  }, [feedQ.data, archivedIds, unreadOf]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await feedQ.refetch();
-    await markSeen();
+    await Promise.all([feedQ.refetch(), archivedQ.refetch(), filter === 'archived' ? archivedFeedQ.refetch() : null]);
+    await mark();
     setRefreshing(false);
-  }, [feedQ, markSeen]);
+  }, [feedQ, archivedQ, archivedFeedQ, filter, mark]);
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: theme.background }}>
@@ -213,6 +314,21 @@ export default function NotificationsScreen() {
             Notifications
           </Text>
           <View style={{ width: 40 }} />
+          {canClear ? (
+            <Pressable
+              testID="notifications-clear-all"
+              onPress={() => {
+                tap('light');
+                onClearAll();
+              }}
+              hitSlop={HIT_SLOP_8}
+              accessibilityRole="button"
+              accessibilityLabel="Clear all notifications"
+              style={({ pressed }) => ({ position: 'absolute', right: 16, height: 40, justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}
+            >
+              <Text style={{ fontSize: 13, fontFamily: typography.family.sansMedium, color: theme.mute }}>Clear all</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {user ? (
@@ -288,7 +404,15 @@ export default function NotificationsScreen() {
               <FlatList
                 data={items}
                 keyExtractor={(n) => n.id}
-                renderItem={({ item }) => <NotificationRow n={item} unread={isUnread(item, seenAt)} />}
+                renderItem={({ item }) => (
+                  <NotificationRow
+                    n={item}
+                    unread={unreadOf(item)}
+                    archived={archivedIds.has(item.id)}
+                    onRead={onRead}
+                    onToggleArchive={onToggleArchive}
+                  />
+                )}
                 ItemSeparatorComponent={() => (
                   <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: theme.border, marginLeft: 72 }} />
                 )}
