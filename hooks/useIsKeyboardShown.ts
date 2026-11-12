@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Keyboard, Platform, type EmitterSubscription } from 'react-native';
+import { AppState, Keyboard, Platform, type EmitterSubscription, type KeyboardEvent } from 'react-native';
 
 /**
  * Universal hook to track virtual software keyboard visibility across iOS, Android, and Web.
@@ -23,6 +23,8 @@ export function isTypingTarget(el: Element | null | undefined): boolean {
 
 // Soft keyboards take 250px+; browser toolbars sliding in/out move the viewport by less.
 const KEYBOARD_MIN_PX = 150;
+// Native: a hardware keyboard's shortcut bar is ~55-70px.
+const NATIVE_KEYBOARD_MIN_PX = 100;
 
 /**
  * Web keyboard state. Focus alone isn't enough: dismissing the keyboard with the
@@ -44,7 +46,12 @@ export function useIsKeyboardShown(): boolean {
   });
 
   useEffect(() => {
-    const handleShow = () => setIsKeyboardShown(true);
+    // A "show" with next to no height is a hardware keyboard's shortcut bar or
+    // a floating iPad keyboard: nothing covers the tab bar, so it isn't "shown".
+    const handleShow = (e?: KeyboardEvent) => {
+      const h = e?.endCoordinates?.height;
+      setIsKeyboardShown(typeof h === 'number' ? h >= NATIVE_KEYBOARD_MIN_PX : true);
+    };
     const handleHide = () => setIsKeyboardShown(false);
 
     // Web: react-native-web's Keyboard never emits, so the tab bar used to float
@@ -87,6 +94,12 @@ export function useIsKeyboardShown(): boolean {
         subscriptions.push(
           Keyboard.addListener('keyboardWillShow', handleShow),
           Keyboard.addListener('keyboardWillHide', handleHide),
+          // iOS can skip keyboardWillHide (a sheet or screen closing with a
+          // field focused, the app going to the background). The state then
+          // stayed "shown" and the tab bar stayed disabled until the next
+          // keyboard cycle. The Did events and the checks below correct it.
+          Keyboard.addListener('keyboardDidHide', handleHide),
+          Keyboard.addListener('keyboardDidShow', handleShow),
         );
       } else {
         subscriptions.push(
@@ -107,7 +120,22 @@ export function useIsKeyboardShown(): boolean {
       // Safe fallback on platforms where Keyboard listener is unavailable
     }
 
+    // Re-read the real state when the app comes back to the foreground.
+    const resync = () => {
+      try {
+        if (typeof Keyboard.isVisible === 'function') setIsKeyboardShown(Keyboard.isVisible());
+      } catch {}
+    };
+    let resyncTimer: ReturnType<typeof setTimeout> | undefined;
+    const appState = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') return;
+      clearTimeout(resyncTimer);
+      resyncTimer = setTimeout(resync, 400);
+    });
+
     return () => {
+      clearTimeout(resyncTimer);
+      appState.remove();
       subscriptions.forEach((sub) => {
         try {
           sub.remove();
