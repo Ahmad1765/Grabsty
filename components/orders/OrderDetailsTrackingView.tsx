@@ -29,6 +29,8 @@ import { getOptimizedImageUrl } from '@/lib/images';
 import { conditionLabel } from '@/components/product/shared';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { orderReference, trackingIdFor } from '@/lib/orderTracking';
+import { isOrderClosed, orderMoneyLines, orderStatusBadge } from '@/lib/orderDisplay';
+import { formatPrice } from '@/lib/currency';
 
 export interface OrderDetailsTrackingViewProps {
   order?: Order | null;
@@ -385,9 +387,7 @@ export function OrderDetailsTrackingView({
   const pickupBooked =
     pickupConfirmed ||
     ['packing', 'picked', 'shifting', 'delivered', 'completed'].includes(String(order?.fulfillment_status ?? ''));
-  const orderClosed =
-    ['canceled', 'refunded', 'refund_due', 'failed'].includes(String(order?.status ?? '')) ||
-    order?.fulfillment_status === 'canceled';
+  const orderClosed = isOrderClosed(order);
   const pickupCode = order?.pickup_code ?? null;
   const courierUrl = order?.id ? `${APP_URL}/courier/${order.id}` : '';
   const pickedUp = Boolean(order?.pickup_verified_at) ||
@@ -404,23 +404,16 @@ export function OrderDetailsTrackingView({
     statusBadge = 'Preparing Order';
   }
 
-  if (currentFulfillment === 'delivered') {
-    statusBadge = statusBadge || 'Delivered';
-  } else if (currentFulfillment === 'shifting' || (order as any)?.shipped_at || (order as any)?.shifted_at) {
-    statusBadge = statusBadge || 'In Transit';
-  } else if (currentFulfillment === 'picked') {
-    statusBadge = statusBadge || 'Picked';
-  } else if (currentFulfillment === 'completed') {
-    statusBadge = statusBadge || 'Completed';
-  } else if (currentFulfillment === 'packing') {
-    statusBadge = statusBadge || (isSeller ? 'Awaiting Pickup' : 'Preparing Order');
-  } else if (currentFulfillment === 'disputed') {
-    statusBadge = statusBadge || 'Refund Under Review';
-  } else if (currentFulfillment === 'canceled') {
-    statusBadge = statusBadge || 'Cancelled';
-  } else {
-    statusBadge = statusBadge || (order?.status === 'paid' ? (isSeller ? 'Ready to Deliver' : 'Paid') : (isSeller ? 'Ready to Deliver' : 'Preparing Order'));
-  }
+  statusBadge =
+    statusBadge ||
+    orderStatusBadge({
+      status: order?.status,
+      fulfillment: currentFulfillment,
+      shipped: Boolean((order as any)?.shipped_at || (order as any)?.shifted_at),
+      isSeller,
+    });
+  // An open dispute; a resolved one moves the status on (completed / refunded).
+  const isDisputed = order?.status === 'disputed';
 
 
   // Sellers never see the buyer's delivery details: the server doesn't send
@@ -558,9 +551,16 @@ export function OrderDetailsTrackingView({
     return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
   };
 
-  const pickedTimeLabel = isPicked ? formatTime(pickedTime) : 'Pending';
-  const transitTimeLabel = isShipped ? formatTime(transitTime) : 'Pending';
-  const deliveredTimeLabel = isDelivered ? formatTime(deliveredTime) : 'Pending';
+  // DEV-007: a step a cancelled order never reached isn't "Pending".
+  const notReached = orderClosed ? '—' : 'Pending';
+  const pickedTimeLabel = isPicked ? formatTime(pickedTime) : notReached;
+  const transitTimeLabel = isShipped ? formatTime(transitTime) : notReached;
+  const deliveredTimeLabel = isDelivered ? formatTime(deliveredTime) : notReached;
+  const completedTime = parseServerDate(order?.completed_at);
+  const disputedTime = parseServerDate(order?.disputed_at);
+  const canceledTime = parseServerDate(
+    (order as any)?.cancelled_at || (order as any)?.canceled_at || (order as any)?.updated_at,
+  );
 
   // Available Pickup Dates (Rule 2: Tomorrow & Day after tomorrow)
   const tomorrowDate = new Date();
@@ -581,6 +581,47 @@ export function OrderDetailsTrackingView({
 
   // Chronological activity timeline events with exact working times
   const activityEvents = [
+    ...(orderClosed
+      ? [
+          {
+            id: 'canceled',
+            time: canceledTime ? formatTime(canceledTime) : '',
+            date: formatDate(canceledTime),
+            title: 'Order Cancelled',
+            description: order?.cancel_reason ? `Reason: ${order.cancel_reason}` : 'This order was cancelled.',
+            completed: true,
+            isLatest: true,
+          },
+        ]
+      : []),
+    ...(isDisputed
+      ? [
+          {
+            id: 'disputed',
+            time: disputedTime ? formatTime(disputedTime) : '',
+            date: formatDate(disputedTime),
+            title: 'Issue Reported',
+            description: isSeller
+              ? 'The buyer reported a problem. Your payment is on hold while Grabsty reviews it.'
+              : 'You reported a problem. Payment to the seller is on hold while Grabsty reviews it.',
+            completed: true,
+            isLatest: !orderClosed,
+          },
+        ]
+      : []),
+    ...(isCompleted && !isDisputed
+      ? [
+          {
+            id: 'completed',
+            time: completedTime ? formatTime(completedTime) : '',
+            date: formatDate(completedTime),
+            title: 'Order Completed',
+            description: isSeller ? "Your payout is now due." : 'This order is complete.',
+            completed: true,
+            isLatest: true,
+          },
+        ]
+      : []),
     ...(isDelivered && deliveredTime
       ? [
           {
@@ -590,7 +631,7 @@ export function OrderDetailsTrackingView({
             title: 'Package Delivered',
             description: isSeller ? 'Handed over to the buyer.' : `Handed over directly to ${recipient} at ${streetAddress}.`,
             completed: true,
-            isLatest: true,
+            isLatest: !isCompleted && !isDisputed && !orderClosed,
           },
         ]
       : []),
@@ -642,9 +683,13 @@ export function OrderDetailsTrackingView({
         ? `Order confirmed and awaiting seller dispatch. Pay upon physical delivery.`
         : `Payment secured under ${BRAND} Buyer Protection escrow guarantee.`,
       completed: true,
-      isLatest: !isPacked && !isPicked && !isShipped && !isDelivered,
+      isLatest: !isPacked && !isPicked && !isShipped && !isDelivered && !isDisputed && !orderClosed,
     },
   ];
+  // Newest first: only the top entry is the latest.
+  activityEvents.forEach((e, i) => {
+    e.isLatest = i === 0;
+  });
 
   // Clipboard Copy Action with haptics & feedback toast
   const handleCopyTracking = async () => {
@@ -1157,7 +1202,9 @@ export function OrderDetailsTrackingView({
                 </Text>
                 <Text style={{ fontSize: 12.5, color: theme.mute, fontFamily: typography.family.sans, marginTop: 2 }}>
                   {pickedUp
-                    ? 'Scanned by the courier · in transit'
+                    ? isDelivered
+                      ? 'Scanned by the courier · delivered'
+                      : 'Scanned by the courier · in transit'
                     : pickupBooked
                       ? 'Show it to the courier at pickup'
                       : 'Available after Ready to deliver'}
@@ -1232,6 +1279,71 @@ export function OrderDetailsTrackingView({
           </GroupCard>
         ) : null}
 
+        {/* ── WEB-003: an open issue puts the payment on hold; say so to both sides ── */}
+        {isDisputed && !orderClosed ? (
+          <GroupCard style={{ padding: 16, marginBottom: 16, flexDirection: 'row', gap: 12 }}>
+            <Feather name="alert-triangle" size={20} color={theme.ink} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 15, fontFamily: typography.family.sansBold, color: theme.ink }}>
+                {isSeller ? 'The buyer reported an issue' : 'You reported an issue'}
+              </Text>
+              <Text style={{ fontSize: 13, color: theme.mute, marginTop: 4, lineHeight: 18 }}>
+                {isSeller
+                  ? 'Your payment for this order is on hold while Grabsty reviews it. Our support team will contact you in Support chat.'
+                  : 'Payment to the seller is on hold while Grabsty reviews it. Our support team will reply in Support chat.'}
+              </Text>
+            </View>
+          </GroupCard>
+        ) : null}
+
+        {/* ── DEV-008 / WF-003: what this order costs (buyer) or earns (seller) ── */}
+        {order && !orderClosed && Number.isFinite(order.amount_cents) ? (
+          <GroupCard style={{ padding: 16, marginBottom: 16 }}>
+            {(() => {
+              const money = orderMoneyLines(order as any, isSeller);
+              const row = (label: string, cents: number, bold = false) => (
+                <View
+                  key={label}
+                  style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: bold ? 10 : 4 }}
+                >
+                  <Text
+                    style={{
+                      fontSize: bold ? 15 : 13.5,
+                      color: bold ? theme.ink : theme.mute,
+                      fontFamily: bold ? typography.family.sansBold : typography.family.sans,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                  <Text
+                    style={[
+                      {
+                        fontSize: bold ? 15 : 13.5,
+                        color: theme.ink,
+                        fontFamily: bold ? typography.family.sansBold : typography.family.sans,
+                      },
+                      tabularNumberStyle,
+                    ]}
+                  >
+                    {formatPrice(cents / 100)}
+                  </Text>
+                </View>
+              );
+              return (
+                <>
+                  {money.lines.map((l) => row(l.label, l.cents))}
+                  {row(money.total.label, money.total.cents, true)}
+                  {isSeller ? (
+                    <Text style={{ fontSize: 12.5, color: theme.mute, marginTop: 6 }}>
+                      Buyer protection and delivery are paid by the buyer.
+                    </Text>
+                  ) : null}
+                </>
+              );
+            })()}
+          </GroupCard>
+        ) : null}
+
         {/* ── Items Overview Card ── */}
         <GroupCard style={{ padding: 18, marginBottom: 16 }}>
           {/* Header Row */}
@@ -1244,7 +1356,7 @@ export function OrderDetailsTrackingView({
                 letterSpacing: -0.3,
               }}
             >
-              {isSeller ? 'Items to pack' : 'Order details'}
+              {isSeller && !pickedUp && !orderClosed ? 'Items to pack' : 'Order details'}
             </Text>
                 <Text
                   style={{

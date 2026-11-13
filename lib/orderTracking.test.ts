@@ -2,7 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
-import { cashToCollect, codAmount, groupRiderDeliveries, orderReference, trackingIdFor, type RiderDelivery } from './orderTracking';
+import {
+  cashToCollect,
+  codAmount,
+  groupRiderDeliveries,
+  orderReference,
+  trackingIdFor,
+  type RiderDelivery,
+} from './orderTracking';
 
 describe('order reference / tracking id', () => {
   const id = 'a9ac3ee6-47bf-4e98-b4e9-7c3004673159';

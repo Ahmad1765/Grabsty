@@ -25,6 +25,7 @@ import { deriveInvoiceAmounts } from '@/lib/invoiceStatus';
 import { partitionOrders, getOrderCategory, type OrderSide } from '@/lib/orders';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 import type { MyOrder } from '@/lib/payments';
+import { orderMoneyLines } from '@/lib/orderDisplay';
 
 type FilterStatus = 'all' | 'in_progress' | 'completed' | 'refunds' | 'canceled';
 
@@ -223,14 +224,17 @@ export function OrderRow({ order, side }: { order: MyOrder; side: OrderSide }) {
             marginBottom: 1,
           }}
         >
-          Price:{' '}
+          {/* WF-003: the seller earns the item price; protection and delivery are the buyer's. */}
+          {side === 'bought' ? 'Price:' : 'You earn:'}{' '}
           <Text
             style={[
               { fontFamily: typography.family.sansBold, fontWeight: '700', color: theme.ink },
               tabularNumberStyle,
             ]}
           >
-            {formatPrice(total)}
+            {side === 'bought' || !Number.isFinite(order.amount_cents)
+              ? formatPrice(total)
+              : formatPrice(orderMoneyLines(order as any, true).total.cents / 100)}
           </Text>
         </Text>
 

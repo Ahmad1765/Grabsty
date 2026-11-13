@@ -25,6 +25,7 @@ import { ReportIssueSheet } from '@/components/orders/ReportIssueSheet';
 import type { SellerPickupAddressInput } from '@/components/orders/SellerPickupModal';
 import { mergeOrderUpdate } from '@/lib/orderDelivery';
 import { orderReference } from '@/lib/orderTracking';
+import { isOrderClosed } from '@/lib/orderDisplay';
 
 function tap(style: 'light' | 'medium' = 'light') {
   if (Platform.OS !== 'ios') return;
@@ -443,7 +444,9 @@ export default function InvoiceScreen() {
     (isBuyer || isSeller) &&
     !!order?.id &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(order.id) &&
-    order.status !== 'awaiting_payment';
+    order.status !== 'awaiting_payment' &&
+    // DEV-007: nothing to report on a cancelled or refunded order.
+    !isOrderClosed(order);
   const deliveryNote =
     order?.status === 'disputed' || fulfillment === 'disputed'
       ? 'Issue reported · our team is reviewing this order'

@@ -1070,6 +1070,58 @@ export default function SettingsScreen() {
           />
         </ChatGPTGroup>
 
+        {/* Group 3: Privacy & people (same controls as the desktop layout) */}
+        <ChatGPTGroup title="Privacy & people">
+          <ChatGPTItem
+            icon="bar-chart-2"
+            label="Share usage data"
+            rightElement={
+              <Switch
+                value={mgr.shareUsage}
+                onValueChange={(val: boolean) => {
+                  tap('light');
+                  mgr.setShareUsage(val);
+                }}
+                trackColor={{ false: theme.border, true: theme.accent }}
+                thumbColor={theme.accent?.toUpperCase() === '#FFFFFF' ? '#000000' : '#FFFFFF'}
+                ios_backgroundColor={theme.border}
+              />
+            }
+          />
+          <ChatGPTItem
+            icon="bookmark"
+            label="Public saved collection"
+            rightElement={
+              <Switch
+                value={mgr.savedCollectionPrivacy === 'public'}
+                onValueChange={(val: boolean) => {
+                  tap('light');
+                  mgr.setSavedCollectionPrivacy(val ? 'public' : 'private');
+                }}
+                trackColor={{ false: theme.border, true: theme.accent }}
+                thumbColor={theme.accent?.toUpperCase() === '#FFFFFF' ? '#000000' : '#FFFFFF'}
+                ios_backgroundColor={theme.border}
+              />
+            }
+          />
+          <ChatGPTItem
+            icon="user-plus"
+            label="Find & invite friends"
+            chevron
+            isLast={!session}
+            onPress={() => router.push('/friends' as any)}
+          />
+          {session && (
+            <ChatGPTItem
+              icon="slash"
+              label="Blocked accounts"
+              chevron
+              isLast
+              onPress={() => router.push('/blocked' as any)}
+            />
+          )}
+        </ChatGPTGroup>
+
         {/* Group 4: Support & Legal */}
         <ChatGPTGroup title="Support & legal">
           <ChatGPTItem
@@ -1112,10 +1164,20 @@ export default function SettingsScreen() {
             icon="log-out"
             label={mgr.busy === 'logout' ? 'Logging out…' : 'Log out'}
             destructive
-            isLast
+            isLast={!session}
             disabled={mgr.busy === 'logout'}
             onPress={mgr.handleLogout}
           />
+          {session && (
+            <ChatGPTItem
+              icon="trash-2"
+              label={mgr.busy === 'delete' ? 'Deleting…' : 'Delete account'}
+              destructive
+              isLast
+              disabled={mgr.busy === 'delete'}
+              onPress={mgr.handleDeleteAccount}
+            />
+          )}
         </ChatGPTGroup>
       </ScrollView>
 
