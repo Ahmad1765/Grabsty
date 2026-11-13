@@ -623,7 +623,8 @@ export default function PaymentScreen() {
       }
 
       const cleanPhone = (shippingAddress.phone || '').replace(/[\s\-\(\)]/g, '');
-      if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      // Same rule process_checkout enforces.
+      if (!/^\+?[0-9]{10,15}$/.test(cleanPhone)) {
         toast.show('Please enter a valid contact phone number (10 to 15 digits)', {
           variant: 'default',
           icon: 'phone',

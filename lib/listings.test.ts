@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { getSearchTokenVariants } from './listings';
 
 vi.stubGlobal('__DEV__', true);
 
@@ -11,8 +12,16 @@ vi.mock('expo-constants', () => ({
   default: { expoConfig: { extra: {} } },
 }));
 
+const { listingsQuery } = vi.hoisted(() => {
+  const listingsQuery: Record<string, ReturnType<typeof vi.fn>> = {};
+  for (const m of ['select', 'eq', 'is', 'order']) listingsQuery[m] = vi.fn(() => listingsQuery);
+  (listingsQuery as unknown as PromiseLike<unknown>).then = ((resolve: (v: unknown) => void) =>
+    resolve({ data: [], error: null })) as never;
+  return { listingsQuery };
+});
+
 vi.mock('@/lib/supabase', () => ({
-  supabase: {},
+  supabase: { from: vi.fn(() => listingsQuery) },
 }));
 
 vi.mock('@/lib/sentry', () => ({
@@ -33,8 +42,6 @@ vi.mock('@react-native-community/netinfo', () => ({
     addEventListener: vi.fn(() => () => {}),
   },
 }));
-
-import { getSearchTokenVariants } from './listings';
 
 describe('getSearchTokenVariants plural/singular logic', () => {
   it('preserves valid singular/plural variants for dress and dresses without truncation', () => {
@@ -90,6 +97,14 @@ describe('getSearchTokenVariants plural/singular logic', () => {
     const watchesVariants = getSearchTokenVariants('watches');
     expect(watchesVariants).toContain('watches');
     expect(watchesVariants).toContain('watch');
+  });
+});
+
+describe('fetchUserListings', () => {
+  it('leaves soft-deleted listings off the profile', async () => {
+    const { fetchUserListings } = await import('./listings');
+    await fetchUserListings('seller-1');
+    expect(listingsQuery.is).toHaveBeenCalledWith('deleted_at', null);
   });
 });
 

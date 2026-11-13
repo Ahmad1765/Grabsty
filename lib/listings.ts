@@ -348,6 +348,9 @@ export async function fetchUserListings(sellerId: string): Promise<Listing[]> {
     .from('listings')
     .select(SELECT_WITH_SELLER)
     .eq('seller_id', sellerId)
+    // A deleted listing with order history is kept (soft-deleted) and stays visible to
+    // its seller through the order, so leave it off the profile.
+    .is('deleted_at', null)
     .order('is_sold', { ascending: true })
     .order('created_at', { ascending: false });
   if (error) {
@@ -510,7 +513,8 @@ export async function isLiked(listingId: string, userId: string): Promise<boolea
   return ids.has(listingId);
 }
 
-// Owner action: hard-delete the row. RLS only lets the seller delete their
+// Owner action: delete the row. A listing with order history is soft-deleted
+// by a DB trigger instead (kept, hidden). RLS only lets the seller delete their
 // own listing. We return a bool so the UI can show a toast instead of
 // throwing.
 export async function deleteListing(listingId: string): Promise<boolean> {
