@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/lib/supabase', () => ({ supabase: {} }));
 
-import { cashToCollect, codAmount, orderReference, trackingIdFor } from './orderTracking';
+import { cashToCollect, codAmount, groupRiderDeliveries, orderReference, trackingIdFor, type RiderDelivery } from './orderTracking';
 
 describe('order reference / tracking id', () => {
   const id = 'a9ac3ee6-47bf-4e98-b4e9-7c3004673159';
@@ -29,5 +29,18 @@ describe('codAmount', () => {
   it('keeps the Rs label as written, for use inside a sentence', () => {
     expect(codAmount(1720)).toBe('Rs 1,720');
     expect(codAmount(undefined)).toBeNull();
+  });
+});
+
+// WEB-008: an assigned order waiting for pickup is not shown as delivered.
+describe('groupRiderDeliveries', () => {
+  const item = (id: string, state: RiderDelivery['state'], active = false): RiderDelivery => ({
+    id, reference: id, title: null, image: null, city: null, active, state, at: '2026-11-14T00:00:00Z',
+  });
+  it('splits pick up, deliver and past', () => {
+    const g = groupRiderDeliveries([item('a', 'to_pick_up'), item('b', 'in_transit', true), item('c', 'delivered')]);
+    expect(g.toPickUp.map((i) => i.id)).toEqual(['a']);
+    expect(g.toDeliver.map((i) => i.id)).toEqual(['b']);
+    expect(g.past.map((i) => i.id)).toEqual(['c']);
   });
 });

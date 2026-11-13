@@ -161,9 +161,22 @@ export type RiderDelivery = {
   city: string | null;
   collect?: number | null;
   active: boolean;
-  state: 'in_transit' | 'delivered' | 'on_hold' | 'closed';
+  state: 'to_pick_up' | 'in_transit' | 'delivered' | 'on_hold' | 'closed';
   at: string;
 };
+
+/** WEB-008: a rider's list: assigned and waiting for pickup, in transit, and the rest. */
+export function groupRiderDeliveries(items: RiderDelivery[]): {
+  toPickUp: RiderDelivery[];
+  toDeliver: RiderDelivery[];
+  past: RiderDelivery[];
+} {
+  return {
+    toPickUp: items.filter((i) => i.state === 'to_pick_up'),
+    toDeliver: items.filter((i) => i.active),
+    past: items.filter((i) => !i.active && i.state !== 'to_pick_up'),
+  };
+}
 
 /** Copy for every rider-page state that is just a message (no form). */
 export const COURIER_MESSAGES: Partial<Record<CourierState, { icon: string; title: string; body: string }>> = {
@@ -177,11 +190,11 @@ export const COURIER_MESSAGES: Partial<Record<CourierState, { icon: string; titl
     title: 'Riders only',
     body: 'This page is for Grabsty delivery riders. Buyers and sellers follow their orders in Activity.',
   },
-  other_rider: { icon: 'truck', title: 'In transit', body: 'Another rider picked up this order.' },
+  other_rider: { icon: 'truck', title: "Another rider's order", body: 'This order is assigned to another rider.' },
   delivered: { icon: 'check-circle', title: 'Delivered', body: 'This order was delivered. Nothing more to do.' },
   on_hold: { icon: 'pause-circle', title: 'On hold', body: 'An issue was reported on this order. Contact Grabsty logistics before doing anything.' },
   not_ready: { icon: 'clock', title: 'Not ready for pickup', body: "The seller hasn't confirmed Ready to deliver for this order yet." },
   closed: { icon: 'x-circle', title: 'Order closed', body: 'This order was cancelled. Do not collect or deliver the item.' },
-  locked: { icon: 'lock', title: 'Code locked', body: 'Too many wrong codes. Contact Grabsty logistics to complete this pickup.' },
+  locked: { icon: 'lock', title: 'Code locked', body: 'Too many wrong codes. The seller now has a new pickup code; you can enter it in 30 minutes.' },
   not_found: { icon: 'alert-circle', title: 'Order not found', body: 'This QR code does not match a Grabsty order.' },
 };

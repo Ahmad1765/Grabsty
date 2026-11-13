@@ -17,11 +17,12 @@ import { getOptimizedImageUrl } from '@/lib/images';
 import { tap } from '@/lib/haptics';
 import { BRAND } from '@/lib/brand';
 import { timeAgo } from '@/components/product/shared';
-import { COURIER_MESSAGES, cashToCollect, type RiderDelivery } from '@/lib/orderTracking';
+import { COURIER_MESSAGES, cashToCollect, groupRiderDeliveries, type RiderDelivery } from '@/lib/orderTracking';
 
 type Data = { state: 'loading' | 'ok' | 'signin' | 'forbidden' | 'error'; items: RiderDelivery[] };
 
 const ROW_LABEL: Record<RiderDelivery['state'], string> = {
+  to_pick_up: 'To pick up',
   in_transit: 'To deliver',
   delivered: 'Delivered',
   on_hold: 'On hold',
@@ -52,8 +53,13 @@ export default function RiderDashboard() {
   }, [load]);
 
   const gate = data.state === 'signin' || data.state === 'forbidden' ? COURIER_MESSAGES[data.state] : null;
-  const active = data.items.filter((i) => i.active);
-  const past = data.items.filter((i) => !i.active);
+  const { toPickUp, toDeliver: active, past } = groupRiderDeliveries(data.items);
+
+  const header = (label: string, marginTop = 24) => (
+    <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginTop }}>{label}</Text>
+  );
+  // Waiting for pickup or in transit: show the cash to collect, not an age.
+  const isOpen = (i: RiderDelivery) => i.active || i.state === 'to_pick_up';
 
   const row = (i: RiderDelivery) => (
     <Pressable
@@ -88,9 +94,9 @@ export default function RiderDashboard() {
         </Text>
         <Text numberOfLines={1} style={{ fontSize: 13, color: theme.mute, marginTop: 3 }}>
           Order #{i.reference}
-          {i.city ? ` · ${i.city}` : ''} · {ROW_LABEL[i.state]} {i.active ? '' : timeAgo(i.at)}
+          {i.city ? ` · ${i.city}` : ''} · {ROW_LABEL[i.state]} {isOpen(i) ? '' : timeAgo(i.at)}
         </Text>
-        {i.active
+        {isOpen(i)
           ? ((cash) =>
               cash ? (
                 <Text numberOfLines={1} style={{ fontSize: 13, color: theme.ink, marginTop: 3, fontFamily: typography.family.sansSemibold }}>
@@ -160,9 +166,13 @@ export default function RiderDashboard() {
             <Text style={{ fontSize: 14, color: theme.mute, marginTop: 8, lineHeight: 20 }}>
               To pick up an order, scan the seller&apos;s Pickup QR code with your phone camera.
             </Text>
-            <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginTop: 24 }}>
-              To deliver ({active.length})
-            </Text>
+            {toPickUp.length ? (
+              <>
+                {header(`To pick up (${toPickUp.length})`)}
+                {toPickUp.map(row)}
+              </>
+            ) : null}
+            {header(`To deliver (${active.length})`)}
             {active.length ? (
               active.map(row)
             ) : (
@@ -170,7 +180,7 @@ export default function RiderDashboard() {
             )}
             {past.length ? (
               <>
-                <Text style={{ fontSize: 13, fontFamily: typography.family.sansSemibold, color: theme.ink, marginTop: 28 }}>Last 30 days</Text>
+                {header('Last 30 days', 28)}
                 {past.map(row)}
               </>
             ) : null}
