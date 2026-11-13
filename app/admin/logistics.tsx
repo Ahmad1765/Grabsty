@@ -31,8 +31,10 @@ import {
   escrowService,
   getEscrowStatusStyle,
   canAdvanceEscrow,
+  releaseConfirmation,
   type EscrowLogisticsItem,
 } from '@/lib/escrowService';
+import { confirm } from '@/lib/confirm';
 import type { EscrowStatus, TransactionEventLog } from '@/types';
 
 type FilterTab =
@@ -238,8 +240,29 @@ export default function AdminLogisticsScreen() {
       return;
     }
 
-    tap('medium');
+    if (submittingAction) return;
     setSubmittingAction(true);
+
+    if (targetStatus === 'COMPLETED_FUNDS_RELEASED') {
+      const { data: pm, error: pmError } = await supabase.rpc('admin_get_payout_method', {
+        p_user_id: selectedTx.seller_id,
+      });
+      if (pmError) {
+        setSubmittingAction(false);
+        toast.show(`Couldn't check the seller's payout method: ${pmError.message}`, {
+          variant: 'default',
+          icon: 'alert-triangle',
+        });
+        return;
+      }
+      const hasPayoutMethod = !!((Array.isArray(pm) ? pm[0] : pm) as SellerPayout | null)?.kind;
+      if (!(await confirm(releaseConfirmation(hasPayoutMethod)))) {
+        setSubmittingAction(false);
+        return;
+      }
+    }
+
+    tap('medium');
 
     try {
       const updated = await escrowService.advanceStatus({
@@ -1016,6 +1039,85 @@ function RiderAssignCard({ orderId }: { orderId: string }) {
   );
 }
 
+type PayoutRow = { status: 'owed' | 'paid'; amount_cents: number; reference: string | null; paid_at: string | null };
+
+// WF-010: what the seller is owed for this order, and recording the transfer.
+function PayoutRecordCard({ orderId }: { orderId: string }) {
+  const [row, setRow] = useState<PayoutRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [reference, setReference] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setLoading(true);
+    supabase
+      .from('seller_payouts')
+      .select('status, amount_cents, reference, paid_at')
+      .eq('order_id', orderId)
+      .maybeSingle()
+      .then(({ data, error: e }) => {
+        if (!live) return;
+        setRow((data as PayoutRow | null) ?? null);
+        setError(e?.message ?? null);
+        setLoading(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [orderId]);
+
+  const record = async () => {
+    if (saving || !reference.trim()) return;
+    setSaving(true);
+    const { data, error: e } = await supabase.rpc('admin_mark_payout_paid', {
+      p_order_id: orderId,
+      p_reference: reference.trim(),
+    });
+    setSaving(false);
+    if (e) setError(e.message);
+    else {
+      setRow(data as PayoutRow);
+      setError(null);
+    }
+  };
+
+  return (
+    <View style={[styles.ledgerCard, { marginTop: 12 }]}>
+      <Text style={styles.sectionHeaderTitle}>SELLER PAYOUT RECORD</Text>
+      {loading ? (
+        <ActivityIndicator color="#6C47FF" size="small" />
+      ) : !row ? (
+        <Text style={styles.ledgerLabel}>No payout recorded for this order.</Text>
+      ) : row.status === 'paid' ? (
+        <Text style={styles.ledgerLabel}>
+          Paid {formatPrice(row.amount_cents / 100)} · ref {row.reference}
+        </Text>
+      ) : (
+        <>
+          <Text style={styles.ledgerLabel}>Owed to the seller: {formatPrice(row.amount_cents / 100)}</Text>
+          <TextInput
+            value={reference}
+            onChangeText={setReference}
+            placeholder="Bank / JazzCash / Easypaisa transfer reference"
+            maxLength={200}
+            style={[styles.ledgerValue, { marginTop: 8, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 8 }]}
+          />
+          <Pressable
+            onPress={record}
+            disabled={saving || !reference.trim()}
+            style={[styles.primaryActionButton, { marginTop: 8 }, (saving || !reference.trim()) && styles.disabledButton]}
+          >
+            <Text style={styles.primaryActionText}>{saving ? 'Saving…' : 'Record payout as sent'}</Text>
+          </Pressable>
+        </>
+      )}
+      {error ? <Text style={[styles.ledgerLabel, { color: '#EF4444', marginTop: 6 }]}>{error}</Text> : null}
+    </View>
+  );
+}
+
 function SellerPayoutCard({ sellerId, onCopy }: { sellerId: string; onCopy: (text: string, label: string) => void }) {
   const [state, setState] = useState<{ loading: boolean; data: SellerPayout | null; error: string | null }>({
     loading: true,
@@ -1371,6 +1473,7 @@ function DetailContent({
 
       {/* ── Where the seller gets paid (needed to release funds) ── */}
       <SellerPayoutCard sellerId={tx.seller_id} onCopy={onCopy} />
+      {tx.order_id && tx.status === 'COMPLETED_FUNDS_RELEASED' ? <PayoutRecordCard orderId={tx.order_id} /> : null}
 
       {/* ── Audit Trail & Timestamps ── */}
       <View style={styles.auditSection}>

@@ -17,7 +17,7 @@ import { getOptimizedImageUrl } from '@/lib/images';
 import { tap } from '@/lib/haptics';
 import { BRAND } from '@/lib/brand';
 import { timeAgo } from '@/components/product/shared';
-import { COURIER_MESSAGES, type RiderDelivery } from '@/lib/orderTracking';
+import { COURIER_MESSAGES, cashToCollect, type RiderDelivery } from '@/lib/orderTracking';
 
 type Data = { state: 'loading' | 'ok' | 'signin' | 'forbidden' | 'error'; items: RiderDelivery[] };
 
@@ -90,6 +90,14 @@ export default function RiderDashboard() {
           Order #{i.reference}
           {i.city ? ` · ${i.city}` : ''} · {ROW_LABEL[i.state]} {i.active ? '' : timeAgo(i.at)}
         </Text>
+        {i.active
+          ? ((cash) =>
+              cash ? (
+                <Text numberOfLines={1} style={{ fontSize: 13, color: theme.ink, marginTop: 3, fontFamily: typography.family.sansSemibold }}>
+                  {cash}
+                </Text>
+              ) : null)(cashToCollect(i.collect))
+          : null}
       </View>
       <Feather name="chevron-right" size={18} color={theme.mute} />
     </Pressable>

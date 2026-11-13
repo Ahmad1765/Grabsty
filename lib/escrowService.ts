@@ -13,6 +13,25 @@ export const ESCROW_TRANSITION_MAP: Record<EscrowStatus, EscrowStatus[]> = {
   CANCELLED: [],
 };
 
+/** WEB-009: what the admin confirms before completing an order (the seller's payout becomes owed). */
+export function releaseConfirmation(hasPayoutMethod: boolean): {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  destructive: boolean;
+} {
+  return {
+    title: 'Complete this order?',
+    message:
+      (hasPayoutMethod
+        ? ''
+        : 'This seller has no payout method yet, so you have nowhere to send the money. ') +
+      "The seller's payout is recorded as owed. Send it, then record the transfer reference on this order.",
+    confirmLabel: 'Complete order',
+    destructive: !hasPayoutMethod,
+  };
+}
+
 export function canAdvanceEscrow(from: EscrowStatus, to: EscrowStatus): boolean {
   const allowed = ESCROW_TRANSITION_MAP[from] || [];
   return allowed.includes(to);

@@ -3,6 +3,7 @@ import {
   canAdvanceEscrow,
   getEscrowStatusStyle,
   ESCROW_TRANSITION_MAP,
+  releaseConfirmation,
 } from './escrowService';
 import type { EscrowStatus } from '@/types';
 
@@ -111,5 +112,20 @@ describe('Escrow Financial Ledger Invariant Check', () => {
 
     expect(payoutAmountCents).toBeGreaterThanOrEqual(0);
     expect(totalCapturedCents).toBe(platformFeeCents + shippingFeeCents + payoutAmountCents);
+  });
+});
+
+// WEB-009: completing an order asks first, and warns when the seller can't be paid.
+describe('releaseConfirmation', () => {
+  it('warns and uses a destructive button when the seller has no payout method', () => {
+    const c = releaseConfirmation(false);
+    expect(c.destructive).toBe(true);
+    expect(c.message).toContain('no payout method');
+  });
+  it('asks plainly when the seller can be paid', () => {
+    const c = releaseConfirmation(true);
+    expect(c.destructive).toBe(false);
+    expect(c.message).not.toContain('no payout method');
+    expect(c.message).toContain('recorded as owed');
   });
 });

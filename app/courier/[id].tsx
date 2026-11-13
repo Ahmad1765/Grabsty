@@ -24,7 +24,7 @@ import { tap } from '@/lib/haptics';
 import { confirm } from '@/lib/confirm';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
 import { BRAND } from '@/lib/brand';
-import { COURIER_MESSAGES, type CourierInfo, type CourierState } from '@/lib/orderTracking';
+import { COURIER_MESSAGES, codAmount, type CourierInfo, type CourierState } from '@/lib/orderTracking';
 
 type State = CourierState | 'loading' | 'error';
 type Info = Omit<CourierInfo, 'state'> & { state: State };
@@ -97,7 +97,7 @@ export default function CourierOrderScreen() {
     const ok = await confirm({
       title: 'Confirm delivery?',
       message: info.cod
-        ? 'Confirm you handed the parcel to the buyer and collected the cash. This marks the order Delivered.'
+        ? `Confirm you handed the parcel to the buyer and collected ${codAmount(info.collect) ?? 'the cash'}. This marks the order Delivered.`
         : 'Confirm you handed the parcel to the buyer. This marks the order Delivered.',
       confirmLabel: 'Delivered',
     });
@@ -242,7 +242,9 @@ export default function CourierOrderScreen() {
                 <View testID="courier-delivery" style={{ marginTop: 22 }}>
                   <Text style={{ fontSize: 14, color: theme.ink, lineHeight: 20, marginBottom: 12 }}>
                     You picked this order up. Deliver it to the buyer, then confirm below.
-                    {info.cod ? ' This is Cash on Delivery: collect the payment before handing it over.' : ''}
+                    {info.cod
+                      ? ` This is Cash on Delivery: collect ${codAmount(info.collect) ?? 'the payment'} before handing it over.`
+                      : ''}
                   </Text>
                   {line('Deliver to', d?.name)}
                   {line('Address', address)}

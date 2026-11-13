@@ -137,8 +137,21 @@ export type CourierInfo = {
   city?: string | null;
   attempts_left?: number;
   cod?: boolean;
+  /** COD only: what the buyer pays the rider, in whole rupees. */
+  collect?: number | null;
   delivery?: CourierDelivery | null;
 };
+
+/** "Rs 1,720" for a COD order's cash, or null when nothing is collected. */
+export function codAmount(collect: number | null | undefined): string | null {
+  return collect && collect > 0 ? `Rs ${collect.toLocaleString('en-US')}` : null;
+}
+
+/** "Collect Rs 1,720 in cash" for a COD order, or null when nothing is collected. */
+export function cashToCollect(collect: number | null | undefined): string | null {
+  const amount = codAmount(collect);
+  return amount ? `Collect ${amount} in cash` : null;
+}
 
 export type RiderDelivery = {
   id: string;
@@ -146,6 +159,7 @@ export type RiderDelivery = {
   title: string | null;
   image: string | null;
   city: string | null;
+  collect?: number | null;
   active: boolean;
   state: 'in_transit' | 'delivered' | 'on_hold' | 'closed';
   at: string;
