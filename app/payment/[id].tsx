@@ -42,7 +42,11 @@ import {
 } from '@/components/payment/PaymentOptionsModal';
 import { paymentService, normalizeAddressInput, isDemoMode } from '@/lib/paymentService';
 import { ShippingAddressSchema } from '@/lib/schemas/order';
-import { getOrCreateConversation, cancelBundleOffersForSoldItem } from '@/lib/chat';
+import {
+  getOrCreateConversation,
+  cancelBundleOffersForSoldItem,
+  fetchAcceptedOfferAmount,
+} from '@/lib/chat';
 import { SELECT_LISTING_WITH_SELLER } from '@/lib/listings';
 import { openCheckout, STRIPE_ENABLED } from '@/lib/payments';
 import type { ShippingAddress, Listing } from '@/types';
@@ -331,9 +335,27 @@ export default function PaymentScreen() {
     };
   }, [user?.id, isDemo]);
 
+  // Opened without ?offer= (listing strip, product page): still price an accepted
+  // offer, since process_checkout will, and a full-price total would be rejected.
+  const [acceptedOfferAmount, setAcceptedOfferAmount] = useState<number | null>(null);
+  const listingIdForOffer = listing?.id;
+  useEffect(() => {
+    setAcceptedOfferAmount(null);
+    if (offer || isBundle || isDemo || !user?.id || !listingIdForOffer) return;
+    let active = true;
+    fetchAcceptedOfferAmount(listingIdForOffer, user.id)
+      .then((amount) => {
+        if (active) setAcceptedOfferAmount(amount);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [offer, isBundle, isDemo, user?.id, listingIdForOffer]);
+
   const offerAmount = (() => {
     const n = Number(offer);
-    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : null;
+    return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : acceptedOfferAmount;
   })();
 
   const bundleCalculation = useMemo(() => {

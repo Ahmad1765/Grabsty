@@ -527,6 +527,38 @@ export async function acceptChatOffer(offerMessageId: string): Promise<any> {
 }
 
 /**
+ * The buyer's live accepted offer on a single listing (not a bundle), picked the
+ * way process_checkout prices it: accepted, not expired (or accepted within 24h),
+ * newest first. Lets checkout show the agreed price from any "Buy" entry point.
+ */
+export async function fetchAcceptedOfferAmount(
+  listingId: string,
+  buyerId: string,
+): Promise<number | null> {
+  const now = Date.now();
+  const { data, error } = await supabase
+    .from('offers')
+    .select('amount, message:messages(metadata)')
+    .eq('listing_id', listingId)
+    .eq('buyer_id', buyerId)
+    .eq('status', 'accepted')
+    .or(
+      `expires_at.gt.${new Date(now).toISOString()},accepted_at.gt.${new Date(now - 24 * 3600 * 1000).toISOString()}`,
+    )
+    .order('accepted_at', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(5);
+  if (error || !data) return null;
+  const single = (data as { amount: number; message: { metadata?: { bundle_item_ids?: unknown } } | null }[]).find(
+    (o) => {
+      const ids = o.message?.metadata?.bundle_item_ids;
+      return !Array.isArray(ids) || ids.every((x) => x === listingId);
+    },
+  );
+  return single ? Number(single.amount) : null;
+}
+
+/**
  * Atomically creates a counter-offer linked to a parent offer, locking the parent offer
  * and transitioning it to 'countered' within a single database transaction.
  */

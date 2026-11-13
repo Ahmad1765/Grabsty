@@ -24,6 +24,7 @@ import { bubbleStamp } from './format';
 import Svg, { Path } from 'react-native-svg';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { getOptimizedImageUrl } from '@/lib/images';
+import { OFFER_TTL_MS } from '@/components/product/offerHelpers';
 
 /** Renders **bold** spans (support bot replies and FAQ answers use them) as real bold. */
 export function withBold(text: string | null | undefined) {
@@ -688,7 +689,7 @@ function OfferBubble(
     (msg.offer_status === 'pending' || msg.offer_status === 'proposed') &&
     msg.metadata?.actionable !== false &&
     msg.created_at &&
-    Date.now() - new Date(msg.created_at).getTime() > 48 * 3600 * 1000
+    Date.now() - new Date(msg.created_at).getTime() > OFFER_TTL_MS
   );
   const isPaid = Boolean(
     msg.metadata?.paid ||

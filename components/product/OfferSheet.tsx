@@ -21,7 +21,9 @@ import {
   OFFER_PRESET_TIERS,
   type OfferTierId,
   calculateTierPrices,
+  defaultCounterAmount,
   isValidOfferAmount,
+  type OfferRange,
 } from './offerHelpers';
 
 export interface OfferSheetProps {
@@ -36,6 +38,8 @@ export interface OfferSheetProps {
   offersLeftToday?: number;
   /** Extra seller items bundled with this one. Shows "+N Bundle" under Continue when > 0. */
   bundleExtraCount?: number;
+  /** Counter-offer bounds: a seller counters above the buyer's offer, a buyer below the seller's. */
+  range?: OfferRange;
 }
 
 /**
@@ -59,6 +63,7 @@ export function OfferSheet({
   loading = false,
   offersLeftToday = 25,
   bundleExtraCount,
+  range,
 }: OfferSheetProps) {
   const { theme, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -77,14 +82,34 @@ export function OfferSheet({
     return calculateTierPrices(askingPrice);
   }, [askingPrice]);
 
+  const rangeMin = range?.min;
+  const rangeMax = range?.max;
+
   // Reset state when opening
   useEffect(() => {
-    if (visible) {
+    if (!visible) return;
+    setSubmitting(false);
+    if (rangeMin == null && rangeMax == null) {
       setSelectedTier('20');
       setCustomAmount('');
-      setSubmitting(false);
+      return;
     }
-  }, [visible, askingPrice]);
+    const bounds = { min: rangeMin, max: rangeMax };
+    if (rangeMin != null) {
+      // Seller countering: start halfway between the buyer's offer and the asking price.
+      const mid = defaultCounterAmount(rangeMin, rangeMax ?? askingPrice);
+      setSelectedTier('custom');
+      setCustomAmount(mid != null ? String(mid) : '');
+      return;
+    }
+    // Buyer countering: the highest preset still below the seller's counter.
+    const prices = calculateTierPrices(askingPrice);
+    const tier = (['5', '10', '15', '20'] as const).find((t) =>
+      isValidOfferAmount(prices[t], askingPrice, bounds),
+    );
+    setSelectedTier(tier ?? 'custom');
+    setCustomAmount('');
+  }, [visible, askingPrice, rangeMin, rangeMax]);
 
   // Web Escape key listener
   useEffect(() => {
@@ -127,7 +152,7 @@ export function OfferSheet({
     return tierPrices[selectedTier] || 0;
   }, [selectedTier, customAmount, tierPrices]);
 
-  const isValidOffer = isValidOfferAmount(activeOfferAmount, askingPrice);
+  const isValidOffer = isValidOfferAmount(activeOfferAmount, askingPrice, range);
 
   const isCustomInvalid =
     selectedTier === 'custom' &&
@@ -250,11 +275,17 @@ export function OfferSheet({
                 <View style={{ flexDirection: 'row', gap: 8, marginBottom: 20 }}>
                   {OFFER_PRESET_TIERS.map((tier) => {
                     const isSelected = selectedTier === tier.id;
+                    const isDisabled =
+                      tier.id !== 'custom' &&
+                      !isValidOfferAmount(tierPrices[tier.id], askingPrice, range);
                     return (
                       <Pressable
                         key={tier.id}
                         onPress={() => handleSelectTier(tier.id)}
+                        disabled={isDisabled}
+                        accessibilityState={{ disabled: isDisabled }}
                         style={({ pressed }) => ({
+                          opacity: isDisabled ? 0.35 : 1,
                           flex: 1,
                           height: 42,
                           paddingHorizontal: 4,
@@ -329,7 +360,11 @@ export function OfferSheet({
                         autoFocus
                         value={customAmount}
                         onChangeText={handleCustomChange}
-                        placeholder={`Enter amount lower than ${formatPrice(askingPrice)}`}
+                        placeholder={
+                          range?.min != null
+                            ? `Enter amount above ${formatPrice(range.min)}`
+                            : `Enter amount lower than ${formatPrice(range?.max ?? askingPrice)}`
+                        }
                         placeholderTextColor={theme.muteSoft}
                         keyboardType="number-pad"
                         returnKeyType="done"
@@ -360,7 +395,11 @@ export function OfferSheet({
                           paddingHorizontal: 2,
                         }}
                       >
-                        {activeOfferAmount >= askingPrice
+                        {range?.min != null && activeOfferAmount <= range.min
+                          ? `Counter must be more than the buyer's offer (${formatPrice(range.min)})`
+                          : range?.max != null && activeOfferAmount >= range.max
+                          ? `Counter must be less than ${formatPrice(range.max)}`
+                          : activeOfferAmount >= askingPrice
                           ? `Offer must be less than the asking price (${formatPrice(askingPrice)})`
                           : 'Please enter a valid offer amount'}
                       </Text>

@@ -1,26 +1,27 @@
 import { describe, it, expect } from 'vitest';
 import { orderTotal, buyerProtectionFee } from '@/lib/fees';
 import { computeCheckoutItemPrice } from '@/lib/bundle';
+import { OFFER_TTL_MS } from '@/components/product/offerHelpers';
 
 describe('Chat-to-Order Bridge & Offer Lifecycle', () => {
-  describe('48-hour Offer TTL Expiration', () => {
+  describe('24-hour Offer TTL Expiration', () => {
     const isOfferExpired = (msg: { offer_status?: string | null; created_at?: string }) => {
       if (msg.offer_status === 'expired') return true;
       if ((msg.offer_status === 'pending' || msg.offer_status === 'proposed') && msg.created_at) {
         const ageMs = Date.now() - new Date(msg.created_at).getTime();
-        return ageMs > 48 * 3600 * 1000;
+        return ageMs > OFFER_TTL_MS;
       }
       return false;
     };
 
-    it('keeps offers under 48h active and pending', () => {
+    it('keeps offers under 24h active and pending', () => {
       const recent = new Date(Date.now() - 2 * 3600 * 1000).toISOString(); // 2h ago
       expect(isOfferExpired({ offer_status: 'pending', created_at: recent })).toBe(false);
       expect(isOfferExpired({ offer_status: 'proposed', created_at: recent })).toBe(false);
     });
 
-    it('automatically treats offers older than 48h as expired', () => {
-      const old = new Date(Date.now() - 49 * 3600 * 1000).toISOString(); // 49h ago
+    it('automatically treats offers older than 24h as expired', () => {
+      const old = new Date(Date.now() - 25 * 3600 * 1000).toISOString(); // 25h ago
       expect(isOfferExpired({ offer_status: 'pending', created_at: old })).toBe(true);
       expect(isOfferExpired({ offer_status: 'proposed', created_at: old })).toBe(true);
     });

@@ -38,6 +38,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { uploadListingImages, type LocalImage } from '@/lib/upload';
 import { FullscreenImageViewer } from '@/components/product/FullscreenImageViewer';
+import { counterRange } from '@/components/product/offerHelpers';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/lib/toast';
 import { type as typography } from '@/lib/theme';
@@ -884,6 +885,7 @@ export default function ConversationScreen() {
         listingPrice={thread.convListingPrice}
         listingTitle={thread.conv?.listing?.title}
         listingThumb={thread.listingThumb}
+        offerRange={counterRange(counterParentMsg, thread.isSeller)}
         onCloseOffer={() => {
           setOfferVisible(false);
           setCounterParentMsg(null);

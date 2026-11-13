@@ -11,6 +11,7 @@
 import { memo } from 'react';
 import { ChatActionSheet, type ChatAction } from './ChatActionSheet';
 import { OfferSheet } from '@/components/product/OfferSheet';
+import type { OfferRange } from '@/components/product/offerHelpers';
 import { REPORT_REASONS } from '@/lib/reports';
 import { BLOCK_REASONS } from '@/lib/blocks';
 
@@ -35,6 +36,8 @@ type ConversationActionSheetsProps = {
   listingPrice: number | null | undefined;
   listingTitle: string | null | undefined;
   listingThumb: string | null | undefined;
+  /** Set when countering, so the counter stays between the two sides' amounts. */
+  offerRange?: OfferRange;
   onCloseOffer: () => void;
   onSubmitOffer: (amount: number) => Promise<void> | void;
 };
@@ -56,6 +59,7 @@ export const ConversationActionSheets = memo(function ConversationActionSheets({
   listingPrice,
   listingTitle,
   listingThumb,
+  offerRange,
   onCloseOffer,
   onSubmitOffer,
 }: ConversationActionSheetsProps) {
@@ -106,6 +110,7 @@ export const ConversationActionSheets = memo(function ConversationActionSheets({
         imageUrl={listingThumb ?? null}
         onClose={onCloseOffer}
         onSubmit={onSubmitOffer}
+        range={offerRange}
       />
     </>
   );
