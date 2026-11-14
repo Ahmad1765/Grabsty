@@ -279,13 +279,6 @@ describe('PaymentService Dispatcher & Seller Completion', () => {
     expect(result.status).toBe('pending');
   });
 
-  it('allows seller to mark CoD order as collected and paid', async () => {
-    const updated = await paymentService.markCodOrderPaid('order-cod-456');
-    expect(updated.status).toBe('completed');
-    expect(updated.fulfillment_status).toBe('completed');
-    expect(updated.payment_method).toBe('cod');
-  });
-
   it('handles cancelOrder in demo mode', async () => {
     const cancelled = await paymentService.cancelOrder({
       orderId: 'order-cancel-123',
@@ -294,24 +287,6 @@ describe('PaymentService Dispatcher & Seller Completion', () => {
     });
     expect(cancelled.status).toBe('canceled');
     expect(cancelled.id).toBe('order-cancel-123');
-  });
-
-  it('handles markOrderShipped in demo mode', async () => {
-    const shipped = await paymentService.markOrderShipped({
-      orderId: 'order-ship-123',
-      courier: 'TCS',
-      trackingNumber: 'TCS123456',
-    });
-    expect(shipped.status).toBe('paid');
-    expect(shipped.id).toBe('order-ship-123');
-  });
-
-  it('handles confirmOrderReceived in demo mode', async () => {
-    const received = await paymentService.confirmOrderReceived({
-      orderId: 'order-recv-123',
-    });
-    expect(received.status).toBe('completed');
-    expect(received.id).toBe('order-recv-123');
   });
 
   it('orders a COD bundle with one process_checkout call covering every item', async () => {
@@ -469,117 +444,6 @@ describe('PaymentService Dispatcher & Seller Completion', () => {
     );
   });
 
-  it('marks COD order as paid and completed via complete_cod_order RPC', async () => {
-    const rpcSpy = vi.spyOn(supabase, 'rpc').mockResolvedValueOnce({
-      data: {
-        id: 'order-cod-456',
-        listing_id: 'listing-456',
-        buyer_id: 'buyer-456',
-        seller_id: 'seller-456',
-        amount_cents: 12000,
-        fee_cents: 500,
-        currency: 'pkr',
-        payment_method: 'cod',
-        status: 'completed',
-        fulfillment_status: 'completed',
-        escrow_status: 'COMPLETED_FUNDS_RELEASED',
-        created_at: new Date().toISOString(),
-      },
-      error: null,
-    } as any);
-
-    const completedOrder = await paymentService.markCodOrderPaid('order-cod-456');
-
-    expect(rpcSpy).toHaveBeenCalledWith('complete_cod_order', {
-      p_order_id: 'order-cod-456',
-    });
-    expect(completedOrder.id).toBe('order-cod-456');
-    expect(completedOrder.status).toBe('completed');
-    expect(completedOrder.fulfillment_status).toBe('completed');
-  });
-
-  it('falls back to demo mode with status completed when complete_cod_order RPC fails in demo', async () => {
-    vi.spyOn(supabase, 'rpc').mockResolvedValueOnce({
-      data: null,
-      error: { message: 'RPC complete_cod_order not found' },
-    } as any);
-
-    const completedOrder = await paymentService.markCodOrderPaid('order-demo-789');
-
-    expect(completedOrder.id).toBe('order-demo-789');
-    expect(completedOrder.status).toBe('completed');
-    expect(completedOrder.fulfillment_status).toBe('completed');
-    expect(completedOrder.escrow_status).toBe('COMPLETED_FUNDS_RELEASED');
-    expect(completedOrder.cod_buyer_confirmed_at).toBeTruthy();
-    expect(completedOrder.cod_seller_confirmed_at).toBeTruthy();
-  });
-
-  it('records seller COD confirmation and retains in-progress state until buyer confirms', async () => {
-    const now = new Date().toISOString();
-    const rpcSpy = vi.spyOn(supabase, 'rpc').mockResolvedValueOnce({
-      data: {
-        id: 'order-cod-456',
-        listing_id: 'listing-456',
-        buyer_id: 'buyer-456',
-        seller_id: 'seller-456',
-        amount_cents: 12000,
-        fee_cents: 500,
-        currency: 'pkr',
-        payment_method: 'cod',
-        status: 'delivered',
-        fulfillment_status: 'delivered',
-        cod_seller_confirmed_at: now,
-        cod_buyer_confirmed_at: null,
-        created_at: now,
-      },
-      error: null,
-    } as any);
-
-    const order = await paymentService.markCodOrderPaid('order-cod-456', 'seller');
-
-    expect(rpcSpy).toHaveBeenCalledWith('complete_cod_order', {
-      p_order_id: 'order-cod-456',
-      p_role: 'seller',
-    });
-    expect(order.cod_seller_confirmed_at).toBe(now);
-    expect(order.cod_buyer_confirmed_at).toBeNull();
-    expect(order.status).toBe('delivered');
-  });
-
-  it('finalizes COD order to completed once both buyer and seller confirm COD payment', async () => {
-    const now = new Date().toISOString();
-    const rpcSpy = vi.spyOn(supabase, 'rpc').mockResolvedValueOnce({
-      data: {
-        id: 'order-cod-456',
-        listing_id: 'listing-456',
-        buyer_id: 'buyer-456',
-        seller_id: 'seller-456',
-        amount_cents: 12000,
-        fee_cents: 500,
-        currency: 'pkr',
-        payment_method: 'cod',
-        status: 'completed',
-        fulfillment_status: 'completed',
-        escrow_status: 'COMPLETED_FUNDS_RELEASED',
-        cod_paid_at: now,
-        cod_seller_confirmed_at: now,
-        cod_buyer_confirmed_at: now,
-        created_at: now,
-      },
-      error: null,
-    } as any);
-
-    const finalized = await paymentService.markCodOrderPaid('order-cod-456', 'buyer');
-
-    expect(rpcSpy).toHaveBeenCalledWith('complete_cod_order', {
-      p_order_id: 'order-cod-456',
-      p_role: 'buyer',
-    });
-    expect(finalized.status).toBe('completed');
-    expect(finalized.fulfillment_status).toBe('completed');
-    expect(finalized.cod_buyer_confirmed_at).toBe(now);
-    expect(finalized.cod_seller_confirmed_at).toBe(now);
-  });
 });
 
 

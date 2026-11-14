@@ -241,7 +241,7 @@ export function BottomSheetModal({
                       </Text>
                     )}
                     {subtitle && (
-                      <Text style={[styles.headerSubtitle, { color: theme.mute }]} numberOfLines={1}>
+                      <Text style={[styles.headerSubtitle, { color: theme.mute }]} numberOfLines={2}>
                         {subtitle}
                       </Text>
                     )}

@@ -163,9 +163,10 @@ export function SearchLanding({
   const columnWidth = Math.round((contentWidth - PAD) * 0.46);
   const sellerColumns = useMemo(() => {
     const out: { seller: TopSeller; rank: number }[][] = [];
+    // Blocks of four read left to right, then down: 1 2 / 3 4, then 5 6 / 7 8.
     topSellers.forEach((seller, i) => {
-      if (i % 2 === 0) out.push([]);
-      out[out.length - 1].push({ seller, rank: i + 1 });
+      const col = Math.floor(i / 4) * 2 + (i % 2);
+      (out[col] ??= []).push({ seller, rank: i + 1 });
     });
     return out;
   }, [topSellers]);

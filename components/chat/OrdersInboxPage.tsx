@@ -25,7 +25,7 @@ import { deriveInvoiceAmounts } from '@/lib/invoiceStatus';
 import { partitionOrders, getOrderCategory, type OrderSide } from '@/lib/orders';
 import { usePullRefresh } from '@/hooks/usePullRefresh';
 import type { MyOrder } from '@/lib/payments';
-import { orderMoneyLines } from '@/lib/orderDisplay';
+import { expectedDelivery, orderMoneyLines } from '@/lib/orderDisplay';
 
 type FilterStatus = 'all' | 'in_progress' | 'completed' | 'refunds' | 'canceled';
 
@@ -41,10 +41,10 @@ function formatOrderDate(dateStr?: string | null): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const year = d.getFullYear() % 100;
-  return `${month}/${day}/${year < 10 ? '0' : ''}${year}`;
+  // "13 Nov", not US "11/13/26" (same style as the order page); the year only
+  // when it isn't this year, so old orders stay distinguishable.
+  const sameYear = d.getFullYear() === new Date().getFullYear();
+  return d.toLocaleDateString('en-GB', sameYear ? { day: 'numeric', month: 'short' } : { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function OrderRow({ order, side }: { order: MyOrder; side: OrderSide }) {
@@ -124,10 +124,14 @@ export function OrderRow({ order, side }: { order: MyOrder; side: OrderSide }) {
     badgeColor = theme.mute;
   }
 
-  const deliveryExpected =
-    isShipped || isPacking || fulfillment === 'pending'
-      ? formatOrderDate(order.created_at ? new Date(new Date(order.created_at).getTime() + 7 * 86400000).toISOString() : null)
+  // Not once it has arrived (delivered / disputed orders keep shipped_at).
+  const eta =
+    (isShipped || isPacking || fulfillment === 'pending') && !isDelivered && !isDisputed
+      ? expectedDelivery(order)
       : null;
+  const deliveryExpected = eta
+    ? `${formatOrderDate(eta.by.toISOString())}${eta.late ? ' · running late' : ''}`
+    : null;
 
   return (
     <Pressable
@@ -548,7 +552,7 @@ export const OrdersInboxPage = memo(function OrdersInboxPage({
                 color: theme.ink,
               }}
             >
-              Shop Listings
+              Listings
             </Text>
           </View>
 

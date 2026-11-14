@@ -39,11 +39,11 @@ test.describe('Browse search focus', () => {
     expect(activeTag).toBe('INPUT');
   });
 
-  // Browse shortcuts apply to Home's feed/search — never route to /discover.
-  test('a Browse shortcut stays on Home', async ({ page }) => {
+  // Browse shortcuts open Home's search — they don't stay on /discover.
+  test('a Browse shortcut lands on Home search', async ({ page }) => {
     await page.getByRole('button', { name: 'Browse', exact: true }).click();
-    await page.getByRole('button', { name: 'Browse New drops' }).click();
+    await page.getByRole('button', { name: 'Clothing', exact: true }).click();
     await expect(page).not.toHaveURL(/\/discover/);
-    await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/(\?.*)?$/);
+    await expect(page).toHaveURL(/127\.0\.0\.1:\d+\/\?.*searchCategory=clothing/);
   });
 });

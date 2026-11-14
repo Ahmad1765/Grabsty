@@ -1,3 +1,4 @@
+import { isDeliverableCountry, NOT_DELIVERABLE_MESSAGE } from '@/lib/delivery';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   View,
@@ -71,10 +72,8 @@ export function AddressSheet({
 
   useEffect(() => {
     if (!prevVisibleRef.current && visible) {
-      const defaultName =
-        initial?.recipient_name ||
-        profile?.full_name ||
-        (profile?.username ? `@${profile.username}` : '');
+      // Not "@username": the courier needs the recipient's real name.
+      const defaultName = initial?.recipient_name || profile?.full_name || '';
 
       let initCity = initial?.city ?? '';
       let initCountry = initial?.country ?? 'Pakistan';
@@ -113,6 +112,8 @@ export function AddressSheet({
     if (!form.recipient_name.trim()) e.recipient_name = 'Full name is required';
     if (!form.line1.trim()) e.line1 = 'Street address is required';
     if (!form.city.trim()) e.city = 'City is required';
+    // Checkout only delivers inside Pakistan; say so here, not at Pay.
+    if (!isDeliverableCountry(form.country)) e.country = NOT_DELIVERABLE_MESSAGE;
     const cleanPhone = form.phone.replace(/[\s\-()]/g, '');
     if (!cleanPhone) {
       e.phone = 'Phone number is required for courier delivery';
@@ -429,8 +430,12 @@ export function AddressSheet({
                         color: theme.text,
                       },
                       focusedField === 'country' && [styles.inputFocused, { borderColor: theme.accent, backgroundColor: theme.panel, color: theme.text }],
+                      Boolean(errors.country) && styles.inputError,
                     ]}
                   />
+                  {Boolean(errors.country) && (
+                    <Text style={styles.errorText}>{errors.country}</Text>
+                  )}
                 </View>
               </View>
 

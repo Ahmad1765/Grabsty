@@ -1,6 +1,7 @@
 // Login & Sign Up. Two steps on a plain page (no banner):
 //   welcome - mark, "Sign in to continue", then Google / Apple / email
 //   form    - Sign in | Sign up switch, email + password
+import { forgetReturnTo } from '@/components/RequireSignIn';
 import { useEffect, useRef, useState } from 'react';
 import { View, Pressable, Alert, Platform, Animated, Easing, useWindowDimensions } from 'react-native';
 import { Text, TextInput } from '@/lib/rnText';
@@ -78,7 +79,9 @@ export default function LoginRoute() {
 function LoginScreen() {
   const { theme: colors } = useTheme();
   const toast = useToast();
-  const params = useLocalSearchParams<{ mode?: string; step?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; step?: string; next?: string }>();
+  // Where a guest was going (RequireSignIn). Internal paths only.
+  const returnTo = typeof params.next === 'string' && /^\/(?!\/)/.test(params.next) ? params.next : null;
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const isDesktop = isDesktopWidth(width);
@@ -146,7 +149,11 @@ function LoginScreen() {
         if (error) throw error;
         capture('signed_in', { method: 'password' });
         toast.done('Welcome back');
-        if (router.canDismiss()) router.dismiss();
+        if (returnTo) {
+          forgetReturnTo();
+          router.replace(returnTo as any);
+        }
+        else if (router.canDismiss()) router.dismiss();
         else router.replace('/(tabs)');
       } else {
         const { data, error } = await supabase.auth.signUp({
@@ -257,7 +264,11 @@ function LoginScreen() {
     setOauthLoading(false);
     if (r.ok) {
       toast.done('Welcome');
-      if (router.canDismiss()) router.dismiss();
+      if (returnTo) {
+          forgetReturnTo();
+          router.replace(returnTo as any);
+        }
+      else if (router.canDismiss()) router.dismiss();
       else router.replace('/(tabs)');
     } else if (!r.cancelled) {
       toast.show(r.error ?? 'Google sign-in failed', { variant: 'default', icon: 'alert-triangle' });

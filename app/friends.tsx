@@ -1,3 +1,4 @@
+import { RequireSignIn } from '@/components/RequireSignIn';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
@@ -47,7 +48,15 @@ import { useFollowingMaskQuery } from '@/lib/queries/useProfileQueries';
 import { useQueryClient } from '@tanstack/react-query';
 import { qk } from '@/lib/queries/keys';
 
-export default function FriendsScreen() {
+export default function FriendsScreenGate() {
+  return (
+    <RequireSignIn>
+      <FriendsScreen />
+    </RequireSignIn>
+  );
+}
+
+function FriendsScreen() {
   const insets = useSafeAreaInsets();
   const { theme, isDark } = useTheme();
   const { user, profile } = useAuth();

@@ -23,9 +23,17 @@ export const OFFER_TTL_MS = 24 * 3600 * 1000;
 /** Exclusive bounds for a counter-offer: above `min`, below `max` (defaults to the asking price). */
 export type OfferRange = { min?: number; max?: number };
 
+/** Lowest offer a buyer can make: half the asking price, whole rupees (server: same rule). */
+export function minOfferAmount(askingPrice: number): number {
+  return askingPrice > 0 ? Math.ceil(askingPrice * 0.5) : 1;
+}
+
 export function isValidOfferAmount(amount: number, askingPrice: number, range?: OfferRange): boolean {
   const max = range?.max ?? askingPrice;
-  return amount > (range?.min ?? 0) && (max <= 0 || amount < max);
+  // A seller's counter only has to beat the buyer's offer; a buyer's offer or
+  // counter starts at half the asking price.
+  const aboveFloor = range?.min != null ? amount > range.min : amount >= minOfferAmount(askingPrice);
+  return aboveFloor && (max <= 0 || amount < max);
 }
 
 /**

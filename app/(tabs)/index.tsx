@@ -19,6 +19,7 @@ import { RefreshControl, StyleSheet, View } from 'react-native';
 import { FlashList, type FlashListRef } from '@shopify/flash-list';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useScrollToTop } from '@react-navigation/native';
 import { useAuth } from '@/lib/auth';
 import { useTheme } from '@/context/ThemeContext';
 import { useToast } from '@/lib/toast';
@@ -137,6 +138,8 @@ export default function HomeScreen() {
   }, [params.searchOpen, params.searchCategory, params.searchQuery, params.category, params.q, isDesktop]);
 
   const listRef = useRef<FlashListRef<Listing[]>>(null);
+  // Tapping Home while already on Home scrolls the feed back to the top.
+  useScrollToTop(listRef as any);
   const scrollToTop = useCallback(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, []);

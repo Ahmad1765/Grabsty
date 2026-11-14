@@ -16,6 +16,7 @@
 //    vacation mode, bundle discounts, push notifications, and auth flows.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { RequireSignIn } from '@/components/RequireSignIn';
 import {
   View,
   Pressable,
@@ -74,7 +75,15 @@ const TABS: TabConfig[] = [
   { key: 'help', label: 'Help & Legal', icon: 'help-circle' },
 ];
 
-export default function SettingsScreen() {
+export default function SettingsScreenGate() {
+  return (
+    <RequireSignIn>
+      <SettingsScreen />
+    </RequireSignIn>
+  );
+}
+
+function SettingsScreen() {
   const { profile, user, session } = useAuth();
   const { theme, isDark, mode: themeMode } = useTheme();
   const themeLabel = themeMode === 'system' ? 'System' : themeMode === 'dark' ? 'Dark' : 'Light';
@@ -1032,6 +1041,7 @@ export default function SettingsScreen() {
             label="Vacation mode"
             rightElement={
               <Switch
+                accessibilityLabel="Vacation mode"
                 value={vacationOn}
                 onValueChange={(val: boolean) => {
                   tap('light');
@@ -1050,6 +1060,7 @@ export default function SettingsScreen() {
               label="Notifications"
               rightElement={
                 <Switch
+                  accessibilityLabel="Notifications"
                   value={mgr.pushOn}
                   onValueChange={mgr.handlePushToggle}
                   disabled={!session}
@@ -1077,6 +1088,7 @@ export default function SettingsScreen() {
             label="Share usage data"
             rightElement={
               <Switch
+                accessibilityLabel="Share usage data"
                 value={mgr.shareUsage}
                 onValueChange={(val: boolean) => {
                   tap('light');
@@ -1093,6 +1105,7 @@ export default function SettingsScreen() {
             label="Public saved collection"
             rightElement={
               <Switch
+                accessibilityLabel="Public saved collection"
                 value={mgr.savedCollectionPrivacy === 'public'}
                 onValueChange={(val: boolean) => {
                   tap('light');

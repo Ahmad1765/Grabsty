@@ -368,6 +368,15 @@ export default function PaymentScreen() {
     );
   }, [listing, bundledListings]);
 
+  // Already sold when the page opened: show "unavailable" instead of a checkout
+  // the server will reject. Captured once, from fresh data (cached is_sold can
+  // be stale, e.g. a cancelled order relisted it), because our own purchase
+  // flips is_sold. Bundle add-ons are re-checked by the server at Pay.
+  const [soldOnOpen, setSoldOnOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (listing && soldOnOpen === null && !listingQ.isFetching) setSoldOnOpen(Boolean(listing.is_sold));
+  }, [listing, soldOnOpen, listingQ.isFetching]);
+
   const bundleSavings = bundleCalculation?.savings ?? 0;
   const bundleSubtotal = bundleCalculation?.subtotal ?? Number(listing?.price ?? 0);
   const bundleDiscountPct = bundleCalculation?.pct ?? 0;
@@ -408,7 +417,7 @@ export default function PaymentScreen() {
     );
   }
 
-  if (!listing) {
+  if (!listing || soldOnOpen) {
     return (
       <SafeAreaView
         style={{
@@ -1194,7 +1203,7 @@ export default function PaymentScreen() {
                       color: theme.ink,
                     }}
                   >
-                    Tracked Courier (1–3 days)
+                    Tracked Courier (2–5 days)
                   </Text>
                 </View>
                 <Text
@@ -1496,7 +1505,11 @@ export default function PaymentScreen() {
           onPress={handlePay}
           disabled={paying || (isBundle && bundleFetchStatus !== 'success')}
           accessibilityRole="button"
-          accessibilityLabel={`Pay ${formatPrice(finalTotal)}`}
+          accessibilityLabel={
+            selectedMethod === 'cod'
+              ? `Place order, pay ${formatPrice(finalTotal)} on delivery`
+              : `Pay ${formatPrice(finalTotal)}`
+          }
           style={({ pressed }) => {
             const isBlocked =
               paying || (isBundle && bundleFetchStatus !== 'success');
@@ -1545,7 +1558,8 @@ export default function PaymentScreen() {
                 letterSpacing: 0.1,
               }}
             >
-              Pay
+              {/* Cash on delivery: nothing is paid at this step. */}
+              {selectedMethod === 'cod' ? 'Place order' : 'Pay'}
             </Text>
           )}
         </Pressable>

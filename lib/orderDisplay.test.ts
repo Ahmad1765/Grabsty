@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isOrderClosed, orderMoneyLines, orderStatusBadge } from './orderDisplay';
+import { expectedDelivery, isOrderClosed, orderMoneyLines, orderStatusBadge } from './orderDisplay';
 
 // WF-011 / WEB-003 / DEV-007: an ended order doesn't read "In Transit" because it shipped once.
 describe('orderStatusBadge', () => {
@@ -17,6 +17,25 @@ describe('orderStatusBadge', () => {
     expect(badge('refunded', 'disputed')).toBe('Refunded');
     expect(badge('completed', 'disputed', true)).toBe('Completed');
     expect(badge('canceled', 'delivered')).toBe('Cancelled');
+  });
+  it('WF-008: a seller\'s untouched order is new, not "Ready to Deliver"', () => {
+    expect(orderStatusBadge({ status: 'pending', fulfillment: 'pending', shipped: false, isSeller: true })).toBe('New order');
+  });
+});
+
+describe('expectedDelivery (DEV-010)', () => {
+  const day = 86_400_000;
+  const created = '2026-11-14T10:00:00Z';
+  it('is 5 days from ordering until pickup, then 3 days from pickup', () => {
+    expect(expectedDelivery({ created_at: created })!.by.toISOString()).toBe('2026-11-19T10:00:00.000Z');
+    expect(expectedDelivery({ created_at: created, shipped_at: '2026-11-15T10:00:00Z' })!.by.toISOString()).toBe(
+      '2026-11-18T10:00:00.000Z',
+    );
+  });
+  it('flags late orders and handles missing dates', () => {
+    expect(expectedDelivery({ created_at: created }, Date.parse(created) + 6 * day)!.late).toBe(true);
+    expect(expectedDelivery({ created_at: created }, Date.parse(created) + day)!.late).toBe(false);
+    expect(expectedDelivery({})).toBeNull();
   });
 });
 

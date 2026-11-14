@@ -1,3 +1,4 @@
+import { RequireSignIn } from '@/components/RequireSignIn';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Pressable, ScrollView, Platform, ActivityIndicator, Alert, BackHandler } from 'react-native';
 import { KeyboardAvoider } from '@/components/ui/SafeContainer';
@@ -94,7 +95,15 @@ function FieldShell({
 
 type UsernameStatus = 'idle' | 'checking' | 'ok' | 'taken';
 
-export default function ProfileEditScreen() {
+export default function ProfileEditScreenGate() {
+  return (
+    <RequireSignIn>
+      <ProfileEditScreen />
+    </RequireSignIn>
+  );
+}
+
+function ProfileEditScreen() {
   const { theme: colors } = useTheme();
   const { profile, user, refreshProfile, loading } = useAuth();
   const toast = useToast();

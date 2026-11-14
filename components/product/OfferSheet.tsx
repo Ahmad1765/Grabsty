@@ -23,6 +23,7 @@ import {
   calculateTierPrices,
   defaultCounterAmount,
   isValidOfferAmount,
+  minOfferAmount,
   type OfferRange,
 } from './offerHelpers';
 
@@ -401,6 +402,8 @@ export function OfferSheet({
                           ? `Counter must be less than ${formatPrice(range.max)}`
                           : activeOfferAmount >= askingPrice
                           ? `Offer must be less than the asking price (${formatPrice(askingPrice)})`
+                          : range?.min == null && activeOfferAmount < minOfferAmount(askingPrice)
+                          ? `Offers start at ${formatPrice(minOfferAmount(askingPrice))} (half the asking price)`
                           : 'Please enter a valid offer amount'}
                       </Text>
                     )}

@@ -45,6 +45,18 @@ describe('OfferSheet calculations and formatting', () => {
     expect(isValidOfferAmount(25, askingPrice)).toBe(false);
   });
 
+  it('DEV-010: a buyer offer starts at half the asking price (rounded up); a seller counter only beats the buyer', () => {
+    expect(isValidOfferAmount(1, 1500)).toBe(false);
+    expect(isValidOfferAmount(749, 1500)).toBe(false);
+    expect(isValidOfferAmount(750, 1500)).toBe(true);
+    expect(isValidOfferAmount(750, 1499)).toBe(true); // ceil(749.5) = 750
+    expect(isValidOfferAmount(749, 1499)).toBe(false);
+    // buyer countering a seller counter: same floor
+    expect(isValidOfferAmount(700, 1500, counterRange({ metadata: { amount: 1400 } }, false))).toBe(false);
+    // seller countering an old 600 offer: above it is enough
+    expect(isValidOfferAmount(650, 1500, counterRange({ metadata: { amount: 600 } }, true))).toBe(true);
+  });
+
   // WEB-002: buyer offers 1,300 on a 1,500 item; the old -20% default (1,200) undercut it.
   it('keeps a seller counter between the buyer offer and the asking price', () => {
     const range = counterRange({ metadata: { amount: 1300 } }, true);

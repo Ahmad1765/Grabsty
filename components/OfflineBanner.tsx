@@ -50,6 +50,9 @@ export function OfflineBanner() {
       // taps or gets announced while off-screen.
       accessibilityElementsHidden={!offline}
       importantForAccessibility={offline ? 'yes' : 'no-hide-descendants'}
+      // Web: react-native-web ignores the two props above; aria-hidden is what
+      // keeps the off-screen "No internet connection" alert out of the tree.
+      aria-hidden={!offline}
       pointerEvents="none"
       style={{
         position: 'absolute',

@@ -10,7 +10,7 @@ Buyers and sellers of secondhand/resale fashion (clothing, shoes, accessories) t
 
 ## Product Purpose
 
-A disciplined, trustworthy peer-to-peer fashion resale marketplace. Core loop: discover (home feed, search/discover hub with Items/Aesthetics/Brands/Users tabs) → product detail (bundle collage, offer/buy) → transact (Buyer Protection fee, Stripe checkout) → reputation (computed seller levels/badges/completion, shown passively). Success looks like: a buyer trusts a stranger's listing enough to pay, a seller feels the interface respects their listing rather than burying it in decoration.
+A disciplined, trustworthy peer-to-peer fashion resale marketplace. Core loop: discover (home feed, search/discover hub with Items/Aesthetics/Brands/Users tabs) → product detail (bundle collage, offer/buy) → transact (Buyer Protection fee, cash on delivery collected by Grabsty's riders; card checkout is built but off at launch) → reputation (computed seller levels/badges/completion, shown passively). Success looks like: a buyer trusts a stranger's listing enough to pay, a seller feels the interface respects their listing rather than burying it in decoration.
 
 ## Brand Personality
 

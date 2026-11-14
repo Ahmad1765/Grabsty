@@ -45,7 +45,9 @@ async function hydrateSellers<T extends Listing>(rows: T[]): Promise<T[]> {
 // region). Now the backfill is fetched alongside the rpc, and only rpc rows —
 // which can't embed relations — get their sellers looked up, overlapping the
 // backfill. Same rows, same order; one round trip shorter at worst.
-export async function fetchRecommendations(limit = 24): Promise<RecommendedListing[]> {
+// viewerId comes from the caller: reading the session here can deadlock with
+// supabase-js's auth lock when a sign-in listener triggers this refetch.
+export async function fetchRecommendations(limit = 24, viewerId: string | null = null): Promise<RecommendedListing[]> {
   const recsPromise = (async (): Promise<RecommendedListing[]> => {
     const { data, error } = await supabase.rpc('get_recommendations', { p_limit: limit });
     if (error) {
@@ -61,11 +63,12 @@ export async function fetchRecommendations(limit = 24): Promise<RecommendedListi
   });
 
   const [recs, fallback] = await Promise.all([recsPromise, fallbackPromise]);
+  // The rpc already skips the viewer's own listings; the trending backfill doesn't.
   const rows: RecommendedListing[] = recs.slice(0, limit);
   const seen = new Set(rows.map((r) => r.id));
   for (const p of fallback) {
     if (rows.length >= limit) break;
-    if (seen.has(p.id)) continue;
+    if (seen.has(p.id) || (viewerId && p.seller_id === viewerId)) continue;
     seen.add(p.id);
     rows.push({ ...p, rec_reason: 'trending' });
   }

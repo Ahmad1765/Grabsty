@@ -10,10 +10,16 @@ const esc = (s: string) =>
 
 let shell: Promise<string> | null = null;
 
+// The shell is fetched from, and cached for, this origin: only our own hosts
+// (production, the project alias, this project's preview URLs).
+const OWN_HOST =
+  /^(app\.grabsty\.com|ceranix\.vercel\.app|(grabsty|ceranix)-[a-z0-9-]+-flyluckyfire-1119s-projects\.vercel\.app)$/;
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
-  const origin = `https://${request.headers.get('x-forwarded-host') ?? url.host}`;
+  const host = request.headers.get('x-forwarded-host') ?? url.host;
+  const origin = `https://${OWN_HOST.test(host) ? host : 'app.grabsty.com'}`;
 
   // index.html is a static file, so this hits the CDN, not this function.
   shell ??= fetch(`${origin}/index.html`).then((r) => {

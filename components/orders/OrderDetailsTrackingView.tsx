@@ -913,6 +913,9 @@ export function OrderDetailsTrackingView({
               >
                 <Text
                   numberOfLines={1}
+                  // A tracking ID is useless cut short: shrink to fit at large font scales.
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
                   style={[
                     {
                       fontSize: 14,

@@ -237,13 +237,16 @@ export async function fetchSoldListing(
 
 export async function fetchAnyLiveListing(
   _page: Page,
+  // "oldest": blocks.spec takes a different seller than the specs that buy from the newest.
+  order: "newest" | "oldest" = "newest",
 ): Promise<{ id: string; title: string; price: number; brand: string | null; seller_id: string | null } | null> {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/listings?select=id,title,price,brand,seller_id&is_sold=eq.false&order=created_at.desc&limit=1`,
+      // A regular seller: official (admin) accounts can't be blocked or messaged like one.
+      `${SUPABASE_URL}/rest/v1/listings?select=id,title,price,brand,seller_id,seller:profiles!listings_seller_id_fkey!inner(is_admin)&seller.is_admin=eq.false&is_sold=eq.false&order=created_at.${order === "oldest" ? "asc" : "desc"}&limit=1`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,

@@ -13,6 +13,19 @@ import { Text } from '@/lib/rnText';
 import { supabase } from '@/lib/supabase';
 import { capture } from '@/lib/analytics';
 import { useTheme } from '@/context/ThemeContext';
+import { RETURN_TO_KEY } from '@/components/RequireSignIn';
+
+// Web: the page a guest was sent from (RequireSignIn). Internal paths only, used once.
+function takeReturnTo(): any {
+  if (Platform.OS !== 'web') return null;
+  try {
+    const v = sessionStorage.getItem(RETURN_TO_KEY);
+    sessionStorage.removeItem(RETURN_TO_KEY);
+    return v && /^\/(?!\/)/.test(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
 
 function linkParams(url: string): URLSearchParams {
   const params = new URLSearchParams(url.split('#')[1] ?? '');
@@ -37,7 +50,12 @@ export default function AuthCallbackScreen() {
     // The tokens must not linger in the address bar or browser history.
     if (Platform.OS === 'web') window.history.replaceState(null, '', window.location.pathname);
     (async () => {
-      if (p.get('error_description')) throw new Error(p.get('error_description')!);
+      // Fixed wording per code: the URL's error_description is attacker-editable.
+      if (p.get('error') || p.get('error_description')) {
+        throw new Error(p.get('error') === 'access_denied'
+          ? 'Sign-in was cancelled.'
+          : 'Google sign-in failed. Please try again.');
+      }
       const code = p.get('code');
       const access_token = p.get('access_token');
       const refresh_token = p.get('refresh_token');
@@ -54,7 +72,7 @@ export default function AuthCallbackScreen() {
       }
       if (res.error) throw res.error;
       if (Platform.OS === 'web') capture('signed_in', { method: 'google' });
-      router.replace('/(tabs)');
+      router.replace(takeReturnTo() ?? '/(tabs)');
     })().catch((e) => setError(e?.message ?? 'Google sign-in failed'));
   }, [url]);
 

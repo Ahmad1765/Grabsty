@@ -28,8 +28,27 @@ export function orderStatusBadge(o: {
   if (f === 'shifting' || o.shipped) return 'In Transit';
   if (f === 'picked') return 'Picked';
   if (f === 'packing') return o.isSeller ? 'Awaiting Pickup' : 'Preparing Order';
-  if (o.isSeller) return 'Ready to Deliver';
+  // WF-008: nothing has happened yet; "Ready to deliver" is the button to press.
+  if (o.isSeller) return 'New order';
   return s === 'paid' ? 'Paid' : 'Preparing Order';
+}
+
+const DAY_MS = 86_400_000;
+
+/**
+ * DEV-010: one delivery promise everywhere ("2–5 days" at checkout). Before
+ * pickup: 5 days from ordering (pickup tomorrow or the day after, then the
+ * courier). Once picked up: 3 days from pickup. `late` once that has passed.
+ */
+export function expectedDelivery(
+  o: { created_at?: string | null; shipped_at?: string | null },
+  now = Date.now(),
+): { by: Date; late: boolean } | null {
+  const shipped = o.shipped_at ? Date.parse(o.shipped_at) : NaN;
+  const created = o.created_at ? Date.parse(o.created_at) : NaN;
+  const t = Number.isFinite(shipped) ? shipped + 3 * DAY_MS : Number.isFinite(created) ? created + 5 * DAY_MS : NaN;
+  if (!Number.isFinite(t)) return null;
+  return { by: new Date(t), late: now > t };
 }
 
 type MoneyOrder = {

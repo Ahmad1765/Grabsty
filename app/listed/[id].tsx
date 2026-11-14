@@ -4,7 +4,8 @@
 // tapping the card opens the listing.
 import { useEffect } from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { useAuth } from '@/lib/auth';
 import { Image } from 'expo-image';
 import Animated, {
   useAnimatedStyle,
@@ -52,7 +53,8 @@ export default function ListedScreen() {
   const listingId = typeof id === 'string' ? id : '';
   const { theme } = useTheme();
   const { open: openSellSheet } = useSellSheet();
-  const { data: listing } = useListingQuery(listingId);
+  const { data: listing, isPending: listingPending } = useListingQuery(listingId);
+  const { user, loading: authLoading } = useAuth();
 
   const enter = useSharedValue(0);
   const copy = useSharedValue(0);
@@ -85,6 +87,13 @@ export default function ListedScreen() {
   const viewListing = () => {
     if (listingId) router.replace(`/product/${listingId}` as any);
   };
+
+  // The celebration is for the seller only; anyone else gets the product page.
+  // Nothing renders until we know whose listing it is (no flash for strangers).
+  if (authLoading || (listingId && listingPending)) return null;
+  if (listing && listing.seller_id !== user?.id) {
+    return <Redirect href={`/product/${listingId}` as any} />;
+  }
 
   return (
     <SafeContainer edges={['top', 'bottom', 'left', 'right']} backgroundColor={theme.background} style={{ flex: 1 }}>

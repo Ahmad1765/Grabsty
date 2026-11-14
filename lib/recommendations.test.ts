@@ -63,4 +63,11 @@ describe('fetchRecommendations', () => {
     const rows = await p;
     expect(rows.map((r) => r.id)).toEqual(['a', 'f1']);
   });
+
+  it('never backfills the viewer\'s own listings (DEV-010)', async () => {
+    const p = fetchRecommendations(4, 's2');
+    resolveRpc({ data: rpcRows, error: null });
+    const rows = await p;
+    expect(rows.map((r) => r.id)).toEqual(['a', 'b']);
+  });
 });

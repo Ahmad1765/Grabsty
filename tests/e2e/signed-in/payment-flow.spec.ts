@@ -21,8 +21,12 @@ test.describe('Payment', () => {
       await expect(page.getByText(row, { exact: true }).first()).toBeVisible();
     }
     await expect(page.getByText('Cash on Delivery', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('Add delivery address')).toBeVisible();
-    await expect(page.getByText('Pay', { exact: true }).first()).toBeVisible();
+    // Either state is right: depends on whether the E2E account saved an address.
+    await expect(
+      page.getByRole('button', { name: /^(Add|Edit) delivery address$/ }).first(),
+    ).toBeVisible();
+    // Cash on delivery: nothing is paid here, so the CTA says "Place order".
+    await expect(page.getByText('Place order', { exact: true }).first()).toBeVisible();
   });
 
   test('unknown listing id shows the "Item unavailable" state', async ({ page }) => {

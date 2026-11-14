@@ -5,7 +5,7 @@ import { test, expect, waitForAppReady, fetchAnyLiveListing } from '../helpers/p
 
 test.describe('Blocking', () => {
   test('block from a profile, see it in settings, unblock', async ({ page }) => {
-    const listing = await fetchAnyLiveListing(page.request);
+    const listing = await fetchAnyLiveListing(page.request, 'oldest');
     test.skip(!listing, 'no live listing to get a seller from');
     const sellerId = (listing as any).seller_id as string;
 

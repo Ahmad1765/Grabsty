@@ -210,7 +210,7 @@ describe('OrdersInboxPage UI Invariants & Guardrails (Rule 2.10)', () => {
     }
     collectText(rendered);
 
-    expect(textNodes).toContain('Shop Listings');
+    expect(textNodes).toContain('Listings');
     expect(textNodes).toContain('New item');
     expect(textNodes).toContain('View shop');
   });

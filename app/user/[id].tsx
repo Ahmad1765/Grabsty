@@ -456,7 +456,9 @@ export default function UserProfileScreen() {
                       onPress={handleFollowToggle}
                       disabled={followBusy}
                       accessibilityRole="button"
-                      accessibilityLabel={followed ? 'Unfollow' : 'Follow'}
+                      // Name starts with the visible text, so "Following" finds this
+                      // button rather than the Following count beside the stats.
+                      accessibilityLabel={followed ? 'Following, tap to unfollow' : 'Follow'}
                       style={({ pressed }) => ({
                         height: 36,
                         minWidth: 116,

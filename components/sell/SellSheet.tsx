@@ -1584,7 +1584,7 @@ export function SellForm({
               icon="droplet"
               label="Color"
               value={color ? itemColorLabel(color) : ''}
-              placeholder="Add color"
+              placeholder="Optional"
               onPress={() => openSheet('colors')}
             />
 
@@ -1600,7 +1600,7 @@ export function SellForm({
               icon="hash"
               label="Tags"
               value={tags.length ? `${tags.length} tag${tags.length === 1 ? '' : 's'}` : ''}
-              placeholder="Add discovery tags"
+              placeholder="Optional"
               onPress={() => openSheet('tags')}
               isLast
             />

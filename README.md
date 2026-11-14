@@ -1,8 +1,8 @@
 # Grabsty
 
-A peer-to-peer marketplace for secondhand fashion in Pakistan (PKR). Sellers list clothes, shoes and accessories; buyers browse, message, make offers and pay through Stripe with a Buyer Protection fee.
+A peer-to-peer marketplace for secondhand fashion in Pakistan (PKR). Sellers list clothes, shoes and accessories; buyers browse, message, make offers and pay cash on delivery, with a Buyer Protection fee. Grabsty's own riders collect the parcel from the seller, deliver it and collect the cash; sellers are paid out after delivery.
 
-**Live web build:** https://ceranix.vercel.app
+**Live web build:** https://app.grabsty.com
 
 Built solo, end to end: product design, mobile/web app, database, payments, CI/CD and testing (560+ commits).
 
@@ -17,11 +17,12 @@ Built solo, end to end: product design, mobile/web app, database, payments, CI/C
 - **Listings:** multi-image upload with a bundle collage, size/condition/brand, client-side thumbnails
 - **Discovery:** home feed (For you / Trending), search and browse
 - **Messaging and offers:** buyer–seller conversations and price offers
-- **Checkout:** Stripe checkout session and webhook handled in Supabase Edge Functions, Buyer Protection fee, orders and invoices
+- **Checkout:** cash on delivery (up to 3 open COD orders per buyer), Buyer Protection fee, orders, invoices and a public order tracker. Card payments (Stripe) are built but switched off for launch.
+- **Delivery and payouts:** seller books a pickup, a rider confirms pickup with a code and records the cash at delivery; a payout ledger keeps one row per order for what each seller is owed
 - **Trust:** ratings, computed seller levels and completion stats
 - **Accounts:** auth, onboarding, profiles, friends, wardrobe, settings, account deletion
 - **Push notifications** (Expo Notifications + an Edge Function)
-- **Admin** screens for order logistics
+- **Admin and rider** screens for order logistics, disputes, KYC, payouts and support (admin actions are written to an audit log)
 
 ## Tech stack
 
@@ -31,7 +32,7 @@ Built solo, end to end: product design, mobile/web app, database, payments, CI/C
 | UI | NativeWind (Tailwind CSS), FlashList, Expo Image |
 | Data | TanStack Query (with offline persistence), React Hook Form + Zod |
 | Backend | Supabase: Postgres, Row Level Security, Storage, Auth, Edge Functions (Deno) |
-| Payments | Stripe (checkout sessions + webhooks) |
+| Payments | Cash on delivery at launch; Stripe (checkout sessions + webhooks) built, off |
 | Monitoring | Sentry, PostHog |
 | Testing | Vitest (unit), Playwright (end-to-end) |
 | CI/CD | GitHub Actions, EAS Build, Vercel |

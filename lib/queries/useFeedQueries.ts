@@ -56,7 +56,7 @@ export function useMyFeedListingsQuery(userId: string | null) {
   return useQuery({
     queryKey: qk.myFeedListings(userId),
     queryFn: () =>
-      userId ? fetchRecommendations(48) : fetchListings({ tab: 'for_you', limit: 60 }),
+      userId ? fetchRecommendations(48, userId) : fetchListings({ tab: 'for_you', limit: 60 }),
   });
 }
 /**
@@ -173,6 +173,6 @@ export function useRecommendationsQuery(userId: string | null, limit = 12) {
   return useQuery({
     queryKey: qk.recommendations(userId),
     enabled: !!userId,
-    queryFn: () => fetchRecommendations(limit),
+    queryFn: () => fetchRecommendations(limit, userId),
   });
 }

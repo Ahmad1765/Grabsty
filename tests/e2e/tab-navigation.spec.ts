@@ -28,19 +28,16 @@ test.describe('Tab navigation', () => {
     ).toBeVisible();
   });
 
-  // The Browse tab opens a search sheet over Home; picking a category opens
+  // The Browse tab is its own page (/discover); picking a category opens
   // Home's search results filtered to it. Desktop (>=1024px) has no tab bar —
   // its top nav owns category browsing instead.
-  test('Browse tab opens the search sheet, which routes on pick', async ({ page }) => {
+  test('Browse tab opens the Browse page, which routes on pick', async ({ page }) => {
     test.skip(await hasTopNav(page), 'desktop top nav has no Browse tab');
     await page.getByRole('button', { name: 'Browse', exact: true }).click();
-    await expect(page.getByPlaceholder('Search Grabsty...')).toBeVisible();
-    await expect(page.getByText('Categories', { exact: true })).toBeVisible();
-    // Still on Home — the sheet is an overlay, not a route.
-    await expect(page).toHaveURL(/\/(\?.*)?$/);
-
-    await page.getByRole('button', { name: 'Browse Clothing' }).click();
-    await page.waitForURL(/searchCategory=clothing/);
+    await page.waitForURL(/\/discover$/);
+    await expect(homeSearch(page)).toBeVisible();
+    await page.getByRole('button', { name: 'Clothing', exact: true }).click();
+    await page.waitForURL(/\/\?.*searchCategory=clothing/);
   });
 
   test('Sell tab routes (gate or upload form depending on auth)', async ({ page }) => {

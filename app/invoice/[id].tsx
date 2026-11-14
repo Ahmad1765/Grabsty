@@ -379,15 +379,15 @@ export default function InvoiceScreen() {
     order?.fulfillment_status === 'shifting'
   );
 
-  // Mirrors cancel_order: either party until the courier has the parcel,
-  // except the seller, who is locked out once Ready to deliver is confirmed.
+  // Mirrors cancel_order: either party can cancel until the seller books the
+  // courier pickup (Ready to deliver); after that the order is locked for both.
   const orderOpen =
     (isBuyer || isSeller) &&
     (order?.status === 'pending' || order?.status === 'paid') &&
     !isShipped &&
     ['pending', 'awaiting_payment', 'packing', undefined, null].includes(order?.fulfillment_status as any);
-  const sellerLocked = isSeller && !isBuyer && order?.fulfillment_status === 'packing';
-  const canCancel = orderOpen && !sellerLocked;
+  const pickupLocked = order?.fulfillment_status === 'packing';
+  const canCancel = orderOpen && !pickupLocked;
   const withCancel = (primary: React.ReactNode) =>
     primary || orderOpen ? (
       <View style={{ gap: 10 }}>
@@ -427,9 +427,11 @@ export default function InvoiceScreen() {
                 Cancel order
               </Text>
             </Pressable>
-            {sellerLocked ? (
+            {pickupLocked ? (
               <Text style={{ fontSize: 12.5, color: theme.mute, textAlign: 'center', fontFamily: typography.family.sans }}>
-                You confirmed Ready to deliver, so this order can no longer be cancelled. Contact support if something is wrong.
+                {isSeller && !isBuyer
+                  ? 'You confirmed Ready to deliver, so this order can no longer be cancelled. Contact support if something is wrong.'
+                  : 'The seller has booked the courier pickup, so this order can no longer be cancelled. Contact support if something is wrong.'}
               </Text>
             ) : null}
           </View>
