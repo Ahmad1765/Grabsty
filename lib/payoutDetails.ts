@@ -45,3 +45,15 @@ export const isValidCnic = (s: string) => cnicDigits(s).length === 13;
 export function cnicFrontPath(v: { user_id: string; notes: string | null } | null | undefined): string | null {
   return v?.notes?.startsWith(`${v.user_id}/`) ? v.notes : null;
 }
+
+/**
+ * Why a verification wasn't approved: review_notes (since ADM-005), else the
+ * older rows that kept the reason in notes.
+ */
+export function rejectionReason(
+  v: { user_id: string; notes: string | null; review_notes?: string | null } | null | undefined,
+): string | null {
+  if (!v) return null;
+  if (v.review_notes?.trim()) return v.review_notes.trim();
+  return v.notes && !cnicFrontPath(v) ? v.notes : null;
+}

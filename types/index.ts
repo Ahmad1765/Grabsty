@@ -263,6 +263,8 @@ export interface Verification {
   id_back_photo_path?: string | null;
   submitted_at: string;
   reviewed_at: string | null;
+  /** The reviewer's note (e.g. why it wasn't approved). */
+  review_notes?: string | null;
 }
 
 export interface Listing {

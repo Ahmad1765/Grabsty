@@ -370,7 +370,8 @@ export default function AdminConsoleScreen() {
       const msgs = await fetchAdminSupportMessages(convId);
       setSupportMessages(msgs);
     } catch (err: any) {
-      toast.show('Failed to load support messages', { variant: 'default', icon: 'alert-triangle' });
+      setSupportMessages([]);
+      toast.show(err?.message || 'Failed to load support messages', { variant: 'default', icon: 'alert-triangle' });
     } finally {
       setLoadingSupportMessages(false);
     }

@@ -308,31 +308,13 @@ export async function fetchAdminSupportConversations(
 export async function fetchAdminSupportMessages(
   conversationId: string,
 ): Promise<ChatMessage[]> {
-  try {
-    const { data, error } = await supabase.rpc('admin_get_support_messages', {
-      p_conversation_id: conversationId,
-    });
-    if (!error && data) {
-      return data as ChatMessage[];
-    }
-  } catch (e) {
-    console.warn('[support] admin_get_support_messages rpc failed, falling back', e);
-  }
-
-  // Fallback direct messages query
-  try {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
-
-    if (error || !data) return [];
-    return data as ChatMessage[];
-  } catch (err) {
-    console.warn('[support] fetchAdminSupportMessages fallback failed', err);
-    return [];
-  }
+  // The RPC is the only way an admin can read a thread (RLS hides others' chats),
+  // so a refusal, e.g. "Not a support conversation", is passed on, not hidden.
+  const { data, error } = await supabase.rpc('admin_get_support_messages', {
+    p_conversation_id: conversationId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as ChatMessage[];
 }
 
 /**

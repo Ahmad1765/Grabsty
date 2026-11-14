@@ -13,7 +13,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useVerificationPhotoUrl } from '@/lib/upload';
 import { ShieldCheckIcon } from '@/components/ui/ShieldCheckIcon';
 import { tap } from '@/lib/haptics';
-import { cnicDigits, cnicFrontPath, formatCnic, isValidCnic } from '@/lib/payoutDetails';
+import { cnicDigits, cnicFrontPath, formatCnic, isValidCnic, rejectionReason } from '@/lib/payoutDetails';
 import type { Verification } from '@/types';
 import { SheetModal, SheetField, SheetPrimary } from './Sheet';
 
@@ -149,7 +149,7 @@ export function VerificationSheet({
     initial?.status === 'submitted'
       ? 'Under review. We usually reply within a day.'
       : initial?.status === 'rejected'
-        ? `Not approved${initial.notes && !cnicFrontPath(initial) ? `: ${initial.notes}` : ''}. Check the details and resubmit.`
+        ? `Not approved${rejectionReason(initial) ? `: ${rejectionReason(initial)}` : ''}. Check the details and resubmit.`
         : null;
 
   return (

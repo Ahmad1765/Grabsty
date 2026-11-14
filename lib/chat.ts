@@ -835,28 +835,14 @@ export function isConversationUnread(conv: ConversationRow, userId: string): boo
 }
 
 /** Stamps "I've seen this" for the calling participant. Fire-and-forget: a
- *  failed read receipt must never block opening a thread. */
-export async function markConversationRead(conversationId: string, userId?: string): Promise<void> {
+ *  failed read receipt must never block opening a thread. Only the RPC can
+ *  move a read marker (DB-011), so there is no direct-table fallback. */
+export async function markConversationRead(conversationId: string): Promise<void> {
   const { error } = await supabase.rpc('mark_conversation_read', {
     p_conversation_id: conversationId,
   });
   if (error) {
-    console.warn('[chat] markConversationRead RPC error, using direct table fallback:', error.message);
-    if (userId) {
-      const now = new Date().toISOString();
-      await Promise.allSettled([
-        supabase
-          .from('conversations')
-          .update({ buyer_last_read_at: now })
-          .eq('id', conversationId)
-          .eq('buyer_id', userId),
-        supabase
-          .from('conversations')
-          .update({ seller_last_read_at: now })
-          .eq('id', conversationId)
-          .eq('seller_id', userId),
-      ]);
-    }
+    console.warn('[chat] markConversationRead RPC error:', error.message);
   }
 }
 

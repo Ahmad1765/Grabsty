@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accountNumberError, accountTitleError, formatCnic, isValidCnic, normalizeAccountNumber } from './payoutDetails';
+import { accountNumberError, accountTitleError, formatCnic, isValidCnic, normalizeAccountNumber, rejectionReason } from './payoutDetails';
 
 describe('payout details', () => {
   it('accepts IBANs and plain account numbers for banks', () => {
@@ -38,5 +38,19 @@ describe('cnicFrontPath', () => {
     expect(cnicFrontPath({ user_id: 'u1', notes: 'u1/abc.jpg' })).toBe('u1/abc.jpg');
     expect(cnicFrontPath({ user_id: 'u1', notes: 'Blurry/unclear photo' })).toBeNull();
     expect(cnicFrontPath({ user_id: 'u1', notes: null })).toBeNull();
+  });
+});
+
+// ADM-005: the reviewer's note has its own column; notes keeps the CNIC front photo path.
+describe('rejectionReason', () => {
+  const uid = 'u1';
+  it('uses review_notes first', () => {
+    expect(rejectionReason({ user_id: uid, notes: `${uid}/front.jpg`, review_notes: 'Photo is blurry' })).toBe('Photo is blurry');
+  });
+  it('never shows the photo path as a reason', () => {
+    expect(rejectionReason({ user_id: uid, notes: `${uid}/front.jpg`, review_notes: null })).toBeNull();
+  });
+  it('still reads a reason older reviews left in notes', () => {
+    expect(rejectionReason({ user_id: uid, notes: 'Name does not match' })).toBe('Name does not match');
   });
 });
