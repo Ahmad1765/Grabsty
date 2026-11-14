@@ -10,6 +10,14 @@ Before suggesting, writing, or modifying ANY user interface, component, screen, 
    - Warn the user about the collision and the exact risk of breakage.
    - Propose the safe, compliant alternative as specified in `UI_GUARDRAILS.md`.
 
+## No Stray Files
+
+Throwaway work never goes in this repository — not the root, not a new folder.
+- One-off scripts (`verify.mjs`, `_probe.mjs`, `.trace.mjs`, screenshot/Playwright probes), screenshots, extracted frames, logs, review diffs and plans go in the session scratch/temp directory.
+- A temp script that needs this project's packages still lives outside the repo; load them with `createRequire('D:/Softwares/Ceranix/')` (e.g. `createRequire(...)('playwright')`) instead of saving the script here to get `node_modules` resolution.
+- Send tool output (screenshots, traces, reports, renders) to the temp directory with an explicit output path; don't rely on a tool's default of the current folder.
+- Only create a file in the repo when it is a deliverable the user asked for.
+
 ## Core Technical Invariants at a Glance:
 - **Never use `className` on `<Pressable>`:** Use inline `style` or `PressableScale` (NativeWind interop is unregistered via `lib/pressableInterop.ts`).
 - **Never import raw `Text` from `'react-native'`:** Always use `import { Text } from '@/lib/rnText'` or `<AppText>` for Inter font mapping.
