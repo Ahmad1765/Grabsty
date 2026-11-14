@@ -7,6 +7,7 @@
 -- Locks inside `process_checkout` will force one transaction to commit and the
 -- other to fail/rollback, guaranteeing no double-ownership state corruption.
 
+begin;
 do $$
 declare
   v_seller_id uuid := '11111111-1111-4111-8111-111111111111';
@@ -45,14 +46,14 @@ begin
   end;
 
   -- 3. Price Tampering Fuzzing (Attempting to pay less than calculated total with shipping)
-  -- Listing price: 10,000 PKR + Managed Shipping: 250 PKR = Total: 10,250 PKR
+  -- Listing price 10,000 PKR + shipping and fees = 10,730 PKR total
   begin
     perform set_config('request.jwt.claim.sub', v_buyer_a_id::text, true);
     perform public.process_checkout(
       p_listing_id => v_listing_id,
       p_buyer_id => v_buyer_a_id,
       p_payment_method => 'cod',
-      p_shipping_address => '{"line1": "Buyer A Street"}'::jsonb,
+      p_shipping_address => '{"recipientName": "A", "line1": "Buyer A Street", "city": "Lahore", "country": "PK", "phone": "03001234567"}'::jsonb,
       p_expected_total => 10000 -- Missing shipping fee
     );
     raise exception 'FUZZ FAILURE: Server accepted checkout with tampered/underpaid expected total!';
@@ -70,8 +71,8 @@ begin
     p_listing_id => v_listing_id,
     p_buyer_id => v_buyer_a_id,
     p_payment_method => 'cod',
-    p_shipping_address => '{"line1": "Buyer A Street"}'::jsonb,
-    p_expected_total => 10250
+    p_shipping_address => '{"recipientName": "A", "line1": "Buyer A Street", "city": "Lahore", "country": "PK", "phone": "03001234567"}'::jsonb,
+    p_expected_total => 10730
   );
   raise notice 'PASS: Buyer A legitimate checkout processed successfully.';
 
@@ -82,8 +83,8 @@ begin
       p_listing_id => v_listing_id,
       p_buyer_id => v_buyer_b_id,
       p_payment_method => 'cod',
-      p_shipping_address => '{"line1": "Buyer B Street"}'::jsonb,
-      p_expected_total => 10250
+      p_shipping_address => '{"recipientName": "B", "line1": "Buyer B Street", "city": "Lahore", "country": "PK", "phone": "03001234568"}'::jsonb,
+      p_expected_total => 10730
     );
     raise exception 'FUZZ FAILURE: Buyer B was able to checkout an already checked-out listing!';
   exception when others then
@@ -95,3 +96,4 @@ begin
   end;
 
 end $$;
+rollback;
